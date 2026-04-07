@@ -64,11 +64,17 @@ export default function OscarsHome() {
     <div className="max-w-6xl mx-auto px-4 py-8">
 
       {/* ── Page header ── */}
-      <div className="mb-8">
-        <h1 className="page-title">🏆 Academy Awards</h1>
-        <p className="text-gray-400 mt-1">
-          {years.length} ceremonies · {years[years.length-1]?.year}–{years[0]?.year}
-        </p>
+      <div className="flex items-start justify-between mb-8 flex-wrap gap-4">
+        <div>
+          <h1 className="page-title">🏆 Academy Awards</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">
+            {years.length} ceremonies · {years[years.length-1]?.year}–{years[0]?.year}
+          </p>
+        </div>
+        <Link to="/oscars/stats"
+          className="btn-ghost flex items-center gap-2 text-sm self-start mt-1">
+          📊 All-Time Stats
+        </Link>
       </div>
 
       {/* ── All-time scoreboard ── */}
@@ -77,25 +83,29 @@ export default function OscarsHome() {
         <div className="grid grid-cols-3 gap-4 text-center">
 
           {/* Matt */}
-          <div className={`rounded-xl p-4 ${mattWins > dustinWins ? 'bg-gold-900/30 border border-gold-700/40' : 'bg-night-700/50'}`}>
-            <div className="text-3xl font-bold text-white mb-0.5">{mattWins}</div>
+          <div className={`rounded-xl p-4 ${mattWins > dustinWins
+            ? 'bg-gold-50 border border-gold-200 dark:bg-gold-900/30 dark:border-gold-700/40'
+            : 'bg-stone-50 dark:bg-night-700/50'}`}>
+            <div className={`text-3xl font-bold mb-0.5 ${mattWins > dustinWins ? 'text-gold-600 dark:text-gold-300' : 'text-gray-700 dark:text-white'}`}>{mattWins}</div>
             <div className="text-xs text-gray-400 uppercase tracking-wide">Hermz Wins</div>
-            <div className="text-xs text-gray-500 mt-1">{mattTotal} correct all-time</div>
+            <div className="text-xs text-gray-400 mt-1">{mattTotal} correct all-time</div>
           </div>
 
           {/* vs */}
           <div className="flex flex-col items-center justify-center gap-1">
-            <span className="text-gray-600 font-display text-lg">vs</span>
+            <span className="text-gray-300 dark:text-gray-600 font-display text-lg">vs</span>
             {tieYears > 0 && (
               <span className="badge-tiebreaker">{tieYears} tiebreakers</span>
             )}
           </div>
 
           {/* Dustin */}
-          <div className={`rounded-xl p-4 ${dustinWins > mattWins ? 'bg-gold-900/30 border border-gold-700/40' : 'bg-night-700/50'}`}>
-            <div className="text-3xl font-bold text-white mb-0.5">{dustinWins}</div>
+          <div className={`rounded-xl p-4 ${dustinWins > mattWins
+            ? 'bg-gold-50 border border-gold-200 dark:bg-gold-900/30 dark:border-gold-700/40'
+            : 'bg-stone-50 dark:bg-night-700/50'}`}>
+            <div className={`text-3xl font-bold mb-0.5 ${dustinWins > mattWins ? 'text-gold-600 dark:text-gold-300' : 'text-gray-700 dark:text-white'}`}>{dustinWins}</div>
             <div className="text-xs text-gray-400 uppercase tracking-wide">Dust Wins</div>
-            <div className="text-xs text-gray-500 mt-1">{dustinTotal} correct all-time</div>
+            <div className="text-xs text-gray-400 mt-1">{dustinTotal} correct all-time</div>
           </div>
 
         </div>
@@ -129,7 +139,7 @@ function YearCard({ year: y }) {
         {/* Year + ceremony */}
         <div className="flex items-start justify-between mb-3">
           <div>
-            <span className="text-gold-400 font-display text-2xl font-bold group-hover:text-gold-300 transition-colors">
+            <span className="text-gold-600 dark:text-gold-400 font-display text-2xl font-bold group-hover:text-gold-500 dark:group-hover:text-gold-300 transition-colors">
               {y.year}
             </span>
             <p className="text-gray-500 text-xs mt-0.5">{shortCeremony(y.ceremony_name)}</p>
@@ -141,25 +151,29 @@ function YearCard({ year: y }) {
         <div className="flex items-center gap-3 mt-auto">
 
           {/* Matt */}
-          <div className={`flex-1 text-center rounded-lg py-2 px-1 ${mattWon ? 'bg-gold-900/40' : 'bg-night-700/50'}`}>
-            <div className={`text-xl font-bold ${mattWon ? 'text-gold-300' : 'text-gray-300'}`}>
+          <div className={`flex-1 text-center rounded-lg py-2 px-1 ${mattWon
+            ? 'bg-gold-50 dark:bg-gold-900/40'
+            : 'bg-stone-100/80 dark:bg-night-700/50'}`}>
+            <div className={`text-xl font-bold ${mattWon ? 'text-gold-600 dark:text-gold-300' : 'text-gray-600 dark:text-gray-300'}`}>
               {mattScore}
               {mattWon && <span className="text-gold-500 text-sm ml-1">🏆</span>}
             </div>
-            <div className="text-xs text-gray-500">Hermz</div>
+            <div className="text-xs text-gray-400">Hermz</div>
           </div>
 
-          <div className="text-gray-600 text-xs font-medium">
+          <div className="text-gray-400 text-xs font-medium">
             / {total}
           </div>
 
           {/* Dustin */}
-          <div className={`flex-1 text-center rounded-lg py-2 px-1 ${dustinWon ? 'bg-gold-900/40' : 'bg-night-700/50'}`}>
-            <div className={`text-xl font-bold ${dustinWon ? 'text-gold-300' : 'text-gray-300'}`}>
+          <div className={`flex-1 text-center rounded-lg py-2 px-1 ${dustinWon
+            ? 'bg-gold-50 dark:bg-gold-900/40'
+            : 'bg-stone-100/80 dark:bg-night-700/50'}`}>
+            <div className={`text-xl font-bold ${dustinWon ? 'text-gold-600 dark:text-gold-300' : 'text-gray-600 dark:text-gray-300'}`}>
               {dustinScore}
               {dustinWon && <span className="text-gold-500 text-sm ml-1">🏆</span>}
             </div>
-            <div className="text-xs text-gray-500">Dust</div>
+            <div className="text-xs text-gray-400">Dust</div>
           </div>
 
         </div>
