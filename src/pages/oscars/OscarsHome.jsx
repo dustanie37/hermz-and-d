@@ -160,7 +160,7 @@ function YearCard({ year: y }) {
             : 'bg-slate-100 border-slate-300 dark:bg-slate-700 dark:border-slate-500'}`}>
             <div className={`text-xl font-bold ${mattWon ? 'text-white' : 'text-slate-700 dark:text-slate-100'}`}>
               {mattScore}
-              {mattWon && <OscarIcon size={16} className="inline text-indigo-200 ml-1" />}
+              {mattWon && <OscarIcon size={16} className="inline text-gold-400 ml-1" />}
             </div>
             <div className={`text-xs ${mattWon ? 'text-indigo-200' : 'text-slate-500 dark:text-slate-400'}`}>Hermz</div>
           </div>
@@ -175,7 +175,7 @@ function YearCard({ year: y }) {
             : 'bg-slate-100 border-slate-300 dark:bg-slate-700 dark:border-slate-500'}`}>
             <div className={`text-xl font-bold ${dustinWon ? 'text-white' : 'text-slate-700 dark:text-slate-100'}`}>
               {dustinScore}
-              {dustinWon && <OscarIcon size={16} className="inline text-indigo-200 ml-1" />}
+              {dustinWon && <OscarIcon size={16} className="inline text-gold-400 ml-1" />}
             </div>
             <div className={`text-xs ${dustinWon ? 'text-indigo-200' : 'text-slate-500 dark:text-slate-400'}`}>Dust</div>
           </div>
