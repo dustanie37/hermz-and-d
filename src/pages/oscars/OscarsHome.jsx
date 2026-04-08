@@ -146,7 +146,7 @@ function YearCard({ year: y }) {
             <span className="text-gold-600 dark:text-gold-400 font-display text-2xl font-bold group-hover:text-gold-500 dark:group-hover:text-gold-300 transition-colors">
               {y.year}
             </span>
-            <p className="text-gray-500 text-xs mt-0.5">{shortCeremony(y.ceremony_name)}</p>
+            <p className="text-gray-600 dark:text-white text-xs mt-0.5">{shortCeremony(y.ceremony_name)}</p>
           </div>
           {isTie && <span className="badge-tiebreaker mt-1">Tiebreaker</span>}
         </div>
@@ -155,14 +155,14 @@ function YearCard({ year: y }) {
         <div className="flex items-center gap-3 mt-auto">
 
           {/* Matt */}
-          <div className={`flex-1 text-center rounded-lg py-2 px-1 ${mattWon
-            ? 'bg-gold-100 border border-gold-300 dark:bg-gold-900/40 dark:border-transparent'
-            : 'bg-stone-100 dark:bg-night-700/50'}`}>
-            <div className={`text-xl font-bold ${mattWon ? 'text-gold-700 dark:text-gold-300' : 'text-gray-700 dark:text-gray-300'}`}>
+          <div className={`flex-1 text-center rounded-lg py-2 px-1 border ${mattWon
+            ? 'bg-violet-600 border-violet-400'
+            : 'bg-slate-100 border-slate-300 dark:bg-slate-700 dark:border-slate-500'}`}>
+            <div className={`text-xl font-bold ${mattWon ? 'text-white' : 'text-slate-700 dark:text-slate-100'}`}>
               {mattScore}
-              {mattWon && <OscarIcon size={16} className="inline text-gold-600 dark:text-gold-500 ml-1" />}
+              {mattWon && <OscarIcon size={16} className="inline text-violet-200 ml-1" />}
             </div>
-            <div className="text-xs text-gray-500">Hermz</div>
+            <div className={`text-xs ${mattWon ? 'text-violet-200' : 'text-slate-500 dark:text-slate-400'}`}>Hermz</div>
           </div>
 
           <div className="text-gray-400 text-xs font-medium">
@@ -170,20 +170,20 @@ function YearCard({ year: y }) {
           </div>
 
           {/* Dustin */}
-          <div className={`flex-1 text-center rounded-lg py-2 px-1 ${dustinWon
-            ? 'bg-gold-100 border border-gold-300 dark:bg-gold-900/40 dark:border-transparent'
-            : 'bg-stone-100 dark:bg-night-700/50'}`}>
-            <div className={`text-xl font-bold ${dustinWon ? 'text-gold-700 dark:text-gold-300' : 'text-gray-700 dark:text-gray-300'}`}>
+          <div className={`flex-1 text-center rounded-lg py-2 px-1 border ${dustinWon
+            ? 'bg-violet-600 border-violet-400'
+            : 'bg-slate-100 border-slate-300 dark:bg-slate-700 dark:border-slate-500'}`}>
+            <div className={`text-xl font-bold ${dustinWon ? 'text-white' : 'text-slate-700 dark:text-slate-100'}`}>
               {dustinScore}
-              {dustinWon && <OscarIcon size={16} className="inline text-gold-600 dark:text-gold-500 ml-1" />}
+              {dustinWon && <OscarIcon size={16} className="inline text-violet-200 ml-1" />}
             </div>
-            <div className="text-xs text-gray-500">Dust</div>
+            <div className={`text-xs ${dustinWon ? 'text-violet-200' : 'text-slate-500 dark:text-slate-400'}`}>Dust</div>
           </div>
 
         </div>
 
         {/* Date */}
-        <p className="text-gray-600 text-xs mt-3 text-center">{formatDate(y.ceremony_name)}</p>
+        <p className="text-gray-600 dark:text-white text-xs mt-3 text-center">{formatDate(y.ceremony_name)}</p>
 
       </div>
     </Link>
