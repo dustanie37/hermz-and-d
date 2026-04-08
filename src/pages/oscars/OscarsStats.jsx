@@ -437,7 +437,6 @@ export default function OscarsStats() {
                 <span className="text-xs font-bold uppercase tracking-wider" style={{ color: meta.color }}>
                   {meta.icon} {meta.label}
                 </span>
-                {g === 'Sound' && <span className="text-xs text-gray-400">· † = discontinued</span>}
               </div>
 
               {/* Category rows */}
@@ -523,8 +522,8 @@ function CategoryRow({ cat, view, expanded, onToggle }) {
   // isNew badge suppressed for Casting — it lives in Craft now, not the old "New" group
   const showNew      = cat.isNew && (CAT_GROUP[cat.name] !== 'Craft')
   const labelOpacity = cat.isLegacy || showNew ? 0.6 : 1
-  const labelColor   = cat.isLegacy ? '#64748b' : showNew ? '#be185d' : undefined
-  const suffix       = cat.isLegacy ? ' †' : showNew ? ' ★' : ''
+  const labelColor   = cat.isLegacy ? '#64748b' : undefined
+  const suffix       = ''
 
   const yearRows = Object.values(cat.byYear).sort((a,b) => b.year - a.year)
 

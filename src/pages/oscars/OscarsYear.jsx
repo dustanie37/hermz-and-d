@@ -158,20 +158,29 @@ export default function OscarsYear() {
 
   async function toggleNomineeWinner(categoryIdx, nomineeIdx) {
     if (saving) return
-    const cat     = categories[categoryIdx]
-    const nominee = cat.nominees[nomineeIdx]
+    const cat         = categories[categoryIdx]
+    const nominee     = cat.nominees[nomineeIdx]
     const newIsWinner = !nominee.is_winner
+    const newWinner   = newIsWinner ? nominee.name : null
 
-    // Optimistic update — if setting as winner, unset all others in category
+    // Optimistic update — flip winner flag, then auto-derive is_correct for both players
     setCategories(prev => prev.map((c, ci) => {
       if (ci !== categoryIdx) return c
+      const updatedGuesses = {}
+      for (const [user, g] of Object.entries(c.guesses)) {
+        updatedGuesses[user] = {
+          ...g,
+          is_correct: newWinner ? g.guess === newWinner : false,
+        }
+      }
       return {
         ...c,
         nominees: c.nominees.map((n, ni) => ({
           ...n,
           is_winner: newIsWinner ? ni === nomineeIdx : false,
         })),
-        winner: newIsWinner ? nominee.name : null,
+        winner:  newWinner,
+        guesses: updatedGuesses,
       }
     }))
 
@@ -193,21 +202,31 @@ export default function OscarsYear() {
           .eq('id', nominee.id)
         if (setErr) throw setErr
       }
+
+      // Auto-update is_correct for each player's guess based on new winner
+      for (const g of Object.values(cat.guesses)) {
+        if (g.id) {
+          const { error: gErr } = await supabase
+            .from('oscar_guesses')
+            .update({ is_correct: newWinner ? g.guess === newWinner : false })
+            .eq('id', g.id)
+          if (gErr) throw gErr
+        }
+      }
     } catch (err) {
       console.error('Failed to update nominee winner:', err)
-      // Revert optimistic update by refetching
       fetchData(yearNum)
     } finally {
       setSaving(false)
     }
   }
 
-  async function toggleGuessCorrect(categoryIdx, username) {
+  async function changeGuess(categoryIdx, username, newGuessName) {
     if (saving) return
-    const cat     = categories[categoryIdx]
-    const guess   = cat.guesses[username]
+    const cat   = categories[categoryIdx]
+    const guess = cat.guesses[username]
     if (!guess?.id) return
-    const newIsCorrect = !guess.is_correct
+    const newIsCorrect = newGuessName === cat.winner
 
     // Optimistic update
     setCategories(prev => prev.map((c, ci) => {
@@ -216,7 +235,7 @@ export default function OscarsYear() {
         ...c,
         guesses: {
           ...c.guesses,
-          [username]: { ...c.guesses[username], is_correct: newIsCorrect },
+          [username]: { ...c.guesses[username], guess: newGuessName, is_correct: newIsCorrect },
         },
       }
     }))
@@ -225,7 +244,7 @@ export default function OscarsYear() {
     try {
       const { error: updErr } = await supabase
         .from('oscar_guesses')
-        .update({ is_correct: newIsCorrect })
+        .update({ guess: newGuessName, is_correct: newIsCorrect })
         .eq('id', guess.id)
       if (updErr) throw updErr
     } catch (err) {
@@ -314,7 +333,7 @@ export default function OscarsYear() {
                         dark:border-amber-700/40 dark:bg-amber-900/10 dark:text-amber-300 text-sm flex items-center gap-2">
           <span className="font-semibold">Edit mode active.</span>
           <span className="text-amber-600 dark:text-amber-400">
-            Click a nominee to toggle winner · Click ✓ or ✗ to flip a guess result.
+            Click a nominee to set winner (✓/✗ updates automatically) · Use dropdowns to change a guess.
           </span>
         </div>
       )}
@@ -353,8 +372,8 @@ export default function OscarsYear() {
                 yearNum={yearNum}
                 editMode={editMode}
                 onToggleNominee={nomineeIdx => toggleNomineeWinner(idx, nomineeIdx)}
-                onToggleMatt={() => toggleGuessCorrect(idx, 'matt')}
-                onToggleDustin={() => toggleGuessCorrect(idx, 'dustin')}
+                onChangeMatt={name => changeGuess(idx, 'matt', name)}
+                onChangeDustin={name => changeGuess(idx, 'dustin', name)}
               />
             ))}
           </tbody>
@@ -494,8 +513,8 @@ function TiebreakerPanel({ yearData, mattWon }) {
 
 // ── CategoryBlock — two rows per category ─────────────────────────────────────
 
-function CategoryBlock({ cat, idx, yearNum, editMode, onToggleNominee, onToggleMatt, onToggleDustin }) {
-  const { category, nominees, guesses } = cat
+function CategoryBlock({ cat, idx, yearNum, editMode, onToggleNominee, onChangeMatt, onChangeDustin }) {
+  const { category, nominees, guesses, winner } = cat
   const mattG   = guesses.matt   || {}
   const dustinG = guesses.dustin || {}
 
@@ -579,8 +598,10 @@ function CategoryBlock({ cat, idx, yearNum, editMode, onToggleNominee, onToggleM
           <GuessCell
             guess={mattG.guess}
             isCorrect={mattG.is_correct}
+            nominees={nominees}
+            winner={winner}
             editMode={editMode}
-            onToggle={onToggleMatt}
+            onChange={onChangeMatt}
           />
         </td>
 
@@ -589,8 +610,10 @@ function CategoryBlock({ cat, idx, yearNum, editMode, onToggleNominee, onToggleM
           <GuessCell
             guess={dustinG.guess}
             isCorrect={dustinG.is_correct}
+            nominees={nominees}
+            winner={winner}
             editMode={editMode}
-            onToggle={onToggleDustin}
+            onChange={onChangeDustin}
           />
         </td>
 
@@ -601,30 +624,31 @@ function CategoryBlock({ cat, idx, yearNum, editMode, onToggleNominee, onToggleM
 
 // ── GuessCell ─────────────────────────────────────────────────────────────────
 
-function GuessCell({ guess, isCorrect, editMode, onToggle }) {
+function GuessCell({ guess, isCorrect, nominees, winner, editMode, onChange }) {
   if (!guess) return <span className="text-gray-300 text-sm dark:text-gray-600">—</span>
 
   if (editMode) {
+    // Build dropdown options from nominees; include current guess if not in list
+    const nomineeNames = nominees.map(n => n.name)
+    const options = nomineeNames.includes(guess) ? nomineeNames : [guess, ...nomineeNames]
+    const derivedCorrect = winner ? guess === winner : false
+
     return (
       <div className="flex items-start gap-2">
-        <button
-          onClick={onToggle}
-          title="Click to toggle correct/incorrect"
-          className={`mt-0.5 flex-shrink-0 text-sm font-bold w-5 h-5 rounded transition-colors flex items-center justify-center
-            ${isCorrect
-              ? 'text-emerald-600 dark:text-emerald-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-500'
-              : 'text-red-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-emerald-600 dark:hover:text-emerald-400'
-            }`}
-        >
-          {isCorrect ? '✓' : '✗'}
-        </button>
-        <span className={`text-sm leading-snug
-          ${isCorrect
-            ? 'text-gray-800 dark:text-gray-200'
-            : 'text-gray-500 dark:text-gray-400'
-          }`}>
-          {guess}
+        {/* Auto-derived ✓/✗ — read-only, reflects current winner */}
+        <span className={`mt-1.5 flex-shrink-0 text-sm font-bold
+          ${derivedCorrect ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'}`}>
+          {derivedCorrect ? '✓' : '✗'}
         </span>
+        <select
+          value={guess}
+          onChange={e => onChange(e.target.value)}
+          className="select text-xs py-1 px-2 w-full"
+        >
+          {options.map(name => (
+            <option key={name} value={name}>{name}</option>
+          ))}
+        </select>
       </div>
     )
   }
