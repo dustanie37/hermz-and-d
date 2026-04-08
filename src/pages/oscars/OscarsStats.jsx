@@ -319,14 +319,11 @@ export default function OscarsStats() {
         <div className="card">
           <p className="stat-label mb-4">Win Streaks</p>
           <div className="space-y-4">
-            <StreakRow label="Current streak"  mattVal={streaks.mattCurrent}  dustinVal={streaks.dustinCurrent} />
-            <StreakRow label="Longest streak"  mattVal={streaks.mattLongest}  dustinVal={streaks.dustinLongest}
-              mattSub={streaks.mattLongestEnd   ? `ended ${streaks.mattLongestEnd}`   : null}
-              dustinSub={streaks.dustinLongestEnd ? `ended ${streaks.dustinLongestEnd}` : null} />
+            <StreakRow label="Active streak" mattVal={streaks.mattCurrent} dustinVal={streaks.dustinCurrent} />
           </div>
         </div>
         <div className="card">
-          <p className="stat-label mb-4">Peak &amp; Trough Seasons</p>
+          <p className="stat-label mb-4">Peak &amp; Valley</p>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <div className="text-xs font-semibold text-gold-600 dark:text-gold-400 uppercase tracking-wide mb-2">Hermz</div>
@@ -484,7 +481,7 @@ function StreakRow({ label, mattVal, dustinVal, mattSub, dustinSub }) {
   const dW = dustinVal > 0 && dustinVal > mattVal
   return (
     <div>
-      <div className="text-xs text-gray-400 dark:text-gray-200 mb-1.5">{label}</div>
+      <div className="text-xs text-gray-400 dark:text-white mb-1.5">{label}</div>
       <div className="grid grid-cols-2 gap-3">
         <div className={`rounded-lg px-3 py-2 text-center border ${mW ? 'bg-gold-600 border-gold-400' : 'bg-slate-100 border-slate-300 dark:bg-slate-700 dark:border-slate-500'}`}>
           <span className={`text-2xl font-bold font-display ${mW ? 'text-white' : 'text-slate-700 dark:text-slate-100'}`}>{mattVal}</span>
@@ -507,11 +504,11 @@ function PeakRow({ label, year, value, total, isWorst }) {
   return (
     <Link to={`/oscars/${year}`}
       className="flex items-center justify-between rounded-lg px-3 py-2 mb-2 bg-stone-100 dark:bg-night-700/30 hover:bg-stone-200 dark:hover:bg-night-700 transition-colors group">
-      <span className="text-xs text-gray-400">{label}</span>
+      <span className="text-xs text-gray-400 dark:text-gray-200">{label}</span>
       <div className="text-right">
         <span className={`text-sm font-bold ${isWorst ? 'text-red-500 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}>{value}</span>
-        <span className="text-xs text-gray-400 ml-1">/ {total}</span>
-        <span className="text-xs text-gray-500 ml-2 group-hover:text-gold-600 dark:group-hover:text-gold-400 transition-colors">{year}</span>
+        <span className="text-xs text-gray-400 dark:text-gray-200 ml-1">/ {total}</span>
+        <span className="text-xs text-gray-400 dark:text-gray-200 ml-2 group-hover:text-gold-600 dark:group-hover:text-gold-400 transition-colors">{year}</span>
       </div>
     </Link>
   )
