@@ -88,11 +88,11 @@ export default function OscarsHome() {
 
           {/* Matt */}
           <div className={`rounded-xl p-4 border ${mattWins > dustinWins
-            ? 'bg-indigo-700 border-indigo-500'
+            ? 'bg-gold-600 border-gold-400'
             : 'bg-slate-100 border-slate-300 dark:bg-slate-700 dark:border-slate-500'}`}>
             <div className={`text-3xl font-bold mb-0.5 ${mattWins > dustinWins ? 'text-white' : 'text-slate-700 dark:text-slate-100'}`}>{mattWins}</div>
-            <div className={`text-xs uppercase tracking-wide ${mattWins > dustinWins ? 'text-indigo-200' : 'text-slate-500 dark:text-slate-400'}`}>Hermz Wins</div>
-            <div className={`text-xs mt-1 ${mattWins > dustinWins ? 'text-indigo-200' : 'text-slate-500 dark:text-slate-400'}`}>{mattTotal} correct all-time</div>
+            <div className={`text-xs uppercase tracking-wide ${mattWins > dustinWins ? 'text-gold-100' : 'text-slate-500 dark:text-slate-400'}`}>Hermz Wins</div>
+            <div className={`text-xs mt-1 ${mattWins > dustinWins ? 'text-gold-100' : 'text-slate-500 dark:text-slate-400'}`}>{mattTotal} correct all-time</div>
           </div>
 
           {/* vs */}
@@ -105,11 +105,11 @@ export default function OscarsHome() {
 
           {/* Dustin */}
           <div className={`rounded-xl p-4 border ${dustinWins > mattWins
-            ? 'bg-indigo-700 border-indigo-500'
+            ? 'bg-film-500 border-film-400'
             : 'bg-slate-100 border-slate-300 dark:bg-slate-700 dark:border-slate-500'}`}>
             <div className={`text-3xl font-bold mb-0.5 ${dustinWins > mattWins ? 'text-white' : 'text-slate-700 dark:text-slate-100'}`}>{dustinWins}</div>
-            <div className={`text-xs uppercase tracking-wide ${dustinWins > mattWins ? 'text-indigo-200' : 'text-slate-500 dark:text-slate-400'}`}>Dust Wins</div>
-            <div className={`text-xs mt-1 ${dustinWins > mattWins ? 'text-indigo-200' : 'text-slate-500 dark:text-slate-400'}`}>{dustinTotal} correct all-time</div>
+            <div className={`text-xs uppercase tracking-wide ${dustinWins > mattWins ? 'text-film-100' : 'text-slate-500 dark:text-slate-400'}`}>Dust Wins</div>
+            <div className={`text-xs mt-1 ${dustinWins > mattWins ? 'text-film-100' : 'text-slate-500 dark:text-slate-400'}`}>{dustinTotal} correct all-time</div>
           </div>
 
         </div>
@@ -156,13 +156,12 @@ function YearCard({ year: y }) {
 
           {/* Matt */}
           <div className={`flex-1 text-center rounded-lg py-2 px-1 border ${mattWon
-            ? 'bg-indigo-700 border-indigo-500'
+            ? 'bg-gold-600 border-gold-400'
             : 'bg-slate-100 border-slate-300 dark:bg-slate-700 dark:border-slate-500'}`}>
             <div className={`text-xl font-bold ${mattWon ? 'text-white' : 'text-slate-700 dark:text-slate-100'}`}>
               {mattScore}
-              {mattWon && <OscarIcon size={16} className="inline text-gold-400 ml-1" />}
             </div>
-            <div className={`text-xs ${mattWon ? 'text-indigo-200' : 'text-slate-500 dark:text-slate-400'}`}>Hermz</div>
+            <div className={`text-xs ${mattWon ? 'text-gold-100' : 'text-slate-500 dark:text-slate-400'}`}>Hermz</div>
           </div>
 
           <div className="text-gray-400 text-xs font-medium">
@@ -171,13 +170,12 @@ function YearCard({ year: y }) {
 
           {/* Dustin */}
           <div className={`flex-1 text-center rounded-lg py-2 px-1 border ${dustinWon
-            ? 'bg-indigo-700 border-indigo-500'
+            ? 'bg-film-500 border-film-400'
             : 'bg-slate-100 border-slate-300 dark:bg-slate-700 dark:border-slate-500'}`}>
             <div className={`text-xl font-bold ${dustinWon ? 'text-white' : 'text-slate-700 dark:text-slate-100'}`}>
               {dustinScore}
-              {dustinWon && <OscarIcon size={16} className="inline text-gold-400 ml-1" />}
             </div>
-            <div className={`text-xs ${dustinWon ? 'text-indigo-200' : 'text-slate-500 dark:text-slate-400'}`}>Dust</div>
+            <div className={`text-xs ${dustinWon ? 'text-film-100' : 'text-slate-500 dark:text-slate-400'}`}>Dust</div>
           </div>
 
         </div>

@@ -462,12 +462,14 @@ export default function OscarsStats() {
 
 // ── sub-components ────────────────────────────────────────────────────────────
 
-function PlayerStat({ name, value, sub, highlight }) {
+function PlayerStat({ name, value, sub, highlight, color }) {
   const bg       = highlight
-    ? 'bg-indigo-700 border border-indigo-500'
+    ? (color === 'gold' ? 'bg-gold-600 border border-gold-400' : 'bg-film-500 border border-film-400')
     : 'bg-slate-100 border border-slate-300 dark:bg-slate-700 dark:border-slate-500'
   const valColor = highlight ? 'text-white' : 'text-slate-700 dark:text-slate-100'
-  const subColor = highlight ? 'text-indigo-200' : 'text-slate-500 dark:text-slate-400'
+  const subColor = highlight
+    ? (color === 'gold' ? 'text-gold-100' : 'text-film-100')
+    : 'text-slate-500 dark:text-slate-400'
   return (
     <div className={`rounded-xl py-4 px-2 ${bg}`}>
       <div className={`text-3xl font-bold font-display ${valColor}`}>{value}</div>
@@ -484,17 +486,17 @@ function StreakRow({ label, mattVal, dustinVal, mattSub, dustinSub }) {
     <div>
       <div className="text-xs text-gray-400 dark:text-gray-200 mb-1.5">{label}</div>
       <div className="grid grid-cols-2 gap-3">
-        <div className={`rounded-lg px-3 py-2 text-center border ${mW ? 'bg-indigo-700 border-indigo-500' : 'bg-slate-100 border-slate-300 dark:bg-slate-700 dark:border-slate-500'}`}>
+        <div className={`rounded-lg px-3 py-2 text-center border ${mW ? 'bg-gold-600 border-gold-400' : 'bg-slate-100 border-slate-300 dark:bg-slate-700 dark:border-slate-500'}`}>
           <span className={`text-2xl font-bold font-display ${mW ? 'text-white' : 'text-slate-700 dark:text-slate-100'}`}>{mattVal}</span>
-          <span className={`text-xs ml-1 ${mW ? 'text-indigo-200' : 'text-slate-500 dark:text-slate-400'}`}>{mattVal===1?'yr':'yrs'}</span>
-          <div className={`text-xs ${mW ? 'text-indigo-200' : 'text-slate-500 dark:text-slate-400'}`}>Hermz</div>
-          {mattSub && <div className={`text-xs ${mW ? 'text-indigo-200' : 'text-slate-500 dark:text-slate-400'}`}>{mattSub}</div>}
+          <span className={`text-xs ml-1 ${mW ? 'text-gold-100' : 'text-slate-500 dark:text-slate-400'}`}>{mattVal===1?'yr':'yrs'}</span>
+          <div className={`text-xs ${mW ? 'text-gold-100' : 'text-slate-500 dark:text-slate-400'}`}>Hermz</div>
+          {mattSub && <div className={`text-xs ${mW ? 'text-gold-100' : 'text-slate-500 dark:text-slate-400'}`}>{mattSub}</div>}
         </div>
-        <div className={`rounded-lg px-3 py-2 text-center border ${dW ? 'bg-indigo-700 border-indigo-500' : 'bg-slate-100 border-slate-300 dark:bg-slate-700 dark:border-slate-500'}`}>
+        <div className={`rounded-lg px-3 py-2 text-center border ${dW ? 'bg-film-500 border-film-400' : 'bg-slate-100 border-slate-300 dark:bg-slate-700 dark:border-slate-500'}`}>
           <span className={`text-2xl font-bold font-display ${dW ? 'text-white' : 'text-slate-700 dark:text-slate-100'}`}>{dustinVal}</span>
-          <span className={`text-xs ml-1 ${dW ? 'text-indigo-200' : 'text-slate-500 dark:text-slate-400'}`}>{dustinVal===1?'yr':'yrs'}</span>
-          <div className={`text-xs ${dW ? 'text-indigo-200' : 'text-slate-500 dark:text-slate-400'}`}>Dust</div>
-          {dustinSub && <div className={`text-xs ${dW ? 'text-indigo-200' : 'text-slate-500 dark:text-slate-400'}`}>{dustinSub}</div>}
+          <span className={`text-xs ml-1 ${dW ? 'text-film-100' : 'text-slate-500 dark:text-slate-400'}`}>{dustinVal===1?'yr':'yrs'}</span>
+          <div className={`text-xs ${dW ? 'text-film-100' : 'text-slate-500 dark:text-slate-400'}`}>Dust</div>
+          {dustinSub && <div className={`text-xs ${dW ? 'text-film-100' : 'text-slate-500 dark:text-slate-400'}`}>{dustinSub}</div>}
         </div>
       </div>
     </div>
