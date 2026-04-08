@@ -476,26 +476,33 @@ function PlayerStat({ name, value, sub, highlight, color }) {
   )
 }
 
-function StreakRow({ label, mattVal, dustinVal, mattSub, dustinSub }) {
-  const mW = mattVal > 0 && mattVal >= dustinVal
-  const dW = dustinVal > 0 && dustinVal > mattVal
+function StreakRow({ label, mattVal, dustinVal }) {
+  const showMatt   = mattVal   > 0
+  const showDustin = dustinVal > 0
+
   return (
     <div>
       <div className="text-xs text-gray-400 dark:text-white mb-1.5">{label}</div>
-      <div className="grid grid-cols-2 gap-3">
-        <div className={`rounded-lg px-3 py-2 text-center border ${mW ? 'bg-gold-600 border-gold-400' : 'bg-slate-100 border-slate-300 dark:bg-slate-700 dark:border-slate-500'}`}>
-          <span className={`text-2xl font-bold font-display ${mW ? 'text-white' : 'text-slate-700 dark:text-slate-100'}`}>{mattVal}</span>
-          <span className={`text-xs ml-1 ${mW ? 'text-gold-100' : 'text-slate-500 dark:text-slate-400'}`}>{mattVal===1?'yr':'yrs'}</span>
-          <div className={`text-xs ${mW ? 'text-gold-100' : 'text-slate-500 dark:text-slate-400'}`}>Hermz</div>
-          {mattSub && <div className={`text-xs ${mW ? 'text-gold-100' : 'text-slate-500 dark:text-slate-400'}`}>{mattSub}</div>}
+      {!showMatt && !showDustin ? (
+        <div className="text-sm text-slate-500 dark:text-slate-400">No active streak</div>
+      ) : (
+        <div className="flex gap-3">
+          {showMatt && (
+            <div className="rounded-lg px-3 py-2 text-center border bg-gold-600 border-gold-400">
+              <span className="text-2xl font-bold font-display text-white">{mattVal}</span>
+              <span className="text-xs ml-1 text-gold-100">{mattVal === 1 ? 'yr' : 'yrs'}</span>
+              <div className="text-xs text-gold-100">Hermz</div>
+            </div>
+          )}
+          {showDustin && (
+            <div className="rounded-lg px-3 py-2 text-center border bg-film-500 border-film-400">
+              <span className="text-2xl font-bold font-display text-white">{dustinVal}</span>
+              <span className="text-xs ml-1 text-film-100">{dustinVal === 1 ? 'yr' : 'yrs'}</span>
+              <div className="text-xs text-film-100">Dust</div>
+            </div>
+          )}
         </div>
-        <div className={`rounded-lg px-3 py-2 text-center border ${dW ? 'bg-film-500 border-film-400' : 'bg-slate-100 border-slate-300 dark:bg-slate-700 dark:border-slate-500'}`}>
-          <span className={`text-2xl font-bold font-display ${dW ? 'text-white' : 'text-slate-700 dark:text-slate-100'}`}>{dustinVal}</span>
-          <span className={`text-xs ml-1 ${dW ? 'text-film-100' : 'text-slate-500 dark:text-slate-400'}`}>{dustinVal===1?'yr':'yrs'}</span>
-          <div className={`text-xs ${dW ? 'text-film-100' : 'text-slate-500 dark:text-slate-400'}`}>Dust</div>
-          {dustinSub && <div className={`text-xs ${dW ? 'text-film-100' : 'text-slate-500 dark:text-slate-400'}`}>{dustinSub}</div>}
-        </div>
-      </div>
+      )}
     </div>
   )
 }
