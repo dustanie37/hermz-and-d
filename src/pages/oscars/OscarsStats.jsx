@@ -33,13 +33,13 @@ const CAT_GROUP = {
   'Best Visual Effects':             'Craft',
   'Best Original Score':             'Music',
   'Best Original Song':              'Music',
+  'Best Sound':                      'Music',
+  'Best Casting':                    'Craft',
   'Best Animated Short Film':        'Shorts',
   'Best Documentary Short Film':     'Shorts',
   'Best Live Action Short Film':     'Shorts',
-  'Best Sound':                      'Sound',
   'Best Sound Editing':              'Sound',
   'Best Sound Mixing':               'Sound',
-  'Best Casting':                    'New',
 }
 
 const GROUP_META = {
@@ -47,12 +47,11 @@ const GROUP_META = {
   Acting:  { icon: '🎭', label: 'Acting',         color: '#db2777' },
   Writing: { icon: '✍️', label: 'Writing',        color: '#059669' },
   Craft:   { icon: '🎨', label: 'Craft',          color: '#0284c7' },
-  Music:   { icon: '🎵', label: 'Music',          color: '#d97706' },
+  Music:   { icon: '🎵', label: 'Music & Sound',  color: '#d97706' },
   Shorts:  { icon: '📽️', label: 'Short Films',    color: '#64748b' },
-  Sound:   { icon: '🔊', label: 'Sound',          color: '#475569' },
-  New:     { icon: '⭐', label: 'New',            color: '#be185d' },
+  Sound:   { icon: '🔇', label: 'Discontinued',   color: '#475569' },
 }
-const GROUP_ORDER = ['Major','Acting','Writing','Craft','Music','Shorts','Sound','New']
+const GROUP_ORDER = ['Major','Acting','Writing','Craft','Music','Shorts','Sound']
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 function pct(n, d) { return d ? Math.round((n / d) * 100) : 0 }
@@ -439,7 +438,6 @@ export default function OscarsStats() {
                   {meta.icon} {meta.label}
                 </span>
                 {g === 'Sound' && <span className="text-xs text-gray-400">· † = discontinued</span>}
-                {g === 'New'   && <span className="text-xs text-gray-400">· ★ = recently added</span>}
               </div>
 
               {/* Category rows */}
@@ -522,9 +520,11 @@ function CategoryRow({ cat, view, expanded, onToggle }) {
   const edgeLabel = h > d ? 'Hermz' : d > h ? 'Dust' : 'Tied'
   const edgeColor = hLeads ? HC : dLeads ? DC : '#9ca3af'
 
-  const labelOpacity = cat.isLegacy || cat.isNew ? 0.6 : 1
-  const labelColor   = cat.isLegacy ? '#64748b' : cat.isNew ? '#be185d' : undefined
-  const suffix       = cat.isLegacy ? ' †' : cat.isNew ? ' ★' : ''
+  // isNew badge suppressed for Casting — it lives in Craft now, not the old "New" group
+  const showNew      = cat.isNew && (CAT_GROUP[cat.name] !== 'Craft')
+  const labelOpacity = cat.isLegacy || showNew ? 0.6 : 1
+  const labelColor   = cat.isLegacy ? '#64748b' : showNew ? '#be185d' : undefined
+  const suffix       = cat.isLegacy ? ' †' : showNew ? ' ★' : ''
 
   const yearRows = Object.values(cat.byYear).sort((a,b) => b.year - a.year)
 
