@@ -87,12 +87,12 @@ export default function OscarsHome() {
         <div className="grid grid-cols-3 gap-4 text-center">
 
           {/* Matt */}
-          <div className={`rounded-xl p-4 ${mattWins > dustinWins
-            ? 'bg-gold-100 border border-gold-300 dark:bg-gold-900/30 dark:border-gold-700/40'
-            : 'bg-stone-100 dark:bg-night-700/50'}`}>
-            <div className={`text-3xl font-bold mb-0.5 ${mattWins > dustinWins ? 'text-gold-700 dark:text-gold-300' : 'text-gray-700 dark:text-white'}`}>{mattWins}</div>
-            <div className="text-xs text-gray-500 uppercase tracking-wide">Hermz Wins</div>
-            <div className="text-xs text-gray-500 mt-1">{mattTotal} correct all-time</div>
+          <div className={`rounded-xl p-4 border ${mattWins > dustinWins
+            ? 'bg-indigo-700 border-indigo-500'
+            : 'bg-slate-100 border-slate-300 dark:bg-slate-700 dark:border-slate-500'}`}>
+            <div className={`text-3xl font-bold mb-0.5 ${mattWins > dustinWins ? 'text-white' : 'text-slate-700 dark:text-slate-100'}`}>{mattWins}</div>
+            <div className={`text-xs uppercase tracking-wide ${mattWins > dustinWins ? 'text-indigo-200' : 'text-slate-500 dark:text-slate-400'}`}>Hermz Wins</div>
+            <div className={`text-xs mt-1 ${mattWins > dustinWins ? 'text-indigo-200' : 'text-slate-500 dark:text-slate-400'}`}>{mattTotal} correct all-time</div>
           </div>
 
           {/* vs */}
@@ -104,12 +104,12 @@ export default function OscarsHome() {
           </div>
 
           {/* Dustin */}
-          <div className={`rounded-xl p-4 ${dustinWins > mattWins
-            ? 'bg-gold-100 border border-gold-300 dark:bg-gold-900/30 dark:border-gold-700/40'
-            : 'bg-stone-100 dark:bg-night-700/50'}`}>
-            <div className={`text-3xl font-bold mb-0.5 ${dustinWins > mattWins ? 'text-gold-700 dark:text-gold-300' : 'text-gray-700 dark:text-white'}`}>{dustinWins}</div>
-            <div className="text-xs text-gray-500 uppercase tracking-wide">Dust Wins</div>
-            <div className="text-xs text-gray-500 mt-1">{dustinTotal} correct all-time</div>
+          <div className={`rounded-xl p-4 border ${dustinWins > mattWins
+            ? 'bg-indigo-700 border-indigo-500'
+            : 'bg-slate-100 border-slate-300 dark:bg-slate-700 dark:border-slate-500'}`}>
+            <div className={`text-3xl font-bold mb-0.5 ${dustinWins > mattWins ? 'text-white' : 'text-slate-700 dark:text-slate-100'}`}>{dustinWins}</div>
+            <div className={`text-xs uppercase tracking-wide ${dustinWins > mattWins ? 'text-indigo-200' : 'text-slate-500 dark:text-slate-400'}`}>Dust Wins</div>
+            <div className={`text-xs mt-1 ${dustinWins > mattWins ? 'text-indigo-200' : 'text-slate-500 dark:text-slate-400'}`}>{dustinTotal} correct all-time</div>
           </div>
 
         </div>
@@ -156,13 +156,13 @@ function YearCard({ year: y }) {
 
           {/* Matt */}
           <div className={`flex-1 text-center rounded-lg py-2 px-1 border ${mattWon
-            ? 'bg-violet-600 border-violet-400'
+            ? 'bg-indigo-700 border-indigo-500'
             : 'bg-slate-100 border-slate-300 dark:bg-slate-700 dark:border-slate-500'}`}>
             <div className={`text-xl font-bold ${mattWon ? 'text-white' : 'text-slate-700 dark:text-slate-100'}`}>
               {mattScore}
-              {mattWon && <OscarIcon size={16} className="inline text-violet-200 ml-1" />}
+              {mattWon && <OscarIcon size={16} className="inline text-indigo-200 ml-1" />}
             </div>
-            <div className={`text-xs ${mattWon ? 'text-violet-200' : 'text-slate-500 dark:text-slate-400'}`}>Hermz</div>
+            <div className={`text-xs ${mattWon ? 'text-indigo-200' : 'text-slate-500 dark:text-slate-400'}`}>Hermz</div>
           </div>
 
           <div className="text-gray-400 text-xs font-medium">
@@ -171,13 +171,13 @@ function YearCard({ year: y }) {
 
           {/* Dustin */}
           <div className={`flex-1 text-center rounded-lg py-2 px-1 border ${dustinWon
-            ? 'bg-violet-600 border-violet-400'
+            ? 'bg-indigo-700 border-indigo-500'
             : 'bg-slate-100 border-slate-300 dark:bg-slate-700 dark:border-slate-500'}`}>
             <div className={`text-xl font-bold ${dustinWon ? 'text-white' : 'text-slate-700 dark:text-slate-100'}`}>
               {dustinScore}
-              {dustinWon && <OscarIcon size={16} className="inline text-violet-200 ml-1" />}
+              {dustinWon && <OscarIcon size={16} className="inline text-indigo-200 ml-1" />}
             </div>
-            <div className={`text-xs ${dustinWon ? 'text-violet-200' : 'text-slate-500 dark:text-slate-400'}`}>Dust</div>
+            <div className={`text-xs ${dustinWon ? 'text-indigo-200' : 'text-slate-500 dark:text-slate-400'}`}>Dust</div>
           </div>
 
         </div>
