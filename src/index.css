@@ -100,7 +100,7 @@
   }
   /* Category header row inside Oscar tables */
   .table-category-header {
-    @apply bg-amber-50/80 border-t-2 border-stone-200
+    @apply bg-amber-100 border-t-2 border-amber-200
            dark:bg-night-900/60 dark:border-night-600/80;
   }
 

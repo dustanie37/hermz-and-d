@@ -1,6 +1,7 @@
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { useTheme } from '../../context/ThemeContext'
+import OscarIcon from '../OscarIcon'
 
 export default function Navbar() {
   const { isAuthenticated, displayName, signOut } = useAuth()
@@ -47,7 +48,10 @@ export default function Navbar() {
                 }`
               }
             >
-              🏆 Oscars
+              <span className="flex items-center gap-1.5">
+                <OscarIcon size={16} />
+                Oscars
+              </span>
             </NavLink>
             <NavLink
               to="/movies"
