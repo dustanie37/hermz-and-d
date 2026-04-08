@@ -158,7 +158,7 @@ export default function OscarsStats() {
   const [expandedCat, setExpandedCat] = useState(null)         // category id
 
   const gridColor  = isDark ? '#1e1e30' : '#e5e7eb'
-  const axisColor  = isDark ? '#6b7280' : '#9ca3af'
+  const axisColor  = isDark ? '#d1d5db' : '#9ca3af'
 
   useEffect(() => { fetchAll() }, [])
 
@@ -268,7 +268,7 @@ export default function OscarsStats() {
         <h1 className="page-title flex items-center gap-3">
           <span>📊</span> All-Time Stats
         </h1>
-        <p className="text-gray-500 mt-1 text-sm">{years.length} ceremonies · 2008–2026</p>
+        <p className="text-gray-500 dark:text-gray-200 mt-1 text-sm">{years.length} ceremonies · 2008–2026</p>
       </div>
 
       {/* ══ Section 1: Overall record + correct ══════════════════════════════ */}
@@ -278,15 +278,15 @@ export default function OscarsStats() {
           <div className="grid grid-cols-3 gap-3 text-center">
             <PlayerStat name="Hermz" value={mattWins}   sub={pctStr(mattWins,   years.length)+' of years'} highlight={mattWins > dustinWins}   color="gold" />
             <div className="flex flex-col items-center justify-center">
-              <span className="text-gray-400 dark:text-gray-600 font-display text-xl">vs</span>
-              <span className="text-gray-400 text-xs mt-1">{years.length} years</span>
+              <span className="text-gray-400 dark:text-gray-200 font-display text-xl">vs</span>
+              <span className="text-gray-400 dark:text-gray-200 text-xs mt-1">{years.length} years</span>
             </div>
             <PlayerStat name="Dust"  value={dustinWins} sub={pctStr(dustinWins, years.length)+' of years'} highlight={dustinWins > mattWins} color="film" />
           </div>
           {tbYears.length > 0 && (
             <div className="mt-4 pt-4 border-t border-stone-100 dark:border-night-700 text-center">
               <span className="badge-tiebreaker mr-2">{tbYears.length} tiebreaker{tbYears.length>1?'s':''}</span>
-              <span className="text-xs text-gray-400">Hermz won {mattTbWins} · Dust won {dustinTbWins}</span>
+              <span className="text-xs text-gray-400 dark:text-gray-200">Hermz won {mattTbWins} · Dust won {dustinTbWins}</span>
             </div>
           )}
         </div>
@@ -296,19 +296,19 @@ export default function OscarsStats() {
           <div className="grid grid-cols-3 gap-3 text-center">
             <PlayerStat name="Hermz" value={mattAllTime}   sub={pctStr(mattAllTime,   totalPossible)+' accuracy'} highlight={mattAllTime > dustinAllTime}   color="gold" />
             <div className="flex flex-col items-center justify-center">
-              <span className="text-gray-400 dark:text-gray-600 font-display text-xl">vs</span>
-              <span className="text-gray-400 text-xs mt-1">{totalPossible} possible</span>
+              <span className="text-gray-400 dark:text-gray-200 font-display text-xl">vs</span>
+              <span className="text-gray-400 dark:text-gray-200 text-xs mt-1">{totalPossible} possible</span>
             </div>
             <PlayerStat name="Dust"  value={dustinAllTime} sub={pctStr(dustinAllTime, totalPossible)+' accuracy'} highlight={dustinAllTime > mattAllTime} color="film" />
           </div>
           <div className="mt-4 pt-4 border-t border-stone-100 dark:border-night-700 grid grid-cols-2 gap-4 text-center">
             <div>
               <div className="text-xl font-bold font-display text-gray-800 dark:text-white">{(mattAllTime/years.length).toFixed(1)}</div>
-              <div className="text-xs text-gray-400">Hermz avg / year</div>
+              <div className="text-xs text-gray-400 dark:text-gray-200">Hermz avg / year</div>
             </div>
             <div>
               <div className="text-xl font-bold font-display text-gray-800 dark:text-white">{(dustinAllTime/years.length).toFixed(1)}</div>
-              <div className="text-xs text-gray-400">Dust avg / year</div>
+              <div className="text-xs text-gray-400 dark:text-gray-200">Dust avg / year</div>
             </div>
           </div>
         </div>
@@ -345,7 +345,7 @@ export default function OscarsStats() {
       {/* ══ Section 3: Score Timeline ═════════════════════════════════════════ */}
       <div className="card">
         <p className="stat-label mb-1">Correct Guesses Over Time</p>
-        <p className="text-xs text-gray-400 mb-5">Per ceremony 2008–2026. ◆ = tiebreaker year.</p>
+        <p className="text-xs text-gray-400 dark:text-gray-200 mb-5">Per ceremony 2008–2026. ◆ = tiebreaker year.</p>
         <ResponsiveContainer width="100%" height={280}>
           <LineChart data={timelineData} margin={{ top:5, right:20, left:0, bottom:5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
@@ -362,7 +362,7 @@ export default function OscarsStats() {
       {/* ══ Section 4: Winning Margin ═════════════════════════════════════════ */}
       <div className="card">
         <p className="stat-label mb-1">Winning Margin by Year</p>
-        <p className="text-xs text-gray-400 mb-5">Positive = Hermz won · Negative = Dust won · 0 = decided by tiebreaker.</p>
+        <p className="text-xs text-gray-400 dark:text-gray-200 mb-5">Positive = Hermz won · Negative = Dust won · 0 = decided by tiebreaker.</p>
         <ResponsiveContainer width="100%" height={200}>
           <BarChart data={marginData} margin={{ top:5, right:20, left:0, bottom:5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
@@ -384,7 +384,7 @@ export default function OscarsStats() {
         <div className="px-6 pt-5 pb-3 border-b border-stone-100 dark:border-night-700 flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="stat-label">Category Accuracy</p>
-            <p className="text-xs text-gray-400 mt-0.5">All-time correct guesses per category · click any row to expand</p>
+            <p className="text-xs text-gray-400 dark:text-gray-200 mt-0.5">All-time correct guesses per category · click any row to expand</p>
           </div>
           <div className="flex items-center gap-1 bg-stone-100 dark:bg-night-700 rounded-lg p-1">
             {[['accuracy','Accuracy'],['h2h','Head-to-Head']].map(([val, label]) => (
@@ -405,25 +405,25 @@ export default function OscarsStats() {
           <div className="flex items-center justify-center gap-8 py-3 bg-stone-50 dark:bg-night-900/30 border-b border-stone-100 dark:border-night-700">
             <div className="text-center">
               <span className="text-2xl font-bold font-display" style={{ color: HC }}>{hCW}</span>
-              <div className="text-xs text-gray-400">Hermz leads</div>
+              <div className="text-xs text-gray-400 dark:text-gray-200">Hermz leads</div>
             </div>
             <div className="text-center">
-              <span className="text-2xl font-bold font-display text-gray-400 dark:text-gray-500">{tied}</span>
-              <div className="text-xs text-gray-400">Tied</div>
+              <span className="text-2xl font-bold font-display text-gray-400 dark:text-gray-200">{tied}</span>
+              <div className="text-xs text-gray-400 dark:text-gray-200">Tied</div>
             </div>
             <div className="text-center">
               <span className="text-2xl font-bold font-display" style={{ color: DC }}>{dCW}</span>
-              <div className="text-xs text-gray-400">Dust leads</div>
+              <div className="text-xs text-gray-400 dark:text-gray-200">Dust leads</div>
             </div>
           </div>
         )}
 
         {/* Accuracy legend */}
         {catView === 'accuracy' && (
-          <div className="flex items-center gap-4 px-6 py-2 border-b border-stone-100 dark:border-night-700 text-xs text-gray-400">
+          <div className="flex items-center gap-4 px-6 py-2 border-b border-stone-100 dark:border-night-700 text-xs text-gray-400 dark:text-gray-200">
             <span style={{ color: HC }}>■ Hermz fills left</span>
             <span style={{ color: DC }}>■ Dust fills right</span>
-            <span className="text-gray-400">(brighter bar = category leader)</span>
+            <span className="text-gray-400 dark:text-gray-200">(brighter bar = category leader)</span>
           </div>
         )}
 
@@ -462,14 +462,17 @@ export default function OscarsStats() {
 
 // ── sub-components ────────────────────────────────────────────────────────────
 
-function PlayerStat({ name, value, sub, highlight, color }) {
-  const textColor = highlight ? (color === 'gold' ? 'text-gold-700 dark:text-gold-300' : 'text-film-600 dark:text-film-400') : 'text-gray-700 dark:text-white'
-  const bg        = highlight ? (color === 'gold' ? 'bg-gold-100 border border-gold-300 dark:bg-gold-900/30 dark:border-gold-700/30' : 'bg-film-50 border border-film-200 dark:bg-film-900/30 dark:border-film-700/30') : 'bg-stone-100 dark:bg-night-700/40'
+function PlayerStat({ name, value, sub, highlight }) {
+  const bg       = highlight
+    ? 'bg-indigo-700 border border-indigo-500'
+    : 'bg-slate-100 border border-slate-300 dark:bg-slate-700 dark:border-slate-500'
+  const valColor = highlight ? 'text-white' : 'text-slate-700 dark:text-slate-100'
+  const subColor = highlight ? 'text-indigo-200' : 'text-slate-500 dark:text-slate-400'
   return (
     <div className={`rounded-xl py-4 px-2 ${bg}`}>
-      <div className={`text-3xl font-bold font-display ${textColor}`}>{value}</div>
-      <div className="text-xs text-gray-400 uppercase tracking-wide mt-0.5">{name}</div>
-      {sub && <div className="text-xs text-gray-400 mt-1">{sub}</div>}
+      <div className={`text-3xl font-bold font-display ${valColor}`}>{value}</div>
+      <div className={`text-xs uppercase tracking-wide mt-0.5 ${subColor}`}>{name}</div>
+      {sub && <div className={`text-xs mt-1 ${subColor}`}>{sub}</div>}
     </div>
   )
 }
@@ -479,19 +482,19 @@ function StreakRow({ label, mattVal, dustinVal, mattSub, dustinSub }) {
   const dW = dustinVal > 0 && dustinVal > mattVal
   return (
     <div>
-      <div className="text-xs text-gray-400 mb-1.5">{label}</div>
+      <div className="text-xs text-gray-400 dark:text-gray-200 mb-1.5">{label}</div>
       <div className="grid grid-cols-2 gap-3">
-        <div className={`rounded-lg px-3 py-2 text-center ${mW ? 'bg-gold-50 dark:bg-gold-900/20' : 'bg-stone-100 dark:bg-night-700/30'}`}>
-          <span className={`text-2xl font-bold font-display ${mW ? 'text-gold-700 dark:text-gold-300' : 'text-gray-600 dark:text-gray-300'}`}>{mattVal}</span>
-          <span className="text-xs text-gray-400 ml-1">{mattVal===1?'yr':'yrs'}</span>
-          <div className="text-xs text-gray-400">Hermz</div>
-          {mattSub && <div className="text-xs text-gray-400">{mattSub}</div>}
+        <div className={`rounded-lg px-3 py-2 text-center border ${mW ? 'bg-indigo-700 border-indigo-500' : 'bg-slate-100 border-slate-300 dark:bg-slate-700 dark:border-slate-500'}`}>
+          <span className={`text-2xl font-bold font-display ${mW ? 'text-white' : 'text-slate-700 dark:text-slate-100'}`}>{mattVal}</span>
+          <span className={`text-xs ml-1 ${mW ? 'text-indigo-200' : 'text-slate-500 dark:text-slate-400'}`}>{mattVal===1?'yr':'yrs'}</span>
+          <div className={`text-xs ${mW ? 'text-indigo-200' : 'text-slate-500 dark:text-slate-400'}`}>Hermz</div>
+          {mattSub && <div className={`text-xs ${mW ? 'text-indigo-200' : 'text-slate-500 dark:text-slate-400'}`}>{mattSub}</div>}
         </div>
-        <div className={`rounded-lg px-3 py-2 text-center ${dW ? 'bg-film-50 dark:bg-film-900/20' : 'bg-stone-100 dark:bg-night-700/30'}`}>
-          <span className={`text-2xl font-bold font-display ${dW ? 'text-film-600 dark:text-film-400' : 'text-gray-600 dark:text-gray-300'}`}>{dustinVal}</span>
-          <span className="text-xs text-gray-400 ml-1">{dustinVal===1?'yr':'yrs'}</span>
-          <div className="text-xs text-gray-400">Dust</div>
-          {dustinSub && <div className="text-xs text-gray-400">{dustinSub}</div>}
+        <div className={`rounded-lg px-3 py-2 text-center border ${dW ? 'bg-indigo-700 border-indigo-500' : 'bg-slate-100 border-slate-300 dark:bg-slate-700 dark:border-slate-500'}`}>
+          <span className={`text-2xl font-bold font-display ${dW ? 'text-white' : 'text-slate-700 dark:text-slate-100'}`}>{dustinVal}</span>
+          <span className={`text-xs ml-1 ${dW ? 'text-indigo-200' : 'text-slate-500 dark:text-slate-400'}`}>{dustinVal===1?'yr':'yrs'}</span>
+          <div className={`text-xs ${dW ? 'text-indigo-200' : 'text-slate-500 dark:text-slate-400'}`}>Dust</div>
+          {dustinSub && <div className={`text-xs ${dW ? 'text-indigo-200' : 'text-slate-500 dark:text-slate-400'}`}>{dustinSub}</div>}
         </div>
       </div>
     </div>
