@@ -1,0 +1,15 @@
+Films not found on OMDB (12 total)
+Add OMDB imdbID overrides to OMDB_OVERRIDES in omdb_fetch.py
+
+  ID    3  Lord of the Rings: Fellowship of the Ring (2001)
+  ID   24  William Shakespeare's Romeo + Juliet (1996)
+  ID   85  Poltergiest (1982)
+  ID  106  Annie Hall (1977)
+  ID  116  Apocalypse Now (1979)
+  ID  159  The Lord of the Rings: The Return of the King (2003)
+  ID  192  Spiderman 2 (2004)
+  ID  195  X-Men 2 (2003)
+  ID  199  The Bourne Identity (2002)
+  ID  279  Sunset Boulevard (1950)
+  ID  293  The Invisible Man (1933)
+  ID  300  Grand Budapest Hotel (2014)

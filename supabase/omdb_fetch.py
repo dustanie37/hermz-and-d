@@ -78,6 +78,18 @@ OMDB_OVERRIDES = {
     "avengers endgame:2019": "tt4154796",
     "scott pilgrim vs the world:2010": "tt0446029",
     "dr strangelove:1964": "tt0057012",
+    # Fixed from omdb_no_match.txt — title mismatches
+    "lord of the rings fellowship of the ring:2001":    "tt0120737",   # missing "The"
+    "william shakespeares romeo  juliet:1996":          "tt0117509",   # Romeo + Juliet
+    "poltergiest:1982":                                 "tt0084516",   # typo → Poltergeist
+    "annie hall:1977":                                  "tt0075686",
+    "apocalypse now:1979":                              "tt0078788",
+    "spiderman 2:2004":                                 "tt0316654",   # Spider-Man 2
+    "x men 2:2003":                                     "tt0290334",   # X2
+    "the bourne identity:2002":                         "tt0258463",
+    "sunset boulevard:1950":                            "tt0043014",
+    "the invisible man:1933":                           "tt0024184",
+    "grand budapest hotel:2014":                        "tt2278388",   # missing "The"
 }
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
