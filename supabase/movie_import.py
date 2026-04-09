@@ -35,6 +35,47 @@ FILE_0107 = WORKSPACE / "2001 and 2007 Hermz and D Top 100 Favorite Films.xlsx"
 FILE_1626 = WORKSPACE / "2016 and 2026 Hermz and D Top 100 Favorite Movies.xlsx"
 OUTPUT    = SCRIPT_DIR / "movie_import.sql"
 
+# ── Title corrections ─────────────────────────────────────────────────────────
+# Maps bare_key (lowercase, no punctuation) of a wrong/variant title to the
+# correct canonical display title.  Applied inside normalize_title() so every
+# downstream key-lookup and SQL INSERT uses the correct form automatically.
+# This also collapses duplicate film entries that arose from title variants.
+TITLE_FIX = {
+    # ── Typos ────────────────────────────────────────────────────────────────
+    "poltergiest":                                            "Poltergeist",
+    "pirates of the caribeean curse of the black pearl":      "Pirates of the Caribbean: The Curse of the Black Pearl",
+    "anchorman the legend of ron burgandy":                   "Anchorman: The Legend of Ron Burgundy",
+
+    # ── Missing 'The' ─────────────────────────────────────────────────────────
+    "lord of the rings fellowship of the ring":               "The Lord of the Rings: The Fellowship of the Ring",
+    "lord of the rings the two towers":                       "The Lord of the Rings: The Two Towers",
+    "grand budapest hotel":                                   "The Grand Budapest Hotel",
+    "poseidon adventure":                                     "The Poseidon Adventure",
+    "rainmaker the":                                          "The Rainmaker",   # also fixes inverted form
+
+    # ── Spacing / colon formatting ────────────────────────────────────────────
+    # "Austin Powers : Title" → colon has no leading space in official title
+    "austin powers international man of mystery":             "Austin Powers: International Man of Mystery",
+    "austin powers the spy who shagged me":                   "Austin Powers: The Spy Who Shagged Me",
+    "2001 a space odyssey":                                   "2001: A Space Odyssey",
+
+    # ── Wrong or incomplete titles ────────────────────────────────────────────
+    "spiderman 2":                                            "Spider-Man 2",
+    "xmen 2":                                                 "X2: X-Men United",
+    "terminator 2":                                           "Terminator 2: Judgment Day",
+    "back to the future ii":                                  "Back to the Future Part II",
+    "back to the future iii":                                 "Back to the Future Part III",
+    "dr strangelove":                                         "Dr. Strangelove or: How I Learned to Stop Worrying and Love the Bomb",
+
+    # ── Punctuation / article variants ───────────────────────────────────────
+    "et the extra terrestrial":                               "E.T.: The Extra-Terrestrial",
+    "la confidential":                                        "L.A. Confidential",
+    "l a confidential":                                       "L.A. Confidential",
+    "sex lies videotape":                                     "sex, lies, and videotape",
+    "planes trains automobiles":                              "Planes, Trains and Automobiles",
+    "planes trains and automobiles":                          "Planes, Trains and Automobiles",
+}
+
 # ── Year normalisation ────────────────────────────────────────────────────────
 # Films that appear with inconsistent release years across sheets.
 # Keys are lowercase stripped title (no punctuation), values are canonical year.
@@ -101,7 +142,10 @@ def is_rank(v):
         return False
 
 def normalize_title(title):
-    """Return a clean display title (preserves capitalisation)."""
+    """Return a clean display title (preserves capitalisation).
+    Applies TITLE_FIX corrections so typos and variant forms are collapsed to
+    their canonical titles before any key lookup or SQL INSERT.
+    """
     if title is None:
         return None
     # Convert floats/ints that Excel stored as numbers (e.g. 1917.0, 300.0)
@@ -114,7 +158,11 @@ def normalize_title(title):
     t = t.replace('\u201c', '"').replace('\u201d', '"')
     t = t.replace('\u2013', '-').replace('\u2014', '-')
     t = re.sub(r'\s+', ' ', t)
-    return t or None
+    if not t:
+        return None
+    # Compute bare key inline (avoids circular dep with bare_key()) and apply fix
+    bk = re.sub(r'\s+', ' ', re.sub(r"[^a-z0-9 ]", '', t.lower()).strip())
+    return TITLE_FIX.get(bk, t)
 
 def bare_key(title):
     """Lowercase, punctuation-free key for matching (no year)."""
