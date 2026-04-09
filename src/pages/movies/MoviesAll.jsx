@@ -7,16 +7,12 @@ import { supabase } from '../../lib/supabase'
 const EVENTS = [2001, 2007, 2016, 2026]
 
 // Colors
-const COMBINED_LIGHT = '#111827'   // gray-900  — neutral in light mode
-const COMBINED_DARK  = '#ffffff'   // white     — distinct in dark mode
-const DUSTIN_COLOR   = '#6170f5'   // film-500
-const MATT_COLOR     = '#d97706'   // gold-600
+const DUSTIN_COLOR = '#6170f5'   // film-500
+const MATT_COLOR   = '#d97706'   // gold-600
 
 // ── sort helpers ──────────────────────────────────────────────────────────────
 
-// Default sort direction when clicking a new column
 function defaultDir(key) {
-  if (key === 'lists') return 'desc'
   if (key === 'title') return 'asc'
   return 'asc'  // rank columns: rank 1 first
 }
@@ -35,27 +31,29 @@ function appearances(filmId, combMap) {
 
 // ── sub-components ────────────────────────────────────────────────────────────
 
-// Clickable sort header
+// Clickable sort header — indicator is absolutely positioned so label stays centered
 function SortTh({ sortKey: key, currentKey, dir, onSort, children, className = '', style = {} }) {
   const active = currentKey === key
   return (
     <th
       onClick={() => onSort(key)}
-      className={`table-header cursor-pointer select-none transition-colors
+      className={`table-header cursor-pointer select-none transition-colors relative
                   hover:bg-stone-200 dark:hover:bg-night-700/60 ${className}`}
       style={style}
     >
-      <div className="flex items-center justify-center gap-0.5 whitespace-nowrap">
+      <div className="flex items-center justify-center whitespace-nowrap">
         {children}
-        <span className={`text-xs w-3 ${active ? 'opacity-100' : 'opacity-0'}`}>
+      </div>
+      {active && (
+        <span className="absolute right-1 top-1/2 -translate-y-1/2 text-xs opacity-70">
           {dir === 'asc' ? '↑' : '↓'}
         </span>
-      </div>
+      )}
     </th>
   )
 }
 
-// Film-column sort header (left-aligned)
+// Film-column sort header (left-aligned, sticky)
 function FilmSortTh({ sortKey: key, currentKey, dir, onSort }) {
   const active = currentKey === key
   return (
@@ -63,23 +61,25 @@ function FilmSortTh({ sortKey: key, currentKey, dir, onSort }) {
       onClick={() => onSort(key)}
       className="table-header cursor-pointer select-none transition-colors
                  hover:bg-stone-200 dark:hover:bg-night-700/60
-                 sticky left-0 z-10 bg-stone-100 dark:bg-night-900/80 min-w-72 text-left"
+                 sticky left-0 z-10 bg-stone-100 dark:bg-night-900/80 min-w-56 text-left"
     >
       <span className="flex items-center gap-1">
         Film
-        <span className={`text-xs ${active ? 'opacity-100' : 'opacity-0'}`}>
-          {dir === 'asc' ? '↑' : '↓'}
-        </span>
+        {active && (
+          <span className="text-xs opacity-70">
+            {dir === 'asc' ? '↑' : '↓'}
+          </span>
+        )}
       </span>
     </th>
   )
 }
 
-// Rank value cell — combined, dustin, or matt
+// Rank value cell
 function RankCell({ rank, variant = 'combined', className = '' }) {
   if (rank == null) {
     return (
-      <td className={`table-cell text-center px-3 py-3 ${className}`}>
+      <td className={`table-cell text-center px-1 py-3 ${className}`}>
         <span className="text-xs text-gray-300 dark:text-gray-700">NR</span>
       </td>
     )
@@ -91,7 +91,7 @@ function RankCell({ rank, variant = 'combined', className = '' }) {
     ? 'text-gray-900 dark:text-white'
     : ''
   return (
-    <td className={`table-cell text-center px-3 py-3 ${className}`}>
+    <td className={`table-cell text-center px-1 py-3 ${className}`}>
       <span
         className={`text-base font-bold tabular-nums ${cls}`}
         style={color ? { color } : undefined}
@@ -140,6 +140,23 @@ function FilmThumb({ url, title }) {
   )
 }
 
+// Column-group toggle button
+function ToggleBtn({ active, color, onClick, children }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-all ${
+        active
+          ? 'text-white border-transparent'
+          : 'border-stone-300 text-gray-500 hover:border-gray-400 dark:border-night-600 dark:text-gray-400 dark:hover:border-gray-500'
+      }`}
+      style={active ? { backgroundColor: color, borderColor: color } : undefined}
+    >
+      {active ? '✓ ' : ''}{children}
+    </button>
+  )
+}
+
 // ── main component ────────────────────────────────────────────────────────────
 
 export default function MoviesAll() {
@@ -149,10 +166,14 @@ export default function MoviesAll() {
   const [loading, setLoading]   = useState(true)
   const [error, setError]       = useState(null)
 
-  const [showIndiv, setShowIndiv] = useState(false)
-  const [search, setSearch]       = useState('')
-  const [sortKey, setSortKey]     = useState('title')
-  const [sortDir, setSortDir]     = useState('asc')
+  // Column-group toggles
+  const [showCombined, setShowCombined] = useState(true)
+  const [showDust, setShowDust]         = useState(false)
+  const [showMatt, setShowMatt]         = useState(false)
+
+  const [search, setSearch]   = useState('')
+  const [sortKey, setSortKey] = useState('title')
+  const [sortDir, setSortDir] = useState('asc')
 
   // ── data fetch ─────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -232,17 +253,6 @@ export default function MoviesAll() {
         const cmp = (a.title || '').localeCompare(b.title || '')
         return sortDir === 'asc' ? cmp : -cmp
       }
-      if (sortKey === 'lists') {
-        const cmp = appearances(b.id, combMap) - appearances(a.id, combMap)
-        if (cmp !== 0) return sortDir === 'asc' ? -cmp : cmp
-        // Tiebreak: best recent combined rank
-        for (const yr of [2026, 2016, 2007, 2001]) {
-          const ra = combMap[a.id]?.[yr] ?? 9999
-          const rb = combMap[b.id]?.[yr] ?? 9999
-          if (ra !== rb) return ra - rb
-        }
-        return (a.title || '').localeCompare(b.title || '')
-      }
       if (sortKey.startsWith('c_')) {
         const yr = Number(sortKey.slice(2))
         return rankCmp(combMap[a.id]?.[yr], combMap[b.id]?.[yr], sortDir)
@@ -267,6 +277,10 @@ export default function MoviesAll() {
   )
 
   const sharedSortProps = { currentKey: sortKey, dir: sortDir, onSort: handleSort }
+
+  // combined rank column style — dark-mode aware via CSS var trick not available here,
+  // so we split into two classes and let Tailwind handle it
+  const COMBINED_COL_STYLE = {}  // color handled via className text-gray-900 dark:text-white
 
   // ── render ─────────────────────────────────────────────────────────────────
   return (
@@ -295,16 +309,30 @@ export default function MoviesAll() {
           className="input text-sm w-60"
         />
 
-        <button
-          onClick={() => setShowIndiv(v => !v)}
-          className={`px-3 py-2 rounded-lg text-sm font-medium border transition-all ${
-            showIndiv
-              ? 'bg-film-600 text-white border-film-600'
-              : 'border-stone-300 text-gray-500 hover:border-film-400 hover:text-film-600 dark:border-night-600 dark:text-gray-400 dark:hover:border-film-500 dark:hover:text-film-400'
-          }`}
-        >
-          {showIndiv ? '✓ ' : ''}Individual Ranks
-        </button>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-400 dark:text-gray-600 mr-1">Show:</span>
+          <ToggleBtn
+            active={showCombined}
+            color="#374151"
+            onClick={() => setShowCombined(v => !v)}
+          >
+            Combined
+          </ToggleBtn>
+          <ToggleBtn
+            active={showDust}
+            color={DUSTIN_COLOR}
+            onClick={() => setShowDust(v => !v)}
+          >
+            Dust
+          </ToggleBtn>
+          <ToggleBtn
+            active={showMatt}
+            color={MATT_COLOR}
+            onClick={() => setShowMatt(v => !v)}
+          >
+            Hermz
+          </ToggleBtn>
+        </div>
 
         <span className="ml-auto text-xs text-gray-400 dark:text-gray-600">
           {displayFilms.length} film{displayFilms.length !== 1 ? 's' : ''}
@@ -354,27 +382,28 @@ export default function MoviesAll() {
                 <FilmSortTh sortKey="title" {...sharedSortProps} />
 
                 {/* Combined rank columns */}
-                {EVENTS.map(yr => (
+                {showCombined && EVENTS.map(yr => (
                   <SortTh key={`c-hdr-${yr}`} sortKey={`c_${yr}`} {...sharedSortProps}
-                    className="w-16 text-center"
-                    style={{ color: COMBINED_LIGHT }}
+                    className="w-10 text-center text-gray-900 dark:text-white"
                   >
-                    <span className="dark:text-white">C{sy(yr)}</span>
+                    C{sy(yr)}
                   </SortTh>
                 ))}
 
-                {/* Individual rank columns — shown when toggled */}
-                {showIndiv && EVENTS.map(yr => (
+                {/* Dust individual rank columns */}
+                {showDust && EVENTS.map((yr, i) => (
                   <SortTh key={`d-hdr-${yr}`} sortKey={`d_${yr}`} {...sharedSortProps}
-                    className="w-16 text-center border-l border-stone-200 dark:border-night-700"
+                    className={`w-10 text-center ${i === 0 ? 'border-l border-stone-200 dark:border-night-700' : ''}`}
                     style={{ color: DUSTIN_COLOR }}
                   >
                     D{sy(yr)}
                   </SortTh>
                 ))}
-                {showIndiv && EVENTS.map(yr => (
+
+                {/* Hermz individual rank columns */}
+                {showMatt && EVENTS.map((yr, i) => (
                   <SortTh key={`h-hdr-${yr}`} sortKey={`h_${yr}`} {...sharedSortProps}
-                    className="w-16 text-center"
+                    className={`w-10 text-center ${i === 0 ? 'border-l border-stone-200 dark:border-night-700' : ''}`}
                     style={{ color: MATT_COLOR }}
                   >
                     H{sy(yr)}
@@ -391,7 +420,7 @@ export default function MoviesAll() {
                   <td className="table-cell sticky left-0 z-10
                                  bg-white dark:bg-night-800
                                  group-hover:bg-stone-50 dark:group-hover:bg-night-700/40
-                                 min-w-72 max-w-sm">
+                                 min-w-56 max-w-sm">
                     <div className="flex items-center gap-3">
                       <FilmThumb url={film.poster_url} title={film.title} />
                       <div>
@@ -413,25 +442,28 @@ export default function MoviesAll() {
                   </td>
 
                   {/* Combined rank cells */}
-                  {EVENTS.map(yr => (
+                  {showCombined && EVENTS.map(yr => (
                     <RankCell key={`c-${yr}`}
                       rank={combMap[film.id]?.[yr]}
                       variant="combined"
                     />
                   ))}
 
-                  {/* Individual rank cells */}
-                  {showIndiv && EVENTS.map(yr => (
+                  {/* Dust rank cells */}
+                  {showDust && EVENTS.map((yr, i) => (
                     <RankCell key={`d-${yr}`}
                       rank={indivMap[film.id]?.dustin?.[yr]}
                       variant="dustin"
-                      className="border-l border-stone-100 dark:border-night-700/50"
+                      className={i === 0 ? 'border-l border-stone-100 dark:border-night-700/50' : ''}
                     />
                   ))}
-                  {showIndiv && EVENTS.map(yr => (
+
+                  {/* Hermz rank cells */}
+                  {showMatt && EVENTS.map((yr, i) => (
                     <RankCell key={`h-${yr}`}
                       rank={indivMap[film.id]?.matt?.[yr]}
                       variant="matt"
+                      className={i === 0 ? 'border-l border-stone-100 dark:border-night-700/50' : ''}
                     />
                   ))}
 
