@@ -353,12 +353,6 @@ export default function MoviesAll() {
                 {/* Film — sticky */}
                 <FilmSortTh sortKey="title" {...sharedSortProps} />
 
-                {/* Lists count */}
-                <SortTh sortKey="lists" {...sharedSortProps}
-                  className="w-16 text-center">
-                  Lists
-                </SortTh>
-
                 {/* Combined rank columns */}
                 {EVENTS.map(yr => (
                   <SortTh key={`c-hdr-${yr}`} sortKey={`c_${yr}`} {...sharedSortProps}
@@ -416,16 +410,6 @@ export default function MoviesAll() {
                         <AppearanceDots filmId={film.id} combMap={combMap} />
                       </div>
                     </div>
-                  </td>
-
-                  {/* Appearances count */}
-                  <td className="table-cell text-center px-3 py-3">
-                    {(() => {
-                      const n = appearances(film.id, combMap)
-                      return n > 0
-                        ? <span className="text-base font-bold text-gray-900 dark:text-white tabular-nums">{n}</span>
-                        : <span className="text-xs text-gray-300 dark:text-gray-700">—</span>
-                    })()}
                   </td>
 
                   {/* Combined rank cells */}
