@@ -175,12 +175,12 @@ def main():
         year    = film['year']
         key     = normalize_key(title, year)
 
-        # Check override first
+        # Check override first — overrides always bypass cache so corrections apply
         override_id = OMDB_OVERRIDES.get(key)
 
-        # Check cache
+        # Check cache (skipped when there's an override, so updated overrides take effect)
         cache_key = f"{film_id}"
-        if cache_key in cache:
+        if not override_id and cache_key in cache:
             data = cache[cache_key]
             if data:
                 updates.append((film_id, data))
