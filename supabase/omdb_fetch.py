@@ -90,6 +90,11 @@ OMDB_OVERRIDES = {
     "x2 xmen united:2003":                                                          "tt0290334",   # X2: X-Men United
     "the grand budapest hotel:2014":                                                "tt2278388",
     "poltergeist:1982":                                                             "tt0084516",
+    # Remaining no-match films (title formatting OMDB doesn't recognize)
+    "planes trains and automobiles:1987":                                           "tt0093748",
+    "the truth about cats and dogs:1996":                                           "tt0117983",
+    "mission impossible 4 ghost protocol:2011":                                     "tt1229238",
+    "mission impossible 6 fallout:2018":                                            "tt4912910",
 }
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
