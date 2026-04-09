@@ -608,6 +608,21 @@ def main():
         for f in null_year:
             print(f"   ID {f['id']}: {f['title']}")
 
+    # Deduplicate individual_rankings: same film cannot appear twice for the same
+    # person in the same event. This can happen when two slightly-different title
+    # variants in a spreadsheet both normalise to the same film_id via bare-key
+    # matching. Keep the entry with the lowest (best) rank number.
+    ir_dedup = {}
+    for r in individual_rankings:
+        key = (r['film_id'], r['event_year'], r['username'])
+        if key not in ir_dedup or r['rank'] < ir_dedup[key]['rank']:
+            ir_dedup[key] = r
+    deduped_ir = list(ir_dedup.values())
+    removed = len(individual_rankings) - len(deduped_ir)
+    if removed:
+        print(f"\n⚠  Deduplicated {removed} individual ranking row(s) (same film/event/user — kept lowest rank).")
+    individual_rankings[:] = deduped_ir
+
     print(f"\nSummary:")
     print(f"  Unique films:          {len(unique_films)}")
     print(f"  Individual rankings:   {len(individual_rankings)}")

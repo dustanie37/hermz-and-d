@@ -1,6 +1,6 @@
 -- ============================================================
 -- Hermz & D — Movie Rankings Import
--- Films: 318 | Individual: 980 | Combined: 191
+-- Films: 318 | Individual: 979 | Combined: 191
 -- Run AFTER movie_schema_update.sql
 -- ============================================================
 
@@ -1019,7 +1019,6 @@ INSERT INTO public.individual_rankings (film_id, event_id, user_id, rank, total_
   (80, (SELECT id FROM public.ranking_events WHERE year=2016), (SELECT id FROM public.profiles WHERE username='matt'), 82, 76, 9, 9, NULL, NULL, 8, 8, 6, 6, 8, 6, 16, 0, 2, 3),
   (44, (SELECT id FROM public.ranking_events WHERE year=2016), (SELECT id FROM public.profiles WHERE username='matt'), 83, 76, 9, 8, NULL, NULL, 9, 8, 7, 6, 7, 6, 16, 0, 2, 2),
   (128, (SELECT id FROM public.ranking_events WHERE year=2016), (SELECT id FROM public.profiles WHERE username='matt'), 84, 76, 10, 8, NULL, NULL, 8, 8, 7, 8, 6, 7, 14, 1, 0, 4),
-  (143, (SELECT id FROM public.ranking_events WHERE year=2016), (SELECT id FROM public.profiles WHERE username='matt'), 85, 76, 9, 7, NULL, NULL, 9, 8, 7, 9, 8, 5, 14, 0, 3, 2),
   (73, (SELECT id FROM public.ranking_events WHERE year=2016), (SELECT id FROM public.profiles WHERE username='matt'), 86, 76, 9, 9, NULL, NULL, 8, 8, 7, 7, 7, 7, 14, 0, 2, 2),
   (141, (SELECT id FROM public.ranking_events WHERE year=2016), (SELECT id FROM public.profiles WHERE username='matt'), 87, 75, 10, 8, NULL, NULL, 9, 9, 7, 7, 5, 4, 16, 1, 2, 1),
   (221, (SELECT id FROM public.ranking_events WHERE year=2016), (SELECT id FROM public.profiles WHERE username='matt'), 88, 75, 9, 9, NULL, NULL, 8, 9, 8, 7, 7, 4, 14, 0, 3, 2),
