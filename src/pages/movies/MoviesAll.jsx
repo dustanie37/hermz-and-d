@@ -151,8 +151,8 @@ export default function MoviesAll() {
 
   const [showIndiv, setShowIndiv] = useState(false)
   const [search, setSearch]       = useState('')
-  const [sortKey, setSortKey]     = useState('lists')
-  const [sortDir, setSortDir]     = useState('desc')
+  const [sortKey, setSortKey]     = useState('title')
+  const [sortDir, setSortDir]     = useState('asc')
 
   // ── data fetch ─────────────────────────────────────────────────────────────
   useEffect(() => {
