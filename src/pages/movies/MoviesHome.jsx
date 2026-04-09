@@ -31,26 +31,23 @@ export default function MoviesHome() {
   const [events, setEvents] = useState([])
   const [combinedCounts, setCombinedCounts] = useState({})
   const [individualCounts, setIndividualCounts] = useState({})
+  const [totalDbFilms, setTotalDbFilms] = useState(0)
   const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
 
   useEffect(() => {
     async function fetchData() {
-      // Fetch all ranking events
-      const { data: eventsData } = await supabase
-        .from('ranking_events')
-        .select('id, year, label')
-        .order('year', { ascending: false })
-
-      // Fetch combined rankings counts
-      const { data: combined } = await supabase
-        .from('combined_rankings')
-        .select('event_id')
-
-      // Fetch individual rankings counts (with event and user info)
-      const { data: individual } = await supabase
-        .from('individual_rankings')
-        .select('event_id, user_id')
+      const [
+        { data: eventsData },
+        { data: combined },
+        { data: individual },
+        { count: filmCount },
+      ] = await Promise.all([
+        supabase.from('ranking_events').select('id, year, label').order('year', { ascending: false }),
+        supabase.from('combined_rankings').select('event_id'),
+        supabase.from('individual_rankings').select('event_id, user_id'),
+        supabase.from('films').select('*', { count: 'exact', head: true }),
+      ])
 
       // Build count maps
       const combCounts = {}
@@ -58,14 +55,12 @@ export default function MoviesHome() {
         combCounts[r.event_id] = (combCounts[r.event_id] || 0) + 1
       })
 
-      // Individual: count unique films per event per user
       const indivByEventUser = {}
       individual?.forEach(r => {
         const key = `${r.event_id}:${r.user_id}`
         if (!indivByEventUser[key]) indivByEventUser[key] = 0
         indivByEventUser[key]++
       })
-      // Aggregate to per-event (max of two user counts)
       const indivCounts = {}
       Object.entries(indivByEventUser).forEach(([key, count]) => {
         const [eventId] = key.split(':')
@@ -75,6 +70,7 @@ export default function MoviesHome() {
       setEvents(eventsData || [])
       setCombinedCounts(combCounts)
       setIndividualCounts(indivCounts)
+      setTotalDbFilms(filmCount || 0)
       setLoading(false)
     }
     fetchData()
@@ -109,18 +105,42 @@ export default function MoviesHome() {
 
       {/* ── All-time quick stats ── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
-        {[
-          { label: 'Ranking Events', value: events.length, icon: '📅' },
-          { label: 'Combined Films', value: totalFilms, icon: '🎞️' },
-          { label: 'Years of Lists', value: events.length > 0 ? events[0]?.year - events[events.length - 1]?.year : 0, icon: '⏳' },
-          { label: 'Most Recent', value: events[0]?.year || '—', icon: '🏆' },
-        ].map(stat => (
-          <div key={stat.label} className="card text-center">
-            <div className="text-2xl mb-1">{stat.icon}</div>
-            <div className="stat-value text-xl">{stat.value}</div>
-            <div className="stat-label mt-0.5">{stat.label}</div>
+        {/* Ranking Events */}
+        <div className="card text-center">
+          <div className="text-2xl mb-1">📅</div>
+          <div className="stat-value text-xl">{events.length}</div>
+          <div className="stat-label mt-0.5">Ranking Events</div>
+        </div>
+
+        {/* Combined Films */}
+        <div className="card text-center">
+          <div className="text-2xl mb-1">🎞️</div>
+          <div className="stat-value text-xl">{totalFilms}</div>
+          <div className="stat-label mt-0.5">Combined Appearances</div>
+        </div>
+
+        {/* Films in Database — clickable */}
+        <Link to="/movies/all"
+          className="card text-center cursor-pointer transition-all
+                     hover:border-film-400/60 hover:shadow-md hover:shadow-film-100/40
+                     dark:hover:border-film-600/60 dark:hover:shadow-lg dark:hover:shadow-film-900/20
+                     group">
+          <div className="text-2xl mb-1">🗄️</div>
+          <div className="stat-value text-xl group-hover:text-film-600 dark:group-hover:text-film-400 transition-colors">
+            {totalDbFilms}
           </div>
-        ))}
+          <div className="stat-label mt-0.5">Films in Database</div>
+          <div className="text-xs text-film-500 dark:text-film-400 mt-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+            View all →
+          </div>
+        </Link>
+
+        {/* Most Recent */}
+        <div className="card text-center">
+          <div className="text-2xl mb-1">🏆</div>
+          <div className="stat-value text-xl">{events[0]?.year || '—'}</div>
+          <div className="stat-label mt-0.5">Most Recent</div>
+        </div>
       </div>
 
       {/* ── Event cards ── */}
