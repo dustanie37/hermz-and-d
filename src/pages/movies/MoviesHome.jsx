@@ -2,15 +2,6 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 
-// ── helpers ───────────────────────────────────────────────────────────────────
-
-const EVENT_DESCRIPTIONS = {
-  2001: 'The inaugural ranking — 42 films agreed upon by both Hermz & Dust.',
-  2007: 'Six years later, the list grew to 55 films and a shared canon formed.',
-  2016: 'A decade of new classics brought 48 films to the combined list.',
-  2026: 'The most recent ranking — 46 films, debated and scored over months.',
-}
-
 const EVENT_GRADIENTS = {
   2001: 'from-stone-600 to-stone-800',
   2007: 'from-film-800 to-film-600',
@@ -32,6 +23,7 @@ export default function MoviesHome() {
   const [combinedCounts, setCombinedCounts] = useState({})
   const [individualCounts, setIndividualCounts] = useState({})
   const [totalDbFilms, setTotalDbFilms] = useState(0)
+  const [topFilms, setTopFilms] = useState({}) // { eventId: { combined, dustin, hermz } }
   const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
 
@@ -42,11 +34,21 @@ export default function MoviesHome() {
         { data: combined },
         { data: individual },
         { count: filmCount },
+        { data: profiles },
+        { data: topCombined },
+        { data: topIndividual },
       ] = await Promise.all([
         supabase.from('ranking_events').select('id, year, label').order('year', { ascending: false }),
         supabase.from('combined_rankings').select('event_id'),
         supabase.from('individual_rankings').select('event_id, user_id'),
         supabase.from('films').select('*', { count: 'exact', head: true }),
+        supabase.from('profiles').select('id, username'),
+        supabase.from('combined_rankings')
+          .select('event_id, combined_rank, films(id, title)')
+          .eq('combined_rank', 1),
+        supabase.from('individual_rankings')
+          .select('event_id, rank, user_id, films(id, title), profiles(username)')
+          .eq('rank', 1),
       ])
 
       // Build count maps
@@ -67,10 +69,24 @@ export default function MoviesHome() {
         indivCounts[eventId] = Math.max(indivCounts[eventId] || 0, count)
       })
 
+      // Build top films map keyed by event_id
+      const tops = {}
+      topCombined?.forEach(r => {
+        if (!tops[r.event_id]) tops[r.event_id] = {}
+        tops[r.event_id].combined = r.films?.title
+      })
+      topIndividual?.forEach(r => {
+        if (!tops[r.event_id]) tops[r.event_id] = {}
+        const uname = r.profiles?.username
+        if (uname === 'dustin') tops[r.event_id].dustin = r.films?.title
+        if (uname === 'matt')   tops[r.event_id].hermz  = r.films?.title
+      })
+
       setEvents(eventsData || [])
       setCombinedCounts(combCounts)
       setIndividualCounts(indivCounts)
       setTotalDbFilms(filmCount || 0)
+      setTopFilms(tops)
       setLoading(false)
     }
     fetchData()
@@ -89,14 +105,9 @@ export default function MoviesHome() {
 
       {/* ── Page header ── */}
       <div className="flex items-start justify-between mb-8 flex-wrap gap-4">
-        <div>
-          <h1 className="page-title flex items-center gap-3">
-            🎬 Movies
-          </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">
-            Four ranking events across {events.length > 0 ? `${events[events.length - 1]?.year}–${events[0]?.year}` : '…'} · {totalFilms} combined list appearances
-          </p>
-        </div>
+        <h1 className="page-title flex items-center gap-3">
+          🎬 Movies
+        </h1>
         <Link to="/movies/stats"
           className="btn-ghost flex items-center gap-2 text-sm self-start mt-1">
           📊 Movie Stats
@@ -150,7 +161,7 @@ export default function MoviesHome() {
           const combCount = combinedCounts[ev.id] || 0
           const indivCount = individualCounts[ev.id] || 0
           const grad = EVENT_GRADIENTS[ev.year] || 'from-night-800 to-night-600'
-          const accent = EVENT_ACCENT[ev.year] || 'text-gray-300'
+          const tops = topFilms[ev.id] || {}
 
           return (
             <div key={ev.id}
@@ -166,20 +177,36 @@ export default function MoviesHome() {
 
               {/* Content */}
               <div className="relative z-10">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <span className={`font-display text-4xl font-bold text-white`}>{ev.year}</span>
-                    <p className={`text-sm mt-0.5 ${accent}`}>{ev.label}</p>
-                  </div>
+                {/* Year + arrow */}
+                <div className="flex items-start justify-between mb-4">
+                  <span className="font-display text-4xl font-bold text-white">{ev.year}</span>
                   <span className="text-white/40 text-3xl group-hover:text-white/60 transition-colors">→</span>
                 </div>
 
-                <p className="text-white/70 text-sm mb-4 leading-relaxed">
-                  {EVENT_DESCRIPTIONS[ev.year] || ev.label}
-                </p>
+                {/* #1 films */}
+                <div className="space-y-1.5 mb-4">
+                  {tops.combined && (
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-white/50 text-xs uppercase tracking-wider w-16 flex-shrink-0">Combined</span>
+                      <span className="text-white font-semibold text-sm truncate">{tops.combined}</span>
+                    </div>
+                  )}
+                  {tops.dustin && (
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-white/50 text-xs uppercase tracking-wider w-16 flex-shrink-0">Dust</span>
+                      <span className="text-white/90 text-sm truncate">{tops.dustin}</span>
+                    </div>
+                  )}
+                  {tops.hermz && (
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-white/50 text-xs uppercase tracking-wider w-16 flex-shrink-0">Hermz</span>
+                      <span className="text-white/90 text-sm truncate">{tops.hermz}</span>
+                    </div>
+                  )}
+                </div>
 
                 {/* Film counts */}
-                <div className="flex gap-3">
+                <div className="flex gap-3 mb-4">
                   <div className="bg-black/20 rounded-lg px-3 py-1.5 text-center">
                     <div className="text-white font-bold text-lg leading-none">{combCount}</div>
                     <div className="text-white/50 text-xs mt-0.5">Combined</div>
@@ -193,7 +220,7 @@ export default function MoviesHome() {
                 </div>
 
                 {/* View buttons */}
-                <div className="flex gap-2 mt-4 flex-wrap">
+                <div className="flex gap-2 flex-wrap">
                   <button
                     onClick={e => { e.stopPropagation(); navigate(`/movies/list?event=${ev.year}&view=combined`) }}
                     className="bg-white/15 hover:bg-white/25 text-white text-xs font-medium px-3 py-1.5 rounded-lg transition-colors"
