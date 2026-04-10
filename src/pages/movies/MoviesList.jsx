@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams, useLocation } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 
 // ── constants ─────────────────────────────────────────────────────────────────
@@ -61,6 +61,7 @@ function PriorYearCell({ currentRank, filmId, priorMap }) {
 
 export default function MoviesList() {
   const [searchParams, setSearchParams] = useSearchParams()
+  const location = useLocation()
 
   // URL-driven state
   const eventYear = Number(searchParams.get('event')) || 2026
@@ -410,6 +411,7 @@ export default function MoviesList() {
                         <div className="min-w-0">
                           <Link
                             to={`/movies/${film.id}`}
+                            state={{ from: location.pathname + location.search }}
                             className="text-base font-semibold text-gray-900 dark:text-white
                                        hover:text-film-600 dark:hover:text-film-400
                                        transition-colors leading-snug block truncate"
