@@ -44,10 +44,10 @@ export default function MoviesHome() {
         supabase.from('films').select('*', { count: 'exact', head: true }),
         supabase.from('profiles').select('id, username'),
         supabase.from('combined_rankings')
-          .select('event_id, combined_rank, films(id, title)')
+          .select('event_id, combined_rank, films(id, title, poster_url)')
           .eq('combined_rank', 1),
         supabase.from('individual_rankings')
-          .select('event_id, rank, user_id, films(id, title), profiles(username)')
+          .select('event_id, rank, user_id, films(id, title, poster_url), profiles(username)')
           .eq('rank', 1),
       ])
 
@@ -73,13 +73,23 @@ export default function MoviesHome() {
       const tops = {}
       topCombined?.forEach(r => {
         if (!tops[r.event_id]) tops[r.event_id] = {}
-        tops[r.event_id].combined = r.films?.title
+        tops[r.event_id].combined       = r.films?.title
+        tops[r.event_id].combinedPoster = r.films?.poster_url
+        tops[r.event_id].combinedId     = r.films?.id
       })
       topIndividual?.forEach(r => {
         if (!tops[r.event_id]) tops[r.event_id] = {}
         const uname = r.profiles?.username
-        if (uname === 'dustin') tops[r.event_id].dustin = r.films?.title
-        if (uname === 'matt')   tops[r.event_id].hermz  = r.films?.title
+        if (uname === 'dustin') {
+          tops[r.event_id].dustin       = r.films?.title
+          tops[r.event_id].dustinPoster = r.films?.poster_url
+          tops[r.event_id].dustinId     = r.films?.id
+        }
+        if (uname === 'matt') {
+          tops[r.event_id].hermz        = r.films?.title
+          tops[r.event_id].hermzPoster  = r.films?.poster_url
+          tops[r.event_id].hermzId      = r.films?.id
+        }
       })
 
       setEvents(eventsData || [])
@@ -183,40 +193,34 @@ export default function MoviesHome() {
                   <span className="text-white/40 text-3xl group-hover:text-white/60 transition-colors">→</span>
                 </div>
 
-                {/* #1 films */}
-                <div className="space-y-1.5 mb-4">
-                  {tops.combined && (
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-white/50 text-xs uppercase tracking-wider w-16 flex-shrink-0">Combined</span>
-                      <span className="text-white font-semibold text-sm truncate">{tops.combined}</span>
+                {/* #1 films with posters */}
+                <div className="space-y-2.5 mb-5">
+                  {[
+                    { label: 'Combined', title: tops.combined, poster: tops.combinedPoster, filmId: tops.combinedId, view: 'combined' },
+                    { label: 'Dust',     title: tops.dustin,   poster: tops.dustinPoster,   filmId: tops.dustinId,   view: 'dustin'   },
+                    { label: 'Hermz',    title: tops.hermz,    poster: tops.hermzPoster,    filmId: tops.hermzId,    view: 'matt'     },
+                  ].filter(r => r.title).map(row => (
+                    <div key={row.label}
+                      className="flex items-center gap-2.5"
+                      onClick={e => { e.stopPropagation(); navigate(`/movies/${row.filmId}`) }}
+                    >
+                      {/* Poster thumbnail */}
+                      <div className="w-8 h-11 flex-shrink-0 rounded overflow-hidden bg-black/30 shadow-md">
+                        {row.poster
+                          ? <img src={row.poster} alt={row.title}
+                              className="w-full h-full object-cover" />
+                          : <div className="w-full h-full flex items-center justify-center text-white/30 text-xs">🎬</div>
+                        }
+                      </div>
+                      {/* Label + title */}
+                      <div className="min-w-0">
+                        <div className="text-white/50 text-xs uppercase tracking-wider leading-none mb-0.5">{row.label}</div>
+                        <div className={`text-sm truncate leading-snug ${row.label === 'Combined' ? 'text-white font-semibold' : 'text-white/85'}`}>
+                          {row.title}
+                        </div>
+                      </div>
                     </div>
-                  )}
-                  {tops.dustin && (
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-white/50 text-xs uppercase tracking-wider w-16 flex-shrink-0">Dust</span>
-                      <span className="text-white/90 text-sm truncate">{tops.dustin}</span>
-                    </div>
-                  )}
-                  {tops.hermz && (
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-white/50 text-xs uppercase tracking-wider w-16 flex-shrink-0">Hermz</span>
-                      <span className="text-white/90 text-sm truncate">{tops.hermz}</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Film counts */}
-                <div className="flex gap-3 mb-4">
-                  <div className="bg-black/20 rounded-lg px-3 py-1.5 text-center">
-                    <div className="text-white font-bold text-lg leading-none">{combCount}</div>
-                    <div className="text-white/50 text-xs mt-0.5">Combined</div>
-                  </div>
-                  {indivCount > 0 && (
-                    <div className="bg-black/20 rounded-lg px-3 py-1.5 text-center">
-                      <div className="text-white font-bold text-lg leading-none">{indivCount}</div>
-                      <div className="text-white/50 text-xs mt-0.5">Per List</div>
-                    </div>
-                  )}
+                  ))}
                 </div>
 
                 {/* View buttons */}
