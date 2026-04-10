@@ -18,14 +18,14 @@ const SCORE_CATS = [
   { key: 'score_lead_performance',  label: 'Lead Performance',       max: 10, years: 'all' },
   { key: 'score_supp_performance',  label: 'Supporting Performance', max: 10, years: 'all' },
   { key: 'score_direction',         label: 'Direction',              max: 10, years: 'all' },
+  { key: 'score_screenplay',        label: 'Screenplay',             max: 10, years: [2007, 2016, 2026], note: '2007+' },
   { key: 'score_cinematography',    label: 'Cinematography',         max: 10, years: 'all' },
+  { key: 'score_production_design', label: 'Production Design',      max: 10, years: [2007, 2016, 2026], note: '2007+' },
   { key: 'score_influence',         label: 'Influence',              max: 10, years: 'all' },
   { key: 'score_acclaim',           label: 'Acclaim',                max: 10, years: 'all' },
   { key: 'score_personal_impact',   label: 'Personal Impact',        max: 20, years: 'all' },
   { key: 'score_plot',              label: 'Plot',                   max: 10, years: [2001], note: '2001 only' },
   { key: 'score_dialogue',          label: 'Dialogue',               max: 10, years: [2001], note: '2001 only' },
-  { key: 'score_screenplay',        label: 'Screenplay',             max: 10, years: [2007, 2016, 2026], note: '2007+' },
-  { key: 'score_production_design', label: 'Production Design',      max: 10, years: [2007, 2016, 2026], note: '2007+' },
 ]
 
 const ACCLAIM_LISTS = [
