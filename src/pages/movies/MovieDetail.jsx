@@ -73,12 +73,12 @@ function PosterFull({ url, title }) {
 }
 
 function ScoreCell({ value, max = 10 }) {
-  if (value == null) return <span className="text-gray-300 dark:text-gray-700">—</span>
+  if (value == null) return <span className="text-base text-gray-300 dark:text-gray-700">—</span>
   const pct = (value / max) * 100
   const color = pct >= 80 ? 'text-emerald-600 dark:text-emerald-400'
               : pct >= 60 ? 'text-gold-600 dark:text-gold-400'
               : 'text-gray-600 dark:text-gray-400'
-  return <span className={`font-semibold ${color}`}>{value}</span>
+  return <span className={`text-base font-semibold ${color}`}>{value}</span>
 }
 
 function RankBadge({ rank, label }) {
@@ -220,6 +220,9 @@ export default function MovieDetail() {
     a.ranked ? film?.[a.key] != null : film?.[a.key]
   )
 
+  // Most recent event year this film appeared in (for hero rank display)
+  const latestYear = [...EVENTS].reverse().find(yr => dustinRows[yr] || mattRows[yr] || combined[yr])
+
   // Chart data — one point per event year that has ANY ranking data
   // Y-axis = rank (lower number = higher on list → invert axis)
   const chartData = EVENTS.map(yr => ({
@@ -326,33 +329,29 @@ export default function MovieDetail() {
               )}
             </div>
 
-            {/* Acclaim score + Oscar quick stats */}
+            {/* Rank quick stats — most recent event */}
             <div className="flex flex-wrap gap-4 pt-4 border-t border-stone-100 dark:border-night-700">
-              {film.acclaim_score != null && (
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-gold-600 dark:text-gold-400 font-display">
-                    {film.acclaim_score}<span className="text-sm text-gray-400">/10</span>
-                  </div>
-                  <div className="text-xs text-gray-400 uppercase tracking-wider">Acclaim</div>
+              <div className="text-center">
+                <div className="text-2xl font-bold font-display" style={{ color: DC }}>
+                  {latestYear && dustinRows[latestYear] ? `#${dustinRows[latestYear].rank}` : 'NR'}
                 </div>
-              )}
-              {film.oscar_nominations > 0 && (
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-gray-900 dark:text-white font-display">
-                    {film.oscar_nominations}
-                  </div>
-                  <div className="text-xs text-gray-400 uppercase tracking-wider">Oscar Nom{film.oscar_nominations !== 1 ? 's' : ''}</div>
+                <div className="text-xs text-gray-400 uppercase tracking-wider">Dustin's Rank</div>
+                {latestYear && <div className="text-xs text-gray-400">{latestYear}</div>}
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold font-display" style={{ color: HC }}>
+                  {latestYear && mattRows[latestYear] ? `#${mattRows[latestYear].rank}` : 'NR'}
                 </div>
-              )}
-              {film.oscar_wins > 0 && (
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-gold-500 dark:text-gold-400 font-display">
-                    {film.oscar_wins}
-                  </div>
-                  <div className="text-xs text-gray-400 uppercase tracking-wider">Oscar Win{film.oscar_wins !== 1 ? 's' : ''}</div>
+                <div className="text-xs text-gray-400 uppercase tracking-wider">Hermz's Rank</div>
+                {latestYear && <div className="text-xs text-gray-400">{latestYear}</div>}
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 font-display">
+                  {latestYear && combined[latestYear] ? `#${combined[latestYear].combined_rank}` : 'NR'}
                 </div>
-              )}
-              {/* How many combined lists it appeared on */}
+                <div className="text-xs text-gray-400 uppercase tracking-wider">Combined Rank</div>
+                {latestYear && <div className="text-xs text-gray-400">{latestYear}</div>}
+              </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-film-600 dark:text-film-400 font-display">
                   {appearsIn.length}
@@ -371,10 +370,21 @@ export default function MovieDetail() {
 
         {/* Oscar wins panel */}
         <div className="card">
-          <h2 className="section-title text-lg mb-1">Oscar Wins</h2>
-          <p className="section-subtitle mb-4">
-            {film.oscar_nominations || 0} nomination{film.oscar_nominations !== 1 ? 's' : ''} · {film.oscar_wins || 0} win{film.oscar_wins !== 1 ? 's' : ''}
-          </p>
+          <h2 className="section-title text-lg mb-3">Oscar Wins</h2>
+          <div className="flex gap-6 mb-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-gray-900 dark:text-white font-display">
+                {film.oscar_nominations || 0}
+              </div>
+              <div className="text-xs text-gray-400 uppercase tracking-wider">Nomination{film.oscar_nominations !== 1 ? 's' : ''}</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-gold-500 dark:text-gold-400 font-display">
+                {film.oscar_wins || 0}
+              </div>
+              <div className="text-xs text-gray-400 uppercase tracking-wider">Win{film.oscar_wins !== 1 ? 's' : ''}</div>
+            </div>
+          </div>
           {majorWins.length > 0 ? (
             <div className="flex flex-wrap gap-2">
               {majorWins.map(w => (
@@ -394,8 +404,17 @@ export default function MovieDetail() {
 
         {/* Acclaim list appearances */}
         <div className="card">
-          <h2 className="section-title text-lg mb-1">Acclaim Lists</h2>
-          <p className="section-subtitle mb-4">External recognition</p>
+          <h2 className="section-title text-lg mb-3">Acclaim Lists</h2>
+          {film.acclaim_score != null && (
+            <div className="flex items-center gap-4 mb-4 pb-4 border-b border-stone-100 dark:border-night-700">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-gold-600 dark:text-gold-400 font-display">
+                  {film.acclaim_score}<span className="text-sm text-gray-400">/10</span>
+                </div>
+                <div className="text-xs text-gray-400 uppercase tracking-wider">Acclaim Score</div>
+              </div>
+            </div>
+          )}
           {acclaimHits.length > 0 ? (
             <div className="space-y-2">
               {acclaimHits.map(a => (
@@ -452,7 +471,7 @@ export default function MovieDetail() {
                     <tr key={yr} className={`table-row-hover ${!onAny ? 'opacity-40' : ''}`}>
                       <td className="table-cell">
                         <div className="flex items-center gap-2">
-                          <span className="font-display font-bold text-gray-900 dark:text-white">{yr}</span>
+                          <span className="font-display font-bold text-xl text-gray-900 dark:text-white">{yr}</span>
                           {isDropOff && (
                             <span className="text-xs px-1.5 py-0.5 rounded bg-stone-100 dark:bg-night-700
                                            text-gray-400 dark:text-gray-500 italic">
@@ -466,32 +485,32 @@ export default function MovieDetail() {
                       </td>
                       <td className="table-cell text-center">
                         {dRow ? (
-                          <span className="flex items-center justify-center gap-0.5">
-                            <span className="font-semibold text-gray-900 dark:text-white">#{dRow.rank}</span>
+                          <span className="flex items-center justify-center gap-1">
+                            <span className="font-bold text-xl text-gray-900 dark:text-white">#{dRow.rank}</span>
                             <RankMovement from={dPrev} to={dRow.rank} />
                           </span>
-                        ) : <span className="text-xs text-gray-400 italic">NR</span>}
+                        ) : <span className="text-sm text-gray-400 italic">NR</span>}
                       </td>
                       <td className="table-cell text-center">
                         {mRow ? (
-                          <span className="flex items-center justify-center gap-0.5">
-                            <span className="font-semibold text-gray-900 dark:text-white">#{mRow.rank}</span>
+                          <span className="flex items-center justify-center gap-1">
+                            <span className="font-bold text-xl text-gray-900 dark:text-white">#{mRow.rank}</span>
                             <RankMovement from={mPrev} to={mRow.rank} />
                           </span>
-                        ) : <span className="text-xs text-gray-400 italic">NR</span>}
+                        ) : <span className="text-sm text-gray-400 italic">NR</span>}
                       </td>
                       <td className="table-cell text-center">
                         {cRow ? (
-                          <span className="flex items-center justify-center gap-0.5">
-                            <span className="font-bold text-gray-900 dark:text-white">#{cRow.combined_rank}</span>
+                          <span className="flex items-center justify-center gap-1">
+                            <span className="font-bold text-xl text-gray-900 dark:text-white">#{cRow.combined_rank}</span>
                             <RankMovement from={cPrev} to={cRow.combined_rank} />
                           </span>
-                        ) : <span className="text-xs text-gray-400 italic">NR</span>}
+                        ) : <span className="text-sm text-gray-400 italic">NR</span>}
                       </td>
                       <td className="table-cell text-center hidden sm:table-cell">
                         {cRow
-                          ? <span className="text-sm font-semibold text-gray-900 dark:text-white">{cRow.total_score}</span>
-                          : <span className="text-xs text-gray-400 italic">—</span>}
+                          ? <span className="text-base font-bold text-gray-900 dark:text-white">{cRow.total_score}</span>
+                          : <span className="text-sm text-gray-400 italic">—</span>}
                       </td>
                     </tr>
                   )
@@ -514,23 +533,23 @@ export default function MovieDetail() {
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.15)" />
               <XAxis
                 dataKey="year"
-                tick={{ fontSize: 12, fill: 'currentColor' }}
+                tick={{ fontSize: 15, fill: 'currentColor', fontWeight: 600 }}
                 axisLine={false}
                 tickLine={false}
               />
               <YAxis
                 reversed
-                tick={{ fontSize: 11, fill: 'currentColor' }}
+                tick={{ fontSize: 14, fill: 'currentColor' }}
                 axisLine={false}
                 tickLine={false}
                 tickFormatter={v => `#${v}`}
-                width={36}
+                width={42}
               />
               <Tooltip content={<RankTooltip />} />
               <Legend
                 iconType="circle"
-                iconSize={8}
-                wrapperStyle={{ fontSize: 12, paddingTop: 8 }}
+                iconSize={10}
+                wrapperStyle={{ fontSize: 14, paddingTop: 10 }}
               />
               <Line
                 type="monotone"
@@ -573,7 +592,7 @@ export default function MovieDetail() {
           <div className="px-6 pt-5 pb-3 border-b border-stone-100 dark:border-night-700">
             <h2 className="section-title text-lg mb-0.5">Score History</h2>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Per-category scores across every event this film appeared in
+              All scores out of 10 except Personal Impact which is out of 20
             </p>
           </div>
           <div className="overflow-x-auto">
@@ -613,13 +632,12 @@ export default function MovieDetail() {
                   return (
                     <tr key={cat.key} className="table-row-hover">
                       <td className="table-cell">
-                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        <span className="text-base font-medium text-gray-700 dark:text-gray-300">
                           {cat.label}
                         </span>
                         {cat.note && (
                           <span className="block text-xs text-gray-400">{cat.note}</span>
                         )}
-                        <span className="text-xs text-gray-400">/{cat.max}</span>
                       </td>
                       {/* Dustin columns */}
                       {EVENTS.map(yr => {
@@ -653,14 +671,14 @@ export default function MovieDetail() {
 
                 {/* Total score row */}
                 <tr className="bg-stone-50 dark:bg-night-900/50 font-semibold">
-                  <td className="table-cell text-sm font-bold text-gray-900 dark:text-white">
+                  <td className="table-cell text-base font-bold text-gray-900 dark:text-white">
                     Total Score
                   </td>
                   {EVENTS.map(yr => {
                     if (!dustinRows[yr] && !mattRows[yr]) return null
                     return (
                       <td key={`d-total-${yr}`} className="table-cell text-center">
-                        <span className="font-bold text-gray-900 dark:text-white">
+                        <span className="text-base font-bold text-gray-900 dark:text-white">
                           {dustinRows[yr]?.total_score ?? '—'}
                         </span>
                       </td>
@@ -670,7 +688,7 @@ export default function MovieDetail() {
                     if (!dustinRows[yr] && !mattRows[yr]) return null
                     return (
                       <td key={`m-total-${yr}`} className="table-cell text-center">
-                        <span className="font-bold text-gray-900 dark:text-white">
+                        <span className="text-base font-bold text-gray-900 dark:text-white">
                           {mattRows[yr]?.total_score ?? '—'}
                         </span>
                       </td>
