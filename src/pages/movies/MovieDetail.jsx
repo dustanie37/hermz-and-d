@@ -116,6 +116,78 @@ function RankTooltip({ active, payload, label }) {
   )
 }
 
+// ── OscarNomsList ─────────────────────────────────────────────────────────────
+// Renders the full Oscar nomination list from film_oscar_noms rows.
+// Wins shown as gold badges, nominations as plain text pills.
+// Groups by ceremony year if the film was nominated across multiple years.
+
+function OscarNomsList({ noms, filmYear }) {
+  // Group by ceremony_year (null → 'unknown')
+  const byYear = {}
+  noms.forEach(n => {
+    const yr = n.ceremony_year ?? 'unknown'
+    if (!byYear[yr]) byYear[yr] = []
+    byYear[yr].push(n)
+  })
+
+  const years = Object.keys(byYear).sort((a, b) => {
+    if (a === 'unknown') return 1
+    if (b === 'unknown') return -1
+    return Number(a) - Number(b)
+  })
+
+  const singleYear = years.length === 1
+
+  return (
+    <div className="space-y-4">
+      {years.map(yr => {
+        const rows = byYear[yr]
+        // Sort: wins first, then alphabetical
+        const sorted = [...rows].sort((a, b) => {
+          if (a.is_winner !== b.is_winner) return a.is_winner ? -1 : 1
+          return a.category_name.localeCompare(b.category_name)
+        })
+
+        // Show year label only for multi-year films or when year differs from release year
+        const showYearLabel =
+          !singleYear && yr !== 'unknown'
+
+        return (
+          <div key={yr}>
+            {showYearLabel && (
+              <p className="text-xs text-gray-400 uppercase tracking-wider mb-2">
+                {yr} Academy Awards
+              </p>
+            )}
+            <div className="flex flex-wrap gap-2">
+              {sorted.map((nom, i) =>
+                nom.is_winner ? (
+                  <span
+                    key={`${nom.category_name}-${i}`}
+                    className="badge-gold flex items-center gap-1 text-sm"
+                  >
+                    🏆 {nom.category_name}
+                  </span>
+                ) : (
+                  <span
+                    key={`${nom.category_name}-${i}`}
+                    className="text-sm text-gray-500 dark:text-gray-400
+                               px-2.5 py-0.5 rounded-full border
+                               border-stone-200 dark:border-night-600
+                               bg-stone-50 dark:bg-night-800"
+                  >
+                    {nom.category_name}
+                  </span>
+                )
+              )}
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 // ── main component ────────────────────────────────────────────────────────────
 
 export default function MovieDetail() {
@@ -123,13 +195,14 @@ export default function MovieDetail() {
   const location     = useLocation()
   const navigate     = useNavigate()
 
-  const [film,     setFilm]     = useState(null)
-  const [events,   setEvents]   = useState([])   // ranking_events ordered by year
-  const [dustinRows, setDustinRows] = useState({})  // { eventYear: individual_rankings row }
+  const [film,       setFilm]       = useState(null)
+  const [events,     setEvents]     = useState([])   // ranking_events ordered by year
+  const [dustinRows, setDustinRows] = useState({})   // { eventYear: individual_rankings row }
   const [mattRows,   setMattRows]   = useState({})
-  const [combined,   setCombined]   = useState({})  // { eventYear: combined_rankings row }
-  const [loading,  setLoading]  = useState(true)
-  const [error,    setError]    = useState(null)
+  const [combined,   setCombined]   = useState({})   // { eventYear: combined_rankings row }
+  const [oscarNoms,  setOscarNoms]  = useState([])   // film_oscar_noms rows
+  const [loading,    setLoading]    = useState(true)
+  const [error,      setError]      = useState(null)
 
   // Back-link: prefer the referrer passed via router state, else /movies/list
   const backTo = location.state?.from || '/movies/list'
@@ -148,6 +221,7 @@ export default function MovieDetail() {
         { data: evData,   error: ee },
         { data: indData,  error: ie },
         { data: combData, error: ce },
+        { data: nomData,  error: ne },
       ] = await Promise.all([
         supabase.from('films').select('*').eq('id', id).single(),
         supabase.from('ranking_events').select('id,year,label').order('year'),
@@ -159,15 +233,23 @@ export default function MovieDetail() {
           .from('combined_rankings')
           .select(`*, ranking_events(year)`)
           .eq('film_id', id),
+        supabase
+          .from('film_oscar_noms')
+          .select('*')
+          .eq('film_id', id)
+          .order('is_winner', { ascending: false })
+          .order('category_name'),
       ])
 
       if (fe) throw fe
       if (ee) throw ee
       if (ie) throw ie
       if (ce) throw ce
+      // ne (oscar noms) is non-fatal — table may not exist yet
 
       setFilm(filmData)
       setEvents(evData || [])
+      setOscarNoms(nomData || [])
 
       // Index individual rows by person+year
       const dRows = {}
@@ -368,24 +450,35 @@ export default function MovieDetail() {
       ══════════════════════════════════════════════════════════ */}
       <div className="grid md:grid-cols-2 gap-6">
 
-        {/* Oscar wins panel */}
+        {/* Oscar history panel */}
         <div className="card">
-          <h2 className="section-title text-lg mb-3">Oscar Wins</h2>
+          <h2 className="section-title text-lg mb-3">Oscar History</h2>
+
+          {/* Totals strip */}
           <div className="flex gap-6 mb-4">
             <div className="text-center">
               <div className="text-2xl font-bold text-gray-900 dark:text-white font-display">
                 {film.oscar_nominations || 0}
               </div>
-              <div className="text-xs text-gray-400 uppercase tracking-wider">Nomination{film.oscar_nominations !== 1 ? 's' : ''}</div>
+              <div className="text-xs text-gray-400 uppercase tracking-wider">
+                Nomination{film.oscar_nominations !== 1 ? 's' : ''}
+              </div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-gold-500 dark:text-gold-400 font-display">
                 {film.oscar_wins || 0}
               </div>
-              <div className="text-xs text-gray-400 uppercase tracking-wider">Win{film.oscar_wins !== 1 ? 's' : ''}</div>
+              <div className="text-xs text-gray-400 uppercase tracking-wider">
+                Win{film.oscar_wins !== 1 ? 's' : ''}
+              </div>
             </div>
           </div>
-          {majorWins.length > 0 ? (
+
+          {/* Full nomination list from film_oscar_noms */}
+          {oscarNoms.length > 0 ? (
+            <OscarNomsList noms={oscarNoms} filmYear={film.release_year} />
+          ) : majorWins.length > 0 ? (
+            /* Fallback: legacy boolean win badges */
             <div className="flex flex-wrap gap-2">
               {majorWins.map(w => (
                 <span key={w.key} className="badge-gold flex items-center gap-1">
