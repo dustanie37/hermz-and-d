@@ -118,10 +118,16 @@ export default function MoviesHome() {
         <h1 className="page-title flex items-center gap-3">
           🎬 Movies
         </h1>
-        <Link to="/movies/stats"
-          className="btn-ghost flex items-center gap-2 text-sm self-start mt-1">
-          📊 Movie Stats
-        </Link>
+        <div className="flex gap-2 flex-wrap">
+          <Link to="/movies/stats"
+            className="btn-ghost flex items-center gap-2 text-sm self-start mt-1">
+            📊 Movie Stats
+          </Link>
+          <Link to="/movies/acclaim"
+            className="btn-ghost flex items-center gap-2 text-sm self-start mt-1">
+            ⭐ Acclaim Scores
+          </Link>
+        </div>
       </div>
 
       {/* ── All-time quick stats ── */}

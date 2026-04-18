@@ -14,11 +14,12 @@ import OscarsStats   from './pages/oscars/OscarsStats'
 import OscarsNewYear from './pages/oscars/OscarsNewYear'
 
 // Movies pages
-import MoviesHome  from './pages/movies/MoviesHome'
-import MoviesList  from './pages/movies/MoviesList'
-import MoviesAll   from './pages/movies/MoviesAll'
-import MovieDetail from './pages/movies/MovieDetail'
-import MoviesStats from './pages/movies/MoviesStats'
+import MoviesHome    from './pages/movies/MoviesHome'
+import MoviesList    from './pages/movies/MoviesList'
+import MoviesAll     from './pages/movies/MoviesAll'
+import MovieDetail   from './pages/movies/MovieDetail'
+import MoviesStats   from './pages/movies/MoviesStats'
+import MoviesAcclaim from './pages/movies/MoviesAcclaim'
 
 /** Redirect to /login if not authenticated */
 function Protected({ children }) {
@@ -48,11 +49,12 @@ function AppRoutes() {
         <Route path="/oscars/:year"  element={<Protected><OscarsYear /></Protected>} />
 
         {/* Movies */}
-        <Route path="/movies"         element={<Protected><MoviesHome /></Protected>} />
-        <Route path="/movies/list"    element={<Protected><MoviesList /></Protected>} />
-        <Route path="/movies/all"     element={<Protected><MoviesAll /></Protected>} />
-        <Route path="/movies/stats"   element={<Protected><MoviesStats /></Protected>} />
-        <Route path="/movies/:filmId" element={<Protected><MovieDetail /></Protected>} />
+        <Route path="/movies"          element={<Protected><MoviesHome /></Protected>} />
+        <Route path="/movies/list"     element={<Protected><MoviesList /></Protected>} />
+        <Route path="/movies/all"      element={<Protected><MoviesAll /></Protected>} />
+        <Route path="/movies/stats"    element={<Protected><MoviesStats /></Protected>} />
+        <Route path="/movies/acclaim"  element={<Protected><MoviesAcclaim /></Protected>} />
+        <Route path="/movies/:filmId"  element={<Protected><MovieDetail /></Protected>} />
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />

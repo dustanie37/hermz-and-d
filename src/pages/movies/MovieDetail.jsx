@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link, useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
+import { useAuth } from '../../context/AuthContext'
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, Legend, ResponsiveContainer, ReferenceDot,
@@ -116,6 +117,86 @@ function RankTooltip({ active, payload, label }) {
   )
 }
 
+// ── suggestAcclaim ────────────────────────────────────────────────────────────
+// Computes a suggested acclaim score (1–10) from Oscar data + external lists.
+// Returns { score: Number, factors: String[] }
+
+function suggestAcclaim(film) {
+  if (!film) return null
+  let pts = 0
+  const factors = []
+
+  // ── Sight & Sound 2022 (most prestigious critical poll) ────────────────────
+  if (film.sight_sound_2022_rank != null) {
+    if (film.sight_sound_2022_rank <= 10) {
+      pts += 3.5; factors.push(`Sight & Sound Top 10 (#${film.sight_sound_2022_rank})`)
+    } else if (film.sight_sound_2022_rank <= 100) {
+      pts += 2.5; factors.push(`Sight & Sound Top 100 (#${film.sight_sound_2022_rank})`)
+    } else {
+      pts += 1.5; factors.push(`Sight & Sound 2022 listed (#${film.sight_sound_2022_rank})`)
+    }
+  }
+
+  // ── AFI Top 100 ────────────────────────────────────────────────────────────
+  if (film.afi_top100_rank != null) {
+    if (film.afi_top100_rank <= 25) {
+      pts += 2.5; factors.push(`AFI Top 25 (#${film.afi_top100_rank})`)
+    } else {
+      pts += 1.5; factors.push(`AFI Top 100 (#${film.afi_top100_rank})`)
+    }
+  }
+
+  // ── Oscar wins ─────────────────────────────────────────────────────────────
+  if (film.won_best_picture) {
+    pts += 2.5; factors.push('Won Best Picture')
+  }
+  const prestiWins = [
+    'won_best_director', 'won_best_actor', 'won_best_actress',
+    'won_screenplay', 'won_cinematography',
+  ].filter(k => film[k] && k !== 'won_best_picture')
+  if (prestiWins.length > 0) {
+    const boost = Math.min(prestiWins.length * 0.5, 1.5)
+    pts += boost
+    factors.push(`${prestiWins.length} major Oscar win${prestiWins.length > 1 ? 's' : ''}`)
+  }
+
+  // ── Oscar nominations ──────────────────────────────────────────────────────
+  const noms = film.oscar_nominations || 0
+  if (!film.won_best_picture && noms >= 10) {
+    pts += 1.5; factors.push(`${noms} Oscar nominations`)
+  } else if (!film.won_best_picture && noms >= 5) {
+    pts += 0.75; factors.push(`${noms} Oscar nominations`)
+  } else if (!film.won_best_picture && noms >= 2) {
+    pts += 0.25
+  }
+
+  // ── IMDB Top 250 ──────────────────────────────────────────────────────────
+  if (film.imdb_top250_rank != null) {
+    if (film.imdb_top250_rank <= 25) {
+      pts += 1.5; factors.push(`IMDB Top 25 (#${film.imdb_top250_rank})`)
+    } else if (film.imdb_top250_rank <= 100) {
+      pts += 1.0; factors.push(`IMDB Top 100 (#${film.imdb_top250_rank})`)
+    } else {
+      pts += 0.5; factors.push(`IMDB Top 250 (#${film.imdb_top250_rank})`)
+    }
+  }
+
+  // ── National Film Registry ─────────────────────────────────────────────────
+  if (film.national_film_registry) {
+    pts += 0.5; factors.push('National Film Registry')
+  }
+
+  // ── Minor lists ────────────────────────────────────────────────────────────
+  if (film.nyt_2000s_rank != null)       { pts += 0.25; factors.push(`NYT Best of 2000s (#${film.nyt_2000s_rank})`) }
+  if (film.afi_comedies_rank != null)    { pts += 0.25; factors.push(`AFI Top Comedies (#${film.afi_comedies_rank})`) }
+  if (film.variety_comedies_rank != null){ pts += 0.25; factors.push(`Variety Comedies (#${film.variety_comedies_rank})`) }
+
+  // ── Map to 1–10 scale ─────────────────────────────────────────────────────
+  // 0 pts → 2, 5 pts → 7, 10+ pts → 10
+  const score = Math.min(10, Math.max(1, Math.round(2 + pts * 0.8)))
+  return { score, factors }
+}
+
 // ── OscarNomsList ─────────────────────────────────────────────────────────────
 // Renders the full Oscar nomination list from film_oscar_noms rows.
 // Wins shown as gold badges, nominations as plain text pills.
@@ -194,6 +275,7 @@ export default function MovieDetail() {
   const { filmId }   = useParams()
   const location     = useLocation()
   const navigate     = useNavigate()
+  const { isAuthenticated } = useAuth()
 
   const [film,       setFilm]       = useState(null)
   const [events,     setEvents]     = useState([])   // ranking_events ordered by year
@@ -203,6 +285,12 @@ export default function MovieDetail() {
   const [oscarNoms,  setOscarNoms]  = useState([])   // film_oscar_noms rows
   const [loading,    setLoading]    = useState(true)
   const [error,      setError]      = useState(null)
+
+  // Acclaim score editing
+  const [acclaimEditing, setAcclaimEditing] = useState(false)
+  const [acclaimValue,   setAcclaimValue]   = useState('')
+  const [acclaimSaving,  setAcclaimSaving]  = useState(false)
+  const [acclaimError,   setAcclaimError]   = useState(null)
 
   // Back-link: prefer the referrer passed via router state, else /movies/list
   const backTo = location.state?.from || '/movies/list'
@@ -278,6 +366,54 @@ export default function MovieDetail() {
     }
   }
 
+  // ── acclaim score editing ──────────────────────────────────────────────────
+
+  function startAcclaimEdit() {
+    setAcclaimValue(film?.acclaim_score != null ? String(film.acclaim_score) : '')
+    setAcclaimError(null)
+    setAcclaimEditing(true)
+  }
+
+  function cancelAcclaimEdit() {
+    setAcclaimEditing(false)
+    setAcclaimError(null)
+  }
+
+  async function saveAcclaim() {
+    const parsed = parseInt(acclaimValue, 10)
+    if (isNaN(parsed) || parsed < 1 || parsed > 10) {
+      setAcclaimError('Enter a number from 1 to 10')
+      return
+    }
+    setAcclaimSaving(true)
+    setAcclaimError(null)
+    const { error: saveErr } = await supabase
+      .from('films')
+      .update({ acclaim_score: parsed })
+      .eq('id', film.id)
+
+    if (saveErr) {
+      setAcclaimError(saveErr.message)
+      setAcclaimSaving(false)
+      return
+    }
+    // Optimistic update
+    setFilm(f => ({ ...f, acclaim_score: parsed }))
+    setAcclaimEditing(false)
+    setAcclaimSaving(false)
+  }
+
+  async function clearAcclaim() {
+    setAcclaimSaving(true)
+    const { error: saveErr } = await supabase
+      .from('films')
+      .update({ acclaim_score: null })
+      .eq('id', film.id)
+    if (!saveErr) setFilm(f => ({ ...f, acclaim_score: null }))
+    setAcclaimEditing(false)
+    setAcclaimSaving(false)
+  }
+
   // ── derived data ───────────────────────────────────────────────────────────
 
   // Which events does this film appear on (any of the three lists)
@@ -301,6 +437,9 @@ export default function MovieDetail() {
   const acclaimHits = ACCLAIM_LISTS.filter(a =>
     a.ranked ? film?.[a.key] != null : film?.[a.key]
   )
+
+  // Suggested acclaim score
+  const suggestion = film ? suggestAcclaim(film) : null
 
   // Most recent event year this film appeared in (for hero rank display)
   const latestYear = [...EVENTS].reverse().find(yr => dustinRows[yr] || mattRows[yr] || combined[yr])
@@ -495,19 +634,138 @@ export default function MovieDetail() {
           )}
         </div>
 
-        {/* Acclaim list appearances */}
+        {/* Acclaim score + external lists */}
         <div className="card">
-          <h2 className="section-title text-lg mb-3">Acclaim Lists</h2>
-          {film.acclaim_score != null && (
-            <div className="flex items-center gap-4 mb-4 pb-4 border-b border-stone-100 dark:border-night-700">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-gold-600 dark:text-gold-400 font-display">
-                  {film.acclaim_score}<span className="text-sm text-gray-400">/10</span>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="section-title text-lg mb-0">Acclaim</h2>
+            {isAuthenticated && !acclaimEditing && (
+              <button
+                onClick={startAcclaimEdit}
+                className="text-xs text-gray-400 hover:text-gold-500 dark:hover:text-gold-400
+                           transition-colors flex items-center gap-1"
+                title="Edit acclaim score"
+              >
+                ✏️ {film.acclaim_score != null ? 'Edit score' : 'Set score'}
+              </button>
+            )}
+          </div>
+
+          {/* ── Acclaim Score Display / Edit ── */}
+          {acclaimEditing ? (
+            <div className="mb-4 pb-4 border-b border-stone-100 dark:border-night-700">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                Agreed score out of 10 — set collaboratively by both players.
+              </p>
+
+              {/* Suggestion hint */}
+              {suggestion && suggestion.factors.length > 0 && (
+                <div className="mb-3 rounded-lg bg-stone-50 dark:bg-night-900/60
+                                border border-stone-200 dark:border-night-600 p-3">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Algorithm suggests
+                    </span>
+                    <span className="text-lg font-bold text-gold-600 dark:text-gold-400 font-display">
+                      {suggestion.score}<span className="text-xs text-gray-400">/10</span>
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {suggestion.factors.map((f, i) => (
+                      <span key={i} className="text-xs px-2 py-0.5 rounded-full
+                                               bg-stone-100 dark:bg-night-700
+                                               text-gray-500 dark:text-gray-400
+                                               border border-stone-200 dark:border-night-600">
+                        {f}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-                <div className="text-xs text-gray-400 uppercase tracking-wider">Acclaim Score</div>
+              )}
+
+              {/* Input row */}
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min="1"
+                  max="10"
+                  value={acclaimValue}
+                  onChange={e => setAcclaimValue(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') saveAcclaim()
+                    if (e.key === 'Escape') cancelAcclaimEdit()
+                  }}
+                  placeholder="1–10"
+                  className="w-20 px-3 py-1.5 text-center text-lg font-bold
+                             rounded-lg border border-stone-300 dark:border-night-500
+                             bg-white dark:bg-night-800
+                             text-gray-900 dark:text-white
+                             focus:outline-none focus:ring-2 focus:ring-gold-400"
+                  autoFocus
+                />
+                <button
+                  onClick={saveAcclaim}
+                  disabled={acclaimSaving}
+                  className="btn-primary text-sm px-4 py-1.5 disabled:opacity-50"
+                >
+                  {acclaimSaving ? 'Saving…' : 'Save'}
+                </button>
+                <button
+                  onClick={cancelAcclaimEdit}
+                  disabled={acclaimSaving}
+                  className="btn-ghost text-sm px-3 py-1.5"
+                >
+                  Cancel
+                </button>
+                {film.acclaim_score != null && (
+                  <button
+                    onClick={clearAcclaim}
+                    disabled={acclaimSaving}
+                    className="text-xs text-red-400 hover:text-red-500 transition-colors ml-auto"
+                    title="Clear acclaim score"
+                  >
+                    Clear
+                  </button>
+                )}
               </div>
+              {acclaimError && (
+                <p className="text-xs text-red-400 mt-2">{acclaimError}</p>
+              )}
+            </div>
+          ) : (
+            <div className="mb-4 pb-4 border-b border-stone-100 dark:border-night-700">
+              {film.acclaim_score != null ? (
+                <div className="flex items-center gap-4">
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-gold-600 dark:text-gold-400 font-display">
+                      {film.acclaim_score}
+                      <span className="text-base font-normal text-gray-400">/10</span>
+                    </div>
+                    <div className="text-xs text-gray-400 uppercase tracking-wider">Acclaim Score</div>
+                  </div>
+                  {/* Score bar */}
+                  <div className="flex-1">
+                    <div className="h-2 rounded-full bg-stone-100 dark:bg-night-700 overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-gold-400 dark:bg-gold-500 transition-all"
+                        style={{ width: `${film.acclaim_score * 10}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <p className="text-sm text-gray-400 italic">No acclaim score set.</p>
+                  {suggestion && suggestion.factors.length > 0 && (
+                    <span className="text-xs text-gray-500">
+                      (algorithm suggests {suggestion.score}/10)
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           )}
+
+          {/* External list appearances */}
           {acclaimHits.length > 0 ? (
             <div className="space-y-2">
               {acclaimHits.map(a => (
