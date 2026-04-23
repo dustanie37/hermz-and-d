@@ -4,7 +4,7 @@ import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
-  Tooltip, Legend, ResponsiveContainer, ReferenceDot,
+  Tooltip, Legend, ResponsiveContainer,
 } from 'recharts'
 
 // ── constants ─────────────────────────────────────────────────────────────────

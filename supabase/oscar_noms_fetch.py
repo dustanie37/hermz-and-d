@@ -49,8 +49,8 @@ NO_DATA_LOG  = SCRIPT_DIR / "oscar_noms_no_data.txt"
 MISMATCH_LOG = SCRIPT_DIR / "oscar_noms_mismatch.txt"
 
 WIKIDATA_URL = "https://query.wikidata.org/sparql"
-BATCH_SIZE   = 40    # IMDb IDs per SPARQL request
-SLEEP_SECS   = 1.5   # be polite to Wikidata's public endpoint
+BATCH_SIZE   = 15    # IMDb IDs per SPARQL request
+SLEEP_SECS   = 2.0   # be polite to Wikidata's public endpoint
 
 # ── Category normalisation map ─────────────────────────────────────────────────
 # Keys are lowercased Wikidata award labels (after stripping "Academy Award for "
@@ -82,35 +82,42 @@ CATEGORY_NORM = {
 
     # Writing
     "best original screenplay":                             "Best Original Screenplay",
+    "best writing, original screenplay":                    "Best Original Screenplay",
     "best writing, screenplay written directly for the screen": "Best Original Screenplay",
     "best writing, story and screenplay written directly for the screen": "Best Original Screenplay",
     "best writing, motion picture story":                   "Best Original Screenplay",
     "best original story":                                  "Best Original Screenplay",
     "best adapted screenplay":                              "Best Adapted Screenplay",
+    "best writing, adapted screenplay":                     "Best Adapted Screenplay",
     "best writing, screenplay based on material previously produced or published": "Best Adapted Screenplay",
     "best writing, screenplay adapted from other material": "Best Adapted Screenplay",
     "best writing, adaptation":                             "Best Adapted Screenplay",
 
-    # Cinematography
+    # Cinematography (including color/B&W era splits)
     "best cinematography":                                  "Best Cinematography",
     "best cinematography (color)":                          "Best Cinematography",
     "best cinematography (black-and-white)":                "Best Cinematography",
+    "best cinematography, color":                           "Best Cinematography",
+    "best cinematography, black-and-white":                 "Best Cinematography",
 
     # Editing
     "best film editing":                                    "Best Film Editing",
     "best editing":                                         "Best Film Editing",
 
-    # Production Design / Art Direction
+    # Production Design / Art Direction (including color/B&W era splits)
     "best production design":                               "Best Production Design",
     "best art direction":                                   "Best Production Design",
     "best art direction-set decoration":                    "Best Production Design",
     "best art direction-set decoration (color)":            "Best Production Design",
     "best art direction-set decoration (black-and-white)":  "Best Production Design",
+    "best art direction, color":                            "Best Production Design",
+    "best art direction, black and white":                  "Best Production Design",
 
-    # Costume Design
+    # Costume Design (including color/B&W era splits)
     "best costume design":                                  "Best Costume Design",
     "best costume design (color)":                          "Best Costume Design",
     "best costume design (black-and-white)":                "Best Costume Design",
+    "best costume design, black-and-white":                 "Best Costume Design",
 
     # Makeup
     "best makeup and hairstyling":                          "Best Makeup and Hairstyling",
@@ -119,12 +126,16 @@ CATEGORY_NORM = {
     # Music
     "best original score":                                  "Best Original Score",
     "best original dramatic score":                         "Best Original Score",
+    "best original dramatic or comedy score":               "Best Original Score",
     "best original musical or comedy score":                "Best Original Score",
+    "best original score, no musical":                      "Best Original Score",
     "best score":                                           "Best Original Score",
+    "best score, adaptation or treatment":                  "Best Original Score",
     "best scoring: substantially original":                 "Best Original Score",
     "best scoring: adaptation or treatment":                "Best Original Score",
     "best original song":                                   "Best Original Song",
-    "best original song score or adaptation score":         "Best Original Song",
+    "best original song score":                             "Best Original Song Score",
+    "best original song score or adaptation score":         "Best Original Song Score",
 
     # Sound
     "best sound":                                           "Best Sound",
@@ -164,6 +175,9 @@ CATEGORY_NORM = {
     # Other / historical
     "best documentary":                                     "Best Documentary Feature",
     "best writing, story and screenplay":                   "Best Original Screenplay",
+
+    # Special awards (non-competitive, but worth showing)
+    "special achievement academy award":                    "Special Achievement Award",
 }
 
 # ── helpers ────────────────────────────────────────────────────────────────────
@@ -173,14 +187,20 @@ def normalize_category(raw_label: str) -> str | None:
     Given a Wikidata label like 'Academy Award for Best Picture',
     return our canonical category name or None if we don't recognise it.
     """
-    # Strip common prefixes
     s = raw_label.strip()
+
+    # Try full label first (handles "Special Achievement Academy Award" etc.)
+    full_key = s.lower()
+    if full_key in CATEGORY_NORM:
+        return CATEGORY_NORM[full_key]
+
+    # Strip common prefixes
     for prefix in ("Academy Award for Best ", "Academy Award for "):
         if s.lower().startswith(prefix.lower()):
             s = s[len(prefix):]
             break
 
-    # Try exact lowercase match first
+    # Try exact lowercase match
     key = s.lower()
     if key in CATEGORY_NORM:
         return CATEGORY_NORM[key]
@@ -289,6 +309,8 @@ def main():
     film_to_title: dict[str, str] = {}      # film_id (str) → title (for logging)
 
     for film_id, entry in omdb_cache.items():
+        if not entry or not isinstance(entry, dict):
+            continue  # skip null / non-dict cache entries
         imdb_id = entry.get("imdbID", "")
         if imdb_id and imdb_id.startswith("tt"):
             film_to_imdb[str(film_id)] = imdb_id
@@ -426,9 +448,15 @@ def main():
         f.write("TRUNCATE public.film_oscar_noms RESTART IDENTITY CASCADE;\n\n")
 
         if insert_rows:
-            f.write("INSERT INTO public.film_oscar_noms (film_id, ceremony_year, category_name, is_winner)\nVALUES\n")
+            # JOIN against films table so stale film_ids are silently skipped
+            f.write("INSERT INTO public.film_oscar_noms (film_id, ceremony_year, category_name, is_winner)\n")
+            f.write("SELECT f.id, v.ceremony_year, v.category_name, v.is_winner\n")
+            f.write("FROM public.films f\n")
+            f.write("JOIN (\n  VALUES\n")
             f.write(",\n".join(insert_rows))
-            f.write("\nON CONFLICT (film_id, ceremony_year, category_name) DO UPDATE\n")
+            f.write("\n) AS v(film_id, ceremony_year, category_name, is_winner)\n")
+            f.write("  ON f.id = v.film_id\n")
+            f.write("ON CONFLICT (film_id, ceremony_year, category_name) DO UPDATE\n")
             f.write("  SET is_winner = EXCLUDED.is_winner;\n")
 
         f.write("\nCOMMIT;\n")

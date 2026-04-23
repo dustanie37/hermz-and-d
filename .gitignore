@@ -27,3 +27,12 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Generated / cached supabase data files — do not commit
+supabase/omdb_cache.json
+supabase/omdb_update.sql
+supabase/omdb_no_match.txt
+supabase/oscar_noms_cache.json
+supabase/oscar_noms_update.sql
+supabase/oscar_noms_no_data.txt
+supabase/oscar_noms_mismatch.txt

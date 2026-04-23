@@ -280,8 +280,6 @@ export default function MoviesAll() {
 
   // combined rank column style — dark-mode aware via CSS var trick not available here,
   // so we split into two classes and let Tailwind handle it
-  const COMBINED_COL_STYLE = {}  // color handled via className text-gray-900 dark:text-white
-
   // ── render ─────────────────────────────────────────────────────────────────
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">

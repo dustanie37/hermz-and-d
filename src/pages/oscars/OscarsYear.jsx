@@ -87,19 +87,22 @@ export default function OscarsYear() {
         .single()
       if (yrErr) throw yrErr
 
-      // 2 — guesses with category + profile
-      const { data: guesses, error: gErr } = await supabase
-        .from('oscar_guesses')
-        .select('*, oscar_categories(*), profiles(username, display_name)')
-        .eq('year_id', yrRow.id)
+      // 2 & 3 — guesses and nominees fetched in parallel (both need yrRow.id)
+      const [
+        { data: guesses,  error: gErr },
+        { data: nominees, error: nErr },
+      ] = await Promise.all([
+        supabase
+          .from('oscar_guesses')
+          .select('*, oscar_categories(*), profiles(username, display_name)')
+          .eq('year_id', yrRow.id),
+        supabase
+          .from('oscar_nominees')
+          .select('*, oscar_categories(*)')
+          .eq('year_id', yrRow.id)
+          .order('display_order'),
+      ])
       if (gErr) throw gErr
-
-      // 3 — nominees with category
-      const { data: nominees, error: nErr } = await supabase
-        .from('oscar_nominees')
-        .select('*, oscar_categories(*)')
-        .eq('year_id', yrRow.id)
-        .order('display_order')
       if (nErr) throw nErr
 
       // Build per-category map
