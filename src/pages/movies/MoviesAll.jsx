@@ -348,24 +348,13 @@ export default function MoviesAll() {
       </div>
 
       {/* Legend */}
-      <div className="flex items-center gap-4 mb-4 text-xs text-gray-500 dark:text-gray-500">
-        <span className="flex items-center gap-1.5">
-          <span className="font-bold text-gray-900 dark:text-white">42</span> Combined
+      <div className="flex items-center gap-2 mb-4 text-xs text-gray-500 dark:text-gray-500">
+        <span className="flex gap-0.5">
+          {[true, true, false, false].map((on, i) =>
+            <span key={i} className={`w-2 h-2 rounded-full inline-block ${on ? 'bg-film-500' : 'bg-gray-300 dark:bg-gray-700'}`} />
+          )}
         </span>
-        <span className="flex items-center gap-1.5">
-          <span className="font-bold" style={{ color: DUSTIN_COLOR }}>42</span> Dust
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="font-bold" style={{ color: MATT_COLOR }}>42</span> Hermz
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="flex gap-0.5">
-            {[true, true, false, false].map((on, i) =>
-              <span key={i} className={`w-2 h-2 rounded-full inline-block ${on ? 'bg-film-500' : 'bg-gray-300 dark:bg-gray-700'}`} />
-            )}
-          </span>
-          Combined list appearances (01 · 07 · 16 · 26)
-        </span>
+        Combined list appearances (01 · 07 · 16 · 26)
       </div>
 
       {/* Loading / error */}
