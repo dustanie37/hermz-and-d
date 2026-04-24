@@ -20,6 +20,7 @@ import MoviesAll     from './pages/movies/MoviesAll'
 import MovieDetail   from './pages/movies/MovieDetail'
 import MoviesStats   from './pages/movies/MoviesStats'
 import MoviesAcclaim from './pages/movies/MoviesAcclaim'
+import MoviesLists   from './pages/movies/MoviesLists'
 
 /** Redirect to /login if not authenticated */
 function Protected({ children }) {
@@ -54,6 +55,7 @@ function AppRoutes() {
         <Route path="/movies/all"      element={<Protected><MoviesAll /></Protected>} />
         <Route path="/movies/stats"    element={<Protected><MoviesStats /></Protected>} />
         <Route path="/movies/acclaim"  element={<Protected><MoviesAcclaim /></Protected>} />
+        <Route path="/movies/lists"    element={<Protected><MoviesLists /></Protected>} />
         <Route path="/movies/:filmId"  element={<Protected><MovieDetail /></Protected>} />
 
         {/* Fallback */}

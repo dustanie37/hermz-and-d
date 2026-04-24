@@ -127,6 +127,10 @@ export default function MoviesHome() {
             className="btn-ghost flex items-center gap-2 text-sm self-start mt-1">
             ⭐ Acclaim Scores
           </Link>
+          <Link to="/movies/lists"
+            className="btn-ghost flex items-center gap-2 text-sm self-start mt-1">
+            📋 External Lists
+          </Link>
         </div>
       </div>
 
