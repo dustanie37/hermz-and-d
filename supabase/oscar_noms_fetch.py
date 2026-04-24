@@ -569,9 +569,17 @@ def main():
     all_qids_seen: dict[str, str] = {}   # QID → label (for logging)
 
     def process_rows(rows):
-        """Normalise a list of raw SPARQL rows into (canon, won, year, nominee_name) tuples,
-        deduplicating on (canon, year, nominee_name)."""
-        seen: set[tuple] = set()
+        """Normalise raw SPARQL rows into (canon, won, year, nominee_name) tuples.
+
+        Dedup rules:
+        - Non-acting categories: dedup on (canon, year, nominee_name); upgrade False→True
+          when the same entity appears as both nominated and won.
+        - Acting categories (Best Actor/Actress/Supporting): a won=True row alongside a
+          won=False row for the same (canon, year) means two DIFFERENT people — one was
+          nominated, one won. Keep both. Only deduplicate identical won-status duplicates.
+        """
+        seen: set[tuple] = set()        # (canon, year, nominee_name, won) for acting
+        seen_non_acting: set[tuple] = set()  # (canon, year, nominee_name) for non-acting
         result: list[tuple[str, bool, int | None, str | None]] = []
         for row in rows:
             raw_label    = row.get("awardLabel", "")
@@ -587,14 +595,24 @@ def main():
                 unknown_categories.add(f"{raw_label}  (URI: {award_uri})")
             won  = row["won"]
             year = row.get("year")
-            key  = (canon, year, nominee_name)
-            if key in seen:
-                if won:
-                    result = [(c, w, y, n) for c, w, y, n in result if (c, y, n) != key]
-                    result.append((canon, True, year, nominee_name))
+
+            if canon in ACTING_CATEGORIES:
+                # For acting: dedup includes won-status so a win + a nom are kept separately
+                key = (canon, year, nominee_name, won)
+                if key not in seen:
+                    seen.add(key)
+                    result.append((canon, won, year, nominee_name))
             else:
-                seen.add(key)
-                result.append((canon, won, year, nominee_name))
+                # For non-acting: dedup on (canon, year, nominee_name); upgrade to win
+                key = (canon, year, nominee_name)
+                if key in seen_non_acting:
+                    if won:
+                        result = [(c, w, y, n) for c, w, y, n in result
+                                  if not (c == canon and y == year and n == nominee_name)]
+                        result.append((canon, True, year, nominee_name))
+                else:
+                    seen_non_acting.add(key)
+                    result.append((canon, won, year, nominee_name))
         return result
 
     for imdb_id in imdb_to_filmids:
