@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
+import { useAuth } from '../../context/AuthContext'
 import OscarIcon from '../../components/OscarIcon'
 
 // ── helpers ──────────────────────────────────────────────────────────────────
@@ -27,6 +28,7 @@ function formatDate(name) {
 // ── component ─────────────────────────────────────────────────────────────────
 
 export default function OscarsHome() {
+  const { isAuthenticated } = useAuth()
   const [years, setYears] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -75,10 +77,16 @@ export default function OscarsHome() {
             {years.length} ceremonies · {years[years.length-1]?.year}–{years[0]?.year}
           </p>
         </div>
-        <Link to="/oscars/stats"
-          className="btn-ghost flex items-center gap-2 text-sm self-start mt-1">
-          📊 All-Time Stats
-        </Link>
+        <div className="flex items-center gap-2 self-start mt-1">
+          <Link to="/oscars/stats" className="btn-ghost flex items-center gap-2 text-sm">
+            📊 All-Time Stats
+          </Link>
+          {isAuthenticated && (
+            <Link to="/oscars/new" className="btn-ghost flex items-center gap-2 text-sm border-gold-400/40 hover:border-gold-500 dark:border-gold-700/40 dark:hover:border-gold-600">
+              ＋ New Year
+            </Link>
+          )}
+        </div>
       </div>
 
       {/* ── All-time scoreboard ── */}
