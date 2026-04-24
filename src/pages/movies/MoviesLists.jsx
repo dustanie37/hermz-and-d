@@ -34,16 +34,17 @@ function PosterThumb({ url, title }) {
   )
 }
 
-function EventDots({ filmId, combMap }) {
+// rankMap is a { year: rank } object for a specific film + list type
+function EventDots({ rankMap = {} }) {
   return (
     <div className="flex gap-1.5 items-center justify-center">
       {EVENTS.map(yr => {
-        const rank = filmId != null ? combMap[filmId]?.[yr] : undefined
+        const rank = rankMap[yr]
         const on   = rank != null
         return (
           <span
             key={yr}
-            title={on ? `#${rank} combined in ${yr}` : `Not on ${yr} combined list`}
+            title={on ? `#${rank} in ${yr}` : `Not on ${yr} list`}
             className={`w-2 h-2 rounded-full flex-shrink-0 transition-colors ${
               on ? 'bg-film-500' : 'bg-gray-200 dark:bg-gray-700'
             }`}
@@ -61,7 +62,8 @@ export default function MoviesLists() {
   const activeKey = searchParams.get('list') || 'afi_top100'
 
   // All-list state (fetched once)
-  const [combMap, setCombMap]       = useState({})
+  const [combMap, setCombMap]         = useState({})
+  const [indivMap, setIndivMap]       = useState({}) // { filmId: { dustin: { yr: rank }, matt: { yr: rank } } }
   const [combLoading, setCombLoading] = useState(true)
 
   // Per-tab state (re-fetched on tab change)
@@ -72,27 +74,47 @@ export default function MoviesLists() {
   const [search, setSearch]       = useState('')
   const [inDbOnly, setInDbOnly]   = useState(false)
 
-  // ── fetch combined rankings once (for dots) ──────────────────────────────
+  // ── fetch combined + individual rankings once ────────────────────────────
   useEffect(() => {
-    async function fetchCombined() {
+    async function fetchRankings() {
       const [
         { data: combinedData },
+        { data: indivData },
         { data: eventsData },
+        { data: profData },
       ] = await Promise.all([
         supabase.from('combined_rankings').select('film_id, event_id, combined_rank'),
+        supabase.from('individual_rankings').select('film_id, event_id, user_id, rank'),
         supabase.from('ranking_events').select('id, year'),
+        supabase.from('profiles').select('id, username'),
       ])
+
       const eventYearMap = {}
       eventsData?.forEach(e => { eventYearMap[e.id] = e.year })
+
+      const profileMap = {}
+      profData?.forEach(p => { profileMap[p.id] = p.username })
+
       const cm = {}
       combinedData?.forEach(r => {
         if (!cm[r.film_id]) cm[r.film_id] = {}
         cm[r.film_id][eventYearMap[r.event_id]] = r.combined_rank
       })
+
+      const im = {}
+      indivData?.forEach(r => {
+        const username = profileMap[r.user_id]
+        if (!username) return
+        if (!im[r.film_id]) im[r.film_id] = {}
+        if (!im[r.film_id][username]) im[r.film_id][username] = {}
+        im[r.film_id][username][eventYearMap[r.event_id]] = r.rank
+      })
+
       setCombMap(cm)
+      setIndivMap(im)
       setCombLoading(false)
     }
-    fetchCombined()
+    fetchRankings()
   }, [])
 
   // ── fetch entries for active tab ─────────────────────────────────────────
@@ -248,7 +270,7 @@ export default function MoviesLists() {
             <span key={yr} className="w-2 h-2 rounded-full bg-film-500 inline-block" />
           ))}
         </div>
-        <span>On our combined list: {EVENTS.map(yr => `'${String(yr).slice(2)}`).join(' · ')}</span>
+        <span>Each dot = one ranking event: {EVENTS.map(yr => `'${String(yr).slice(2)}`).join(' · ')}</span>
       </div>
 
       {/* Loading / error */}
@@ -275,7 +297,9 @@ export default function MoviesLists() {
                   <th className="table-header w-12 text-center">#</th>
                   <th className="table-header">Film</th>
                   <th className="table-header text-center w-16">Acclaim</th>
-                  <th className="table-header text-center w-28">Our Lists</th>
+                  <th className="table-header text-center w-20">Combined</th>
+                  <th className="table-header text-center w-20" style={{ color: '#6170f5' }}>Dust</th>
+                  <th className="table-header text-center w-20" style={{ color: '#d97706' }}>Hermz</th>
                 </tr>
               </thead>
               <tbody>
@@ -348,9 +372,15 @@ export default function MoviesLists() {
                         )}
                       </td>
 
-                      {/* Combined list dots */}
+                      {/* Combined / Dust / Hermz dots */}
                       <td className="table-cell">
-                        <EventDots filmId={inDb ? film.id : null} combMap={combMap} />
+                        <EventDots rankMap={inDb ? (combMap[film.id] || {}) : {}} />
+                      </td>
+                      <td className="table-cell">
+                        <EventDots rankMap={inDb ? (indivMap[film.id]?.dustin || {}) : {}} />
+                      </td>
+                      <td className="table-cell">
+                        <EventDots rankMap={inDb ? (indivMap[film.id]?.matt || {}) : {}} />
                       </td>
 
                     </tr>
