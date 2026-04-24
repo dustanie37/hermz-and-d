@@ -11,7 +11,7 @@ const LISTS = [
   { key: 'nyt_2000s',        label: 'NYT Best of 2000s', published: 'June 23, 2025',    ranked: true  },
   { key: 'sight_sound',      label: 'Sight & Sound',     published: '2022',             ranked: true  },
   { key: 'variety_comedies', label: 'Variety Comedies',  published: '2026',             ranked: true  },
-  { key: 'nfr',              label: 'Film Registry',     published: 'January 29, 2026', ranked: false },
+  { key: 'nfr',              label: 'National Film Registry', published: 'January 29, 2026', ranked: false },
 ]
 
 const EVENTS = [2001, 2007, 2016, 2026]
