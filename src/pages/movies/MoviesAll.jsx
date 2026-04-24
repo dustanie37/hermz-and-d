@@ -187,7 +187,7 @@ export default function MoviesAll() {
           { data: profData,     error: pe },
         ] = await Promise.all([
           supabase.from('films')
-            .select('id, title, release_year, director, poster_url')
+            .select('id, title, release_year, director, writer, actor_1, actor_2, actor_3, actor_4, actor_5, poster_url')
             .order('title'),
           supabase.from('combined_rankings')
             .select('film_id, event_id, combined_rank'),
@@ -245,7 +245,15 @@ export default function MoviesAll() {
   const displayFilms = useMemo(() => {
     const q = search.trim().toLowerCase()
     const filtered = q
-      ? films.filter(f => f.title?.toLowerCase().includes(q))
+      ? films.filter(f => {
+          if (f.title?.toLowerCase().includes(q)) return true
+          if (f.director?.toLowerCase().includes(q)) return true
+          if (f.writer?.replace(/\s*\(.*?\)/g, '').toLowerCase().includes(q)) return true
+          for (let i = 1; i <= 5; i++) {
+            if (f[`actor_${i}`]?.toLowerCase().includes(q)) return true
+          }
+          return false
+        })
       : films
 
     return [...filtered].sort((a, b) => {
@@ -301,7 +309,7 @@ export default function MoviesAll() {
       <div className="flex flex-wrap items-center gap-3 mb-5">
         <input
           type="text"
-          placeholder="Search films…"
+          placeholder="Search title, director, actor, writer…"
           value={search}
           onChange={e => setSearch(e.target.value)}
           className="input text-sm w-60"
