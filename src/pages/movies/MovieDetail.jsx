@@ -615,7 +615,14 @@ export default function MovieDetail() {
 
           {/* Full nomination list from film_oscar_noms */}
           {oscarNoms.length > 0 ? (
-            <OscarNomsList noms={oscarNoms} filmYear={film.release_year} />
+            <>
+              <OscarNomsList noms={oscarNoms} filmYear={film.release_year} />
+              {oscarNoms.length < (film.oscar_nominations || 0) && (
+                <p className="text-xs text-gray-400 italic mt-3">
+                  Showing {oscarNoms.length} of {film.oscar_nominations} nominations — some categories unavailable.
+                </p>
+              )}
+            </>
           ) : majorWins.length > 0 ? (
             /* Fallback: legacy boolean win badges */
             <div className="flex flex-wrap gap-2">
@@ -624,13 +631,20 @@ export default function MovieDetail() {
                   🏆 {w.label}
                 </span>
               ))}
+              {(film.oscar_wins || 0) > majorWins.length && (
+                <p className="text-xs text-gray-400 italic w-full mt-1">
+                  + {film.oscar_wins - majorWins.length} additional win{film.oscar_wins - majorWins.length !== 1 ? 's' : ''} — detailed breakdown unavailable.
+                </p>
+              )}
             </div>
-          ) : (
+          ) : film.oscar_nominations > 0 ? (
             <p className="text-sm text-gray-400 italic">
-              {film.oscar_nominations > 0
-                ? 'Nominated but did not win a tracked major category.'
-                : 'No Oscar nominations on record.'}
+              {film.oscar_wins > 0
+                ? `${film.oscar_wins} win${film.oscar_wins !== 1 ? 's' : ''} — detailed breakdown unavailable.`
+                : 'Nominated but did not win a tracked major category.'}
             </p>
+          ) : (
+            <p className="text-sm text-gray-400 italic">No Oscar nominations on record.</p>
           )}
         </div>
 
@@ -666,7 +680,7 @@ export default function MovieDetail() {
                       Algorithm suggests
                     </span>
                     <span className="text-lg font-bold text-gold-600 dark:text-gold-400 font-display">
-                      {suggestion.score}<span className="text-xs text-gray-400">/10</span>
+                      {suggestion.score}
                     </span>
                   </div>
                   <div className="flex flex-wrap gap-1.5">
@@ -734,30 +748,18 @@ export default function MovieDetail() {
           ) : (
             <div className="mb-4 pb-4 border-b border-stone-100 dark:border-night-700">
               {film.acclaim_score != null ? (
-                <div className="flex items-center gap-4">
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-gold-600 dark:text-gold-400 font-display">
-                      {film.acclaim_score}
-                      <span className="text-base font-normal text-gray-400">/10</span>
-                    </div>
-                    <div className="text-xs text-gray-400 uppercase tracking-wider">Acclaim Score</div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-gold-600 dark:text-gold-400 font-display">
+                    {film.acclaim_score}
                   </div>
-                  {/* Score bar */}
-                  <div className="flex-1">
-                    <div className="h-2 rounded-full bg-stone-100 dark:bg-night-700 overflow-hidden">
-                      <div
-                        className="h-full rounded-full bg-gold-400 dark:bg-gold-500 transition-all"
-                        style={{ width: `${film.acclaim_score * 10}%` }}
-                      />
-                    </div>
-                  </div>
+                  <div className="text-xs text-gray-400 uppercase tracking-wider">Acclaim Score</div>
                 </div>
               ) : (
                 <div className="flex items-center gap-3">
                   <p className="text-sm text-gray-400 italic">No acclaim score set.</p>
                   {suggestion && suggestion.factors.length > 0 && (
                     <span className="text-xs text-gray-500">
-                      (algorithm suggests {suggestion.score}/10)
+                      (algorithm suggests {suggestion.score})
                     </span>
                   )}
                 </div>
@@ -952,7 +954,7 @@ export default function MovieDetail() {
                 <tr>
                   <th className="table-header w-44">Category</th>
                   {EVENTS.map(yr => (
-                    (dustinRows[yr] || mattRows[yr]) && (
+                    dustinRows[yr] && (
                       <th key={`d-${yr}`}
                         className="table-header text-center"
                         style={{ color: DC }}
@@ -962,7 +964,7 @@ export default function MovieDetail() {
                     )
                   ))}
                   {EVENTS.map(yr => (
-                    (dustinRows[yr] || mattRows[yr]) && (
+                    mattRows[yr] && (
                       <th key={`m-${yr}`}
                         className="table-header text-center"
                         style={{ color: HC }}
@@ -992,7 +994,7 @@ export default function MovieDetail() {
                       </td>
                       {/* Dustin columns */}
                       {EVENTS.map(yr => {
-                        if (!dustinRows[yr] && !mattRows[yr]) return null
+                        if (!dustinRows[yr]) return null
                         const inYear = cat.years === 'all' || cat.years.includes(yr)
                         return (
                           <td key={`d-${yr}`} className="table-cell text-center">
@@ -1005,7 +1007,7 @@ export default function MovieDetail() {
                       })}
                       {/* Hermz (Matt) columns */}
                       {EVENTS.map(yr => {
-                        if (!dustinRows[yr] && !mattRows[yr]) return null
+                        if (!mattRows[yr]) return null
                         const inYear = cat.years === 'all' || cat.years.includes(yr)
                         return (
                           <td key={`m-${yr}`} className="table-cell text-center">
@@ -1026,7 +1028,7 @@ export default function MovieDetail() {
                     Total Score
                   </td>
                   {EVENTS.map(yr => {
-                    if (!dustinRows[yr] && !mattRows[yr]) return null
+                    if (!dustinRows[yr]) return null
                     return (
                       <td key={`d-total-${yr}`} className="table-cell text-center">
                         <span className="text-base font-bold text-gray-900 dark:text-white">
@@ -1036,7 +1038,7 @@ export default function MovieDetail() {
                     )
                   })}
                   {EVENTS.map(yr => {
-                    if (!dustinRows[yr] && !mattRows[yr]) return null
+                    if (!mattRows[yr]) return null
                     return (
                       <td key={`m-total-${yr}`} className="table-cell text-center">
                         <span className="text-base font-bold text-gray-900 dark:text-white">
