@@ -69,7 +69,8 @@ export default function MoviesLists() {
   const [tabLoading, setTabLoading] = useState(true)
   const [error, setError]           = useState(null)
 
-  const [search, setSearch] = useState('')
+  const [search, setSearch]       = useState('')
+  const [inDbOnly, setInDbOnly]   = useState(false)
 
   // ── fetch combined rankings once (for dots) ──────────────────────────────
   useEffect(() => {
@@ -128,14 +129,16 @@ export default function MoviesLists() {
 
   // ── search filter ─────────────────────────────────────────────────────────
   const displayEntries = useMemo(() => {
+    let result = entries
+    if (inDbOnly) result = result.filter(e => e.film_id != null)
     const q = search.trim().toLowerCase()
-    if (!q) return entries
-    return entries.filter(e => {
+    if (!q) return result
+    return result.filter(e => {
       const title    = (e.films?.title    || e.title    || '').toLowerCase()
       const director = (e.films?.director || '').toLowerCase()
       return title.includes(q) || director.includes(q)
     })
-  }, [entries, search])
+  }, [entries, search, inDbOnly])
 
   // ── header counts ─────────────────────────────────────────────────────────
   const inDbCount  = useMemo(() => entries.filter(e => e.film_id != null).length, [entries])
@@ -165,7 +168,7 @@ export default function MoviesLists() {
         {LISTS.map(l => (
           <button
             key={l.key}
-            onClick={() => { setSearchParams({ list: l.key }); setSearch('') }}
+            onClick={() => { setSearchParams({ list: l.key }); setSearch(''); setInDbOnly(false) }}
             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
               l.key === activeKey
                 ? 'bg-white dark:bg-night-600 text-gray-900 dark:text-white shadow-sm'
@@ -203,23 +206,35 @@ export default function MoviesLists() {
             </p>
           )}
         </div>
-        <div className="relative">
-          <input
-            type="text"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Filter by title or director…"
-            className="input text-sm py-1.5 pl-3 pr-8 w-56"
-          />
-          {search && (
-            <button
-              onClick={() => setSearch('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400
-                         hover:text-gray-600 dark:hover:text-gray-300 text-xs"
-            >
-              ✕
-            </button>
-          )}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setInDbOnly(v => !v)}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-all flex-shrink-0 ${
+              inDbOnly
+                ? 'bg-film-600 text-white border-film-600'
+                : 'border-stone-300 text-gray-500 hover:border-gray-400 dark:border-night-600 dark:text-gray-400 dark:hover:border-gray-500'
+            }`}
+          >
+            In our DB
+          </button>
+          <div className="relative">
+            <input
+              type="text"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Filter by title or director…"
+              className="input text-sm py-1.5 pl-3 pr-8 w-52"
+            />
+            {search && (
+              <button
+                onClick={() => setSearch('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400
+                           hover:text-gray-600 dark:hover:text-gray-300 text-xs"
+              >
+                ✕
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
