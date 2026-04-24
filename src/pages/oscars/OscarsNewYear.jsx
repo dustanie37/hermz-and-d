@@ -113,7 +113,7 @@ export default function OscarsNewYear() {
       const initNoms = {}
       const initGuesses = {}
       activeCats.forEach(c => {
-        const slots = c.name === 'Best Picture' ? 8 : 5
+        const slots = c.name === 'Best Picture' ? 10 : 5
         initNoms[c.id]    = Array(slots).fill('')
         initGuesses[c.id] = { matt: '', dustin: '' }
       })
