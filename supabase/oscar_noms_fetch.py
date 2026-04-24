@@ -74,59 +74,20 @@ CACHE_VERSION = 2    # v1 = no awardUri; v2 = awardUri present
 #   3. Add it here with the correct canonical display name.
 #
 QID_OVERRIDE = {
-    # ── Sound (most critical — Wikidata often labels all historical sound awards
-    #    identically as "Academy Award for Best Sound" even though pre-2021 they
-    #    were two separate competitive categories.)
+    # ── Sound ONLY — this is the only category where Wikidata uses ambiguous labels.
+    # Pre-2021, there were TWO separate sound categories (Mixing and Effects Editing),
+    # but Wikidata often labels both as "Academy Award for Best Sound".
+    # The QIDs distinguish them — if Wikidata returns the correct QIDs:
     "Q19024":   "Best Sound Mixing",      # Academy Award for Best Sound Mixing  (1930–2020)
     "Q869717":  "Best Sound Editing",     # Academy Award for Best Sound Editing (1963–2020)
     "Q1047215": "Best Sound",             # Academy Award for Best Sound         (2021+, unified)
-    "Q1148280": "Best Sound",             # older Wikidata item sometimes used for unified sound
+    "Q1148280": "Best Sound",             # alternate Wikidata item for unified sound
 
-    # ── Art Direction / Production Design
-    # Wikidata sometimes calls pre-2012 wins "Academy Award for Best Art Direction"
-    # and post-2012 wins "Best Production Design".  We normalise both to one name.
-    "Q103373":  "Best Production Design", # Academy Award for Best Art Direction (historical)
-    "Q19019":   "Best Production Design", # Academy Award for Best Production Design (2012+)
-
-    # ── Cinematography — colour vs. B&W era
-    "Q19018":   "Best Cinematography",    # Academy Award for Best Cinematography (modern)
-    "Q103368":  "Best Cinematography",    # Black-and-white era item, if separate
-
-    # ── Costume Design
-    "Q103392":  "Best Costume Design",    # historical B&W item, if separate
-    "Q19017":   "Best Costume Design",    # modern item
-
-    # ── Writing
-    "Q103360":  "Best Original Screenplay",
-    "Q103374":  "Best Adapted Screenplay",
-
-    # ── Visual Effects
-    "Q103395":  "Best Visual Effects",
-
-    # ── International Feature Film
-    "Q19021":   "Best International Feature Film",  # current name (2020+)
-    "Q103381":  "Best International Feature Film",  # formerly "Best Foreign Language Film"
-
-    # ── Animated Feature
-    "Q103396":  "Best Animated Feature",
-
-    # ── Documentary
-    "Q103387":  "Best Documentary Feature",
-    "Q103388":  "Best Documentary Short",
-
-    # ── Short films
-    "Q103389":  "Best Live Action Short",
-    "Q103390":  "Best Animated Short",
-
-    # ── Music
-    "Q103382":  "Best Original Score",
-    "Q103383":  "Best Original Song",
-
-    # ── Editing
-    "Q103393":  "Best Film Editing",
-
-    # ── Makeup
-    "Q103394":  "Best Makeup and Hairstyling",
+    # NOTE: All other categories (Best Director, Best Screenplay, etc.) are handled
+    # correctly by the label-based CATEGORY_NORM below. Do NOT add QIDs for them
+    # unless Wikidata is verified to use ambiguous labels for that category.
+    # Adding unverified QIDs here will OVERRIDE the correct label mapping and
+    # cause data corruption (e.g. Q103360 mapped to screenplay renamed Best Director).
 }
 
 # ── Category normalisation map (label-based, used when QID not in QID_OVERRIDE) ─

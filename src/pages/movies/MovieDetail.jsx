@@ -560,31 +560,25 @@ export default function MovieDetail() {
             {/* Rank quick stats — most recent event */}
             <div className="flex flex-wrap gap-4 pt-4 border-t border-stone-100 dark:border-night-700">
               <div className="text-center">
-                <div className="text-2xl font-bold font-display" style={{ color: DC }}>
+                <div className="text-4xl font-bold font-display" style={{ color: DC }}>
                   {latestYear && dustinRows[latestYear] ? `#${dustinRows[latestYear].rank}` : 'NR'}
                 </div>
                 <div className="text-xs text-gray-400 uppercase tracking-wider">Dustin's Rank</div>
                 {latestYear && <div className="text-xs text-gray-400">{latestYear}</div>}
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold font-display" style={{ color: HC }}>
+                <div className="text-4xl font-bold font-display" style={{ color: HC }}>
                   {latestYear && mattRows[latestYear] ? `#${mattRows[latestYear].rank}` : 'NR'}
                 </div>
                 <div className="text-xs text-gray-400 uppercase tracking-wider">Hermz's Rank</div>
                 {latestYear && <div className="text-xs text-gray-400">{latestYear}</div>}
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 font-display">
+                <div className="text-4xl font-bold text-emerald-600 dark:text-emerald-400 font-display">
                   {latestYear && combined[latestYear] ? `#${combined[latestYear].combined_rank}` : 'NR'}
                 </div>
                 <div className="text-xs text-gray-400 uppercase tracking-wider">Combined Rank</div>
                 {latestYear && <div className="text-xs text-gray-400">{latestYear}</div>}
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-film-600 dark:text-film-400 font-display">
-                  {appearsIn.length}
-                </div>
-                <div className="text-xs text-gray-400 uppercase tracking-wider">Event{appearsIn.length !== 1 ? 's' : ''} Listed</div>
               </div>
             </div>
           </div>
@@ -952,7 +946,7 @@ export default function MovieDetail() {
           <div className="px-6 pt-5 pb-3 border-b border-stone-100 dark:border-night-700">
             <h2 className="section-title text-lg mb-0.5">Score History</h2>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              All scores out of 10 except Personal Impact which is out of 20
+              Only events in which the film was ranked by at least one player appear below. All scores out of 10 except Personal Impact (out of 20).
             </p>
           </div>
           <div className="overflow-x-auto">
