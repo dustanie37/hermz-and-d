@@ -191,8 +191,20 @@ function WriterChart({ films, isDark }) {
     films.forEach(f => {
       if (f.writer) {
         f.writer.split(',').forEach(w => {
-          const name = w.trim()
-          if (name) counts[name] = (counts[name] || 0) + 1
+          const trimmed = w.trim()
+          // Check for parenthetical qualifier, e.g. "George Lucas (characters)"
+          const match = trimmed.match(/^(.+?)\s*\((.+?)\)\s*$/)
+          if (match) {
+            const qualifier = match[2].toLowerCase()
+            // Skip source-material credits — not actual screenwriters
+            if (/character|novel|story|book|play|based|comic|series|creator/.test(qualifier) &&
+                !/screenplay|screen story/.test(qualifier)) return
+            const name = match[1].trim()
+            if (name) counts[name] = (counts[name] || 0) + 1
+          } else {
+            // No qualifier — count as writer
+            if (trimmed) counts[trimmed] = (counts[trimmed] || 0) + 1
+          }
         })
       }
     })
