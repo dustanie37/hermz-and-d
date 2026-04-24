@@ -517,16 +517,18 @@ def main():
             won  = row["won"]
             year = row.get("year")
 
-            # Unique key is (canon, year, qid) — allows two different QIDs in the same
-            # category name *only* when they produce different canonical names.
-            # For the common case (same QID → same canon), deduplicate keeping win=True.
-            dedup_key = (canon, year, qid or award_uri)
+            # Dedup key is (canon, year) only — the canonical name is what matters.
+            # Different QIDs that resolve to the SAME canonical name (e.g. two historical
+            # screenplay QIDs both → "Best Original Screenplay") must be collapsed.
+            # Different QIDs that resolve to DIFFERENT names (e.g. Q19024 → "Best Sound
+            # Mixing" vs Q869717 → "Best Sound Editing") are already distinct by canon.
+            dedup_key = (canon, year)
             if dedup_key in seen_keys:
                 # Upgrade to win if incoming is win
                 if won:
-                    noms = [(c, w, y) for c, w, y in noms
-                            if not (c == canon and y == year and (qid or award_uri) == (qid or award_uri))]
+                    noms = [(c, w, y) for c, w, y in noms if (c, y) != dedup_key]
                     noms.append((canon, True, year))
+                # else skip duplicate
             else:
                 seen_keys.add(dedup_key)
                 noms.append((canon, won, year))
