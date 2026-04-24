@@ -82,7 +82,7 @@ function DecadeChart({ films, isDark }) {
       <BarChart data={data} layout="vertical" margin={{ left: 8, right: 20, top: 4, bottom: 4 }}>
         <XAxis type="number" tick={{ fill: textColor, fontSize: 11 }} allowDecimals={false} />
         <YAxis type="category" dataKey="decade" width={48} tick={{ fill: textColor, fontSize: 12 }} />
-        <Tooltip contentStyle={tooltipStyle(isDark)} labelStyle={{ color: isDark ? '#f3f4f6' : '#111827' }} />
+        <Tooltip contentStyle={tooltipStyle(isDark)} labelStyle={{ color: isDark ? '#f3f4f6' : '#111827' }} itemStyle={{ color: isDark ? '#f3f4f6' : '#111827' }} />
         <Bar dataKey="count" fill={DC} radius={[0, 4, 4, 0]} />
       </BarChart>
     </ResponsiveContainer>
@@ -108,7 +108,7 @@ function GenreChart({ films, isDark }) {
       <BarChart data={data} layout="vertical" margin={{ left: 8, right: 20, top: 4, bottom: 4 }}>
         <XAxis type="number" tick={{ fill: textColor, fontSize: 11 }} allowDecimals={false} />
         <YAxis type="category" dataKey="genre" width={128} tick={{ fill: textColor, fontSize: 11 }} />
-        <Tooltip contentStyle={tooltipStyle(isDark)} labelStyle={{ color: isDark ? '#f3f4f6' : '#111827' }} />
+        <Tooltip contentStyle={tooltipStyle(isDark)} labelStyle={{ color: isDark ? '#f3f4f6' : '#111827' }} itemStyle={{ color: isDark ? '#f3f4f6' : '#111827' }} />
         <Bar dataKey="count" fill={HC} radius={[0, 4, 4, 0]} />
       </BarChart>
     </ResponsiveContainer>
@@ -141,7 +141,7 @@ function DirectorChart({ films, isDark }) {
       <BarChart data={data} layout="vertical" margin={{ left: 8, right: 20, top: 4, bottom: 4 }}>
         <XAxis type="number" tick={{ fill: textColor, fontSize: 11 }} allowDecimals={false} />
         <YAxis type="category" dataKey="director" width={140} tick={{ fill: textColor, fontSize: 11 }} />
-        <Tooltip contentStyle={tooltipStyle(isDark)} labelStyle={{ color: isDark ? '#f3f4f6' : '#111827' }} />
+        <Tooltip contentStyle={tooltipStyle(isDark)} labelStyle={{ color: isDark ? '#f3f4f6' : '#111827' }} itemStyle={{ color: isDark ? '#f3f4f6' : '#111827' }} />
         <Bar dataKey="count" radius={[0, 4, 4, 0]}>
           {data.map((_, i) => <Cell key={i} fill={i % 2 === 0 ? HC : DC} />)}
         </Bar>
@@ -176,7 +176,7 @@ function ActorChart({ films, isDark }) {
       <BarChart data={data} layout="vertical" margin={{ left: 8, right: 20, top: 4, bottom: 4 }}>
         <XAxis type="number" tick={{ fill: textColor, fontSize: 11 }} allowDecimals={false} />
         <YAxis type="category" dataKey="actor" width={140} tick={{ fill: textColor, fontSize: 11 }} />
-        <Tooltip contentStyle={tooltipStyle(isDark)} labelStyle={{ color: isDark ? '#f3f4f6' : '#111827' }} />
+        <Tooltip contentStyle={tooltipStyle(isDark)} labelStyle={{ color: isDark ? '#f3f4f6' : '#111827' }} itemStyle={{ color: isDark ? '#f3f4f6' : '#111827' }} />
         <Bar dataKey="count" radius={[0, 4, 4, 0]}>
           {data.map((_, i) => <Cell key={i} fill={i % 2 === 0 ? DC : HC} />)}
         </Bar>
@@ -225,7 +225,7 @@ function WriterChart({ films, isDark }) {
       <BarChart data={data} layout="vertical" margin={{ left: 8, right: 20, top: 4, bottom: 4 }}>
         <XAxis type="number" tick={{ fill: textColor, fontSize: 11 }} allowDecimals={false} />
         <YAxis type="category" dataKey="writer" width={160} tick={{ fill: textColor, fontSize: 11 }} />
-        <Tooltip contentStyle={tooltipStyle(isDark)} labelStyle={{ color: isDark ? '#f3f4f6' : '#111827' }} />
+        <Tooltip contentStyle={tooltipStyle(isDark)} labelStyle={{ color: isDark ? '#f3f4f6' : '#111827' }} itemStyle={{ color: isDark ? '#f3f4f6' : '#111827' }} />
         <Bar dataKey="count" radius={[0, 4, 4, 0]}>
           {data.map((_, i) => <Cell key={i} fill={i % 2 === 0 ? HC : DC} />)}
         </Bar>
