@@ -5,13 +5,13 @@ import { supabase } from '../../lib/supabase'
 // ── list definitions ──────────────────────────────────────────────────────────
 
 const LISTS = [
-  { key: 'afi_top100',       label: 'AFI Top 100',        ranked: true  },
-  { key: 'afi_comedies',     label: 'AFI Comedies',       ranked: true  },
-  { key: 'imdb_top250',      label: 'IMDB Top 250',       ranked: true  },
-  { key: 'nyt_2000s',        label: 'NYT Best of 2000s',  ranked: true  },
-  { key: 'sight_sound',      label: 'Sight & Sound 2022', ranked: true  },
-  { key: 'variety_comedies', label: 'Variety Comedies',   ranked: true  },
-  { key: 'nfr',              label: 'Film Registry',      ranked: false },
+  { key: 'afi_top100',       label: 'AFI Top 100',       published: '2007',             ranked: true  },
+  { key: 'afi_comedies',     label: 'AFI Comedies',      published: '2000',             ranked: true  },
+  { key: 'imdb_top250',      label: 'IMDB Top 250',      published: 'December 31, 2025',ranked: true  },
+  { key: 'nyt_2000s',        label: 'NYT Best of 2000s', published: 'June 23, 2025',    ranked: true  },
+  { key: 'sight_sound',      label: 'Sight & Sound',     published: '2022',             ranked: true  },
+  { key: 'variety_comedies', label: 'Variety Comedies',  published: '2026',             ranked: true  },
+  { key: 'nfr',              label: 'Film Registry',     published: 'January 29, 2026', ranked: false },
 ]
 
 const EVENTS = [2001, 2007, 2016, 2026]
@@ -183,9 +183,12 @@ export default function MoviesLists() {
       {/* List header + search */}
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <div>
-          <h2 className="section-title text-lg mb-0.5">
+          <h2 className="section-title text-lg mb-0">
             {LISTS.find(l => l.key === activeKey)?.label}
           </h2>
+          <p className="text-xs text-gray-400 dark:text-gray-600 mb-0.5">
+            Published {LISTS.find(l => l.key === activeKey)?.published}
+          </p>
           {!loading && (
             <p className="text-sm text-gray-400">
               {search
