@@ -520,8 +520,15 @@ export default function MovieDetail() {
 
               {/* Director */}
               {film.director && (
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
                   Directed by <span className="text-gray-700 dark:text-gray-300 font-medium">{film.director}</span>
+                </p>
+              )}
+
+              {/* Screenplay */}
+              {film.writer && (
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                  Written by <span className="text-gray-700 dark:text-gray-300 font-medium">{film.writer}</span>
                 </p>
               )}
 
