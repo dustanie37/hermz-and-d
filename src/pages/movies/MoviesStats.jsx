@@ -82,7 +82,7 @@ function DecadeChart({ films, isDark }) {
       <BarChart data={data} layout="vertical" margin={{ left: 8, right: 20, top: 4, bottom: 4 }}>
         <XAxis type="number" tick={{ fill: textColor, fontSize: 11 }} allowDecimals={false} />
         <YAxis type="category" dataKey="decade" width={48} tick={{ fill: textColor, fontSize: 12 }} />
-        <Tooltip contentStyle={tooltipStyle(isDark)} labelStyle={{ color: isDark ? '#f3f4f6' : '#111827' }} itemStyle={{ color: isDark ? '#f3f4f6' : '#111827' }} />
+        <Tooltip contentStyle={tooltipStyle(isDark)} labelStyle={{ color: isDark ? '#f3f4f6' : '#111827' }} itemStyle={{ color: isDark ? '#f3f4f6' : '#111827' }} cursor={false} />
         <Bar dataKey="count" fill={DC} radius={[0, 4, 4, 0]} />
       </BarChart>
     </ResponsiveContainer>
@@ -108,7 +108,7 @@ function GenreChart({ films, isDark }) {
       <BarChart data={data} layout="vertical" margin={{ left: 8, right: 20, top: 4, bottom: 4 }}>
         <XAxis type="number" tick={{ fill: textColor, fontSize: 11 }} allowDecimals={false} />
         <YAxis type="category" dataKey="genre" width={128} tick={{ fill: textColor, fontSize: 11 }} />
-        <Tooltip contentStyle={tooltipStyle(isDark)} labelStyle={{ color: isDark ? '#f3f4f6' : '#111827' }} itemStyle={{ color: isDark ? '#f3f4f6' : '#111827' }} />
+        <Tooltip contentStyle={tooltipStyle(isDark)} labelStyle={{ color: isDark ? '#f3f4f6' : '#111827' }} itemStyle={{ color: isDark ? '#f3f4f6' : '#111827' }} cursor={false} />
         <Bar dataKey="count" fill={HC} radius={[0, 4, 4, 0]} />
       </BarChart>
     </ResponsiveContainer>
@@ -141,7 +141,7 @@ function DirectorChart({ films, isDark }) {
       <BarChart data={data} layout="vertical" margin={{ left: 8, right: 20, top: 4, bottom: 4 }}>
         <XAxis type="number" tick={{ fill: textColor, fontSize: 11 }} allowDecimals={false} />
         <YAxis type="category" dataKey="director" width={140} tick={{ fill: textColor, fontSize: 11 }} />
-        <Tooltip contentStyle={tooltipStyle(isDark)} labelStyle={{ color: isDark ? '#f3f4f6' : '#111827' }} itemStyle={{ color: isDark ? '#f3f4f6' : '#111827' }} />
+        <Tooltip contentStyle={tooltipStyle(isDark)} labelStyle={{ color: isDark ? '#f3f4f6' : '#111827' }} itemStyle={{ color: isDark ? '#f3f4f6' : '#111827' }} cursor={false} />
         <Bar dataKey="count" radius={[0, 4, 4, 0]}>
           {data.map((_, i) => <Cell key={i} fill={i % 2 === 0 ? HC : DC} />)}
         </Bar>
@@ -176,7 +176,7 @@ function ActorChart({ films, isDark }) {
       <BarChart data={data} layout="vertical" margin={{ left: 8, right: 20, top: 4, bottom: 4 }}>
         <XAxis type="number" tick={{ fill: textColor, fontSize: 11 }} allowDecimals={false} />
         <YAxis type="category" dataKey="actor" width={140} tick={{ fill: textColor, fontSize: 11 }} />
-        <Tooltip contentStyle={tooltipStyle(isDark)} labelStyle={{ color: isDark ? '#f3f4f6' : '#111827' }} itemStyle={{ color: isDark ? '#f3f4f6' : '#111827' }} />
+        <Tooltip contentStyle={tooltipStyle(isDark)} labelStyle={{ color: isDark ? '#f3f4f6' : '#111827' }} itemStyle={{ color: isDark ? '#f3f4f6' : '#111827' }} cursor={false} />
         <Bar dataKey="count" radius={[0, 4, 4, 0]}>
           {data.map((_, i) => <Cell key={i} fill={i % 2 === 0 ? DC : HC} />)}
         </Bar>
@@ -191,20 +191,9 @@ function WriterChart({ films, isDark }) {
     films.forEach(f => {
       if (f.writer) {
         f.writer.split(',').forEach(w => {
-          const trimmed = w.trim()
-          // Check for parenthetical qualifier, e.g. "George Lucas (characters)"
-          const match = trimmed.match(/^(.+?)\s*\((.+?)\)\s*$/)
-          if (match) {
-            const qualifier = match[2].toLowerCase()
-            // Skip source-material credits — not actual screenwriters
-            if (/character|novel|story|book|play|based|comic|series|creator/.test(qualifier) &&
-                !/screenplay|screen story/.test(qualifier)) return
-            const name = match[1].trim()
-            if (name) counts[name] = (counts[name] || 0) + 1
-          } else {
-            // No qualifier — count as writer
-            if (trimmed) counts[trimmed] = (counts[trimmed] || 0) + 1
-          }
+          // Strip any parenthetical qualifier to get clean name, matching what movie pages display
+          const name = w.trim().replace(/\s*\(.*?\)\s*$/, '').trim()
+          if (name) counts[name] = (counts[name] || 0) + 1
         })
       }
     })
@@ -225,7 +214,7 @@ function WriterChart({ films, isDark }) {
       <BarChart data={data} layout="vertical" margin={{ left: 8, right: 20, top: 4, bottom: 4 }}>
         <XAxis type="number" tick={{ fill: textColor, fontSize: 11 }} allowDecimals={false} />
         <YAxis type="category" dataKey="writer" width={160} tick={{ fill: textColor, fontSize: 11 }} />
-        <Tooltip contentStyle={tooltipStyle(isDark)} labelStyle={{ color: isDark ? '#f3f4f6' : '#111827' }} itemStyle={{ color: isDark ? '#f3f4f6' : '#111827' }} />
+        <Tooltip contentStyle={tooltipStyle(isDark)} labelStyle={{ color: isDark ? '#f3f4f6' : '#111827' }} itemStyle={{ color: isDark ? '#f3f4f6' : '#111827' }} cursor={false} />
         <Bar dataKey="count" radius={[0, 4, 4, 0]}>
           {data.map((_, i) => <Cell key={i} fill={i % 2 === 0 ? HC : DC} />)}
         </Bar>
