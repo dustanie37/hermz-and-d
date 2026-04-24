@@ -168,8 +168,8 @@ export default function MoviesAll() {
 
   // Column-group toggles
   const [showCombined, setShowCombined] = useState(true)
-  const [showDust, setShowDust]         = useState(false)
-  const [showMatt, setShowMatt]         = useState(false)
+  const [showDust, setShowDust]         = useState(true)
+  const [showMatt, setShowMatt]         = useState(true)
 
   const [search, setSearch]   = useState('')
   const [sortKey, setSortKey] = useState('title')
