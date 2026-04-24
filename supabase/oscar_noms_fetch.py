@@ -54,11 +54,21 @@ NO_DATA_LOG  = SCRIPT_DIR / "oscar_noms_no_data.txt"
 MISMATCH_LOG = SCRIPT_DIR / "oscar_noms_mismatch.txt"
 QIDS_LOG     = SCRIPT_DIR / "oscar_noms_qids.txt"
 
+ACTOR_CACHE  = SCRIPT_DIR / "oscar_actor_cache.json"   # person-side query cache
+
 WIKIDATA_URL = "https://query.wikidata.org/sparql"
-BATCH_SIZE   = 15    # IMDb IDs per SPARQL request
-SLEEP_SECS   = 2.0   # be polite to Wikidata's public endpoint
+BATCH_SIZE        = 15   # IMDb IDs per film-side SPARQL request
+ACTOR_BATCH_SIZE  = 8    # IMDb IDs per person-side request (heavier query)
+SLEEP_SECS        = 2.0  # be polite to Wikidata's public endpoint
 
 CACHE_VERSION = 2    # v1 = no awardUri; v2 = awardUri present
+
+# Acting category canonical names — used to decide which rows come from
+# the person-side query vs the film-side query during merge.
+ACTING_CATEGORIES = {
+    "Best Actor", "Best Actress",
+    "Best Supporting Actor", "Best Supporting Actress",
+}
 
 # ── QID override map ───────────────────────────────────────────────────────────
 # Maps Wikidata entity IDs (Q-numbers) to canonical category names.
@@ -308,9 +318,47 @@ SELECT ?imdbId ?awardUri ?awardLabel ?won ?year ?nomineeName WHERE {{
 """
 
 
-def query_wikidata(imdb_ids: list[str]) -> list[dict]:
-    """Run a SPARQL query for a batch of IMDb IDs."""
-    query = build_sparql_query(imdb_ids)
+def build_person_sparql_query(imdb_ids: list[str]) -> str:
+    """Query Oscar acting nominations from the PERSON's Wikidata page.
+    In Wikidata, acting nominees typically have the award on their own page
+    with a P1716 (award for) qualifier pointing back to the film.
+    This is the only reliable way to get individual nominee names for cases
+    like Amadeus (F. Murray Abraham + Tom Hulce, both Best Actor)."""
+    values = " ".join(f'"{iid}"' for iid in imdb_ids)
+    return f"""
+SELECT ?imdbId ?awardUri ?awardLabel ?won ?year ?actorName WHERE {{
+  VALUES ?imdbId {{ {values} }}
+  ?film wdt:P345 ?imdbId .
+  {{
+    ?actor p:P166 ?stmt .
+    ?stmt ps:P166 ?award .
+    BIND(true AS ?won)
+  }} UNION {{
+    ?actor p:P1411 ?stmt .
+    ?stmt ps:P1411 ?award .
+    BIND(false AS ?won)
+  }}
+  ?stmt pq:P1716 ?film .
+  ?award wdt:P31 wd:Q19020 .
+  BIND(str(?award) AS ?awardUri)
+  SERVICE wikibase:label {{
+    bd:serviceParam wikibase:language "en" .
+    ?award rdfs:label ?awardLabel .
+    ?actor rdfs:label ?actorName .
+  }}
+  OPTIONAL {{
+    ?stmt pq:P585 ?date .
+    BIND(YEAR(?date) AS ?year)
+  }}
+}}
+"""
+
+
+def query_wikidata(imdb_ids: list[str], query: str = None) -> list[dict]:
+    """Run a SPARQL query for a batch of IMDb IDs.
+    If query is not provided, uses the default film-side query."""
+    if query is None:
+        query = build_sparql_query(imdb_ids)
     headers = {
         "Accept": "application/sparql-results+json",
         "User-Agent": "HermzAndDMoviesApp/2.0 (film ranking app; contact: bard37@gmail.com)"
@@ -333,7 +381,7 @@ def query_wikidata(imdb_ids: list[str]) -> list[dict]:
                     "awardLabel":  b.get("awardLabel",  {}).get("value", ""),
                     "won":         b.get("won",         {}).get("value", "false").lower() == "true",
                     "year":        int(b["year"]["value"]) if "year" in b else None,
-                    "nomineeName": b.get("nomineeName", {}).get("value", "") or None,
+                    "nomineeName": (b.get("nomineeName") or b.get("actorName") or {}).get("value", "") or None,
                 })
             return rows
         except requests.exceptions.Timeout:
@@ -458,6 +506,60 @@ def main():
             time.sleep(SLEEP_SECS)
 
     print()
+    print("All film-side batches complete.")
+
+    # 5b. Person-side query — acting nominees (stored on the person's Wikidata page
+    #     with P1716 qualifier pointing back to the film)
+    if args.refresh and ACTOR_CACHE.exists():
+        ACTOR_CACHE.unlink()
+        print("Actor cache cleared (--refresh).")
+
+    actor_cache: dict[str, list] = {}
+    if ACTOR_CACHE.exists():
+        with open(ACTOR_CACHE) as f:
+            actor_cache = json.load(f)
+        print(f"Loaded {len(actor_cache)} cached IMDb IDs from {ACTOR_CACHE.name}")
+
+    actor_to_fetch = [iid for iid in all_imdb_ids if iid not in actor_cache]
+    print(f"IMDb IDs to fetch (person-side): {len(actor_to_fetch)}")
+    print()
+
+    total_actor_batches = (len(actor_to_fetch) + ACTOR_BATCH_SIZE - 1) // ACTOR_BATCH_SIZE
+    for batch_num, i in enumerate(range(0, len(actor_to_fetch), ACTOR_BATCH_SIZE), 1):
+        batch = actor_to_fetch[i : i + ACTOR_BATCH_SIZE]
+        print(f"  Actor batch {batch_num}/{total_actor_batches}: {len(batch)} IDs … ", end="", flush=True)
+
+        for iid in batch:
+            actor_cache[iid] = []
+
+        try:
+            rows = query_wikidata(batch, build_person_sparql_query(batch))
+        except Exception as e:
+            print(f"FAILED ({e}) — skipping batch")
+            for iid in batch:
+                del actor_cache[iid]
+            time.sleep(SLEEP_SECS * 4)
+            continue
+
+        by_imdb: dict[str, list] = {iid: [] for iid in batch}
+        for row in rows:
+            iid = row["imdbId"]
+            if iid in by_imdb:
+                by_imdb[iid].append(row)
+
+        for iid, film_rows in by_imdb.items():
+            actor_cache[iid] = film_rows
+
+        hits = sum(1 for iid in batch if actor_cache.get(iid))
+        print(f"{len(rows)} rows  ({hits}/{len(batch)} films with data)")
+
+        with open(ACTOR_CACHE, "w") as f:
+            json.dump(actor_cache, f, indent=2)
+
+        if batch_num < total_actor_batches:
+            time.sleep(SLEEP_SECS)
+
+    print()
     print("All batches complete. Generating SQL…")
 
     # 6. Compile results per film + collect all QIDs seen
@@ -466,11 +568,11 @@ def main():
     unknown_categories: set[str] = set()
     all_qids_seen: dict[str, str] = {}   # QID → label (for logging)
 
-    for imdb_id in imdb_to_filmids:
-        rows  = nom_cache.get(imdb_id, [])
-        seen_keys: set[tuple] = set()
-        noms: list[tuple[str, bool, int | None, str | None]] = []
-
+    def process_rows(rows):
+        """Normalise a list of raw SPARQL rows into (canon, won, year, nominee_name) tuples,
+        deduplicating on (canon, year, nominee_name)."""
+        seen: set[tuple] = set()
+        result: list[tuple[str, bool, int | None, str | None]] = []
         for row in rows:
             raw_label    = row.get("awardLabel", "")
             award_uri    = row.get("awardUri", "")
@@ -478,33 +580,49 @@ def main():
             qid          = extract_qid(award_uri)
             if qid:
                 all_qids_seen[qid] = raw_label
-
             canon = normalize_category(raw_label, award_uri)
             if not canon:
                 continue
             if canon.startswith("[UNKNOWN]"):
                 unknown_categories.add(f"{raw_label}  (URI: {award_uri})")
-
             won  = row["won"]
             year = row.get("year")
-
-            # Dedup key includes nominee_name so that multiple nominees in the same
-            # acting category (e.g. Amadeus: F. Murray Abraham + Tom Hulce, both
-            # Best Actor) are kept as separate rows rather than collapsed.
-            # For non-acting categories (nominee_name is None), dedup is on (canon, year)
-            # as before — prevents duplicate technical/craft nominations.
-            dedup_key = (canon, year, nominee_name)
-            if dedup_key in seen_keys:
-                # Upgrade to win if incoming is win
+            key  = (canon, year, nominee_name)
+            if key in seen:
                 if won:
-                    noms = [(c, w, y, n) for c, w, y, n in noms if (c, y, n) != dedup_key]
-                    noms.append((canon, True, year, nominee_name))
-                # else skip duplicate
+                    result = [(c, w, y, n) for c, w, y, n in result if (c, y, n) != key]
+                    result.append((canon, True, year, nominee_name))
             else:
-                seen_keys.add(dedup_key)
-                noms.append((canon, won, year, nominee_name))
+                seen.add(key)
+                result.append((canon, won, year, nominee_name))
+        return result
 
-        imdb_noms[imdb_id] = noms
+    for imdb_id in imdb_to_filmids:
+        # Person-side: acting nominees with names (P1716 → film)
+        person_noms = process_rows(actor_cache.get(imdb_id, []))
+        person_covered = {(cat, year) for cat, _, year, _ in person_noms}
+
+        # Film-side: all categories — but skip acting categories already covered by
+        # person-side data (those have nominee names; film-side rows would lack them)
+        film_rows_raw = [
+            r for r in nom_cache.get(imdb_id, [])
+            if normalize_category(r.get("awardLabel", ""), r.get("awardUri", ""))
+               not in ACTING_CATEGORIES
+            or (normalize_category(r.get("awardLabel", ""), r.get("awardUri", "")), r.get("year"))
+               not in person_covered
+        ]
+        film_noms = process_rows(film_rows_raw)
+
+        noms: list[tuple[str, bool, int | None, str | None]] = person_noms + film_noms
+        # Final dedup across the merged set
+        seen_keys: set[tuple] = set()
+        deduped: list[tuple[str, bool, int | None, str | None]] = []
+        for item in noms:
+            k = (item[0], item[2], item[3])
+            if k not in seen_keys:
+                seen_keys.add(k)
+                deduped.append(item)
+        imdb_noms[imdb_id] = deduped
 
     # 7. Generate SQL (join by omdb_id, not integer film_id)
     print(f"Generating {OUTPUT_SQL.name} …")
