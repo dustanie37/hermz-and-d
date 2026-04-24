@@ -636,7 +636,10 @@ def main():
         seen_keys: set[tuple] = set()
         deduped: list[tuple[str, bool, int | None, str | None]] = []
         for item in noms:
-            k = (item[0], item[2], item[3])
+            # For acting categories include won-status in the key so a win and a nomination
+            # from the same film (different people) are not collapsed into one row.
+            k = (item[0], item[2], item[3], item[1]) if item[0] in ACTING_CATEGORIES \
+                else (item[0], item[2], item[3])
             if k not in seen_keys:
                 seen_keys.add(k)
                 deduped.append(item)
