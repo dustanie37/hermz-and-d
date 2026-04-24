@@ -223,10 +223,12 @@ function OscarNomsList({ noms, filmYear }) {
     <div className="space-y-4">
       {years.map(yr => {
         const rows = byYear[yr]
-        // Sort: wins first, then alphabetical
+        // Sort: wins first, then category name, then nominee name
         const sorted = [...rows].sort((a, b) => {
           if (a.is_winner !== b.is_winner) return a.is_winner ? -1 : 1
-          return a.category_name.localeCompare(b.category_name)
+          const catCmp = a.category_name.localeCompare(b.category_name)
+          if (catCmp !== 0) return catCmp
+          return (a.nominee_name || '').localeCompare(b.nominee_name || '')
         })
 
         // Show year label only for multi-year films or when year differs from release year
@@ -241,26 +243,29 @@ function OscarNomsList({ noms, filmYear }) {
               </p>
             )}
             <div className="flex flex-wrap gap-2">
-              {sorted.map((nom, i) =>
-                nom.is_winner ? (
+              {sorted.map((nom, i) => {
+                const label = nom.nominee_name
+                  ? `${nom.category_name} — ${nom.nominee_name}`
+                  : nom.category_name
+                return nom.is_winner ? (
                   <span
-                    key={`${nom.category_name}-${i}`}
+                    key={`${nom.category_name}-${nom.nominee_name ?? ''}-${i}`}
                     className="badge-gold flex items-center gap-1 text-sm"
                   >
-                    🏆 {nom.category_name}
+                    🏆 {label}
                   </span>
                 ) : (
                   <span
-                    key={`${nom.category_name}-${i}`}
+                    key={`${nom.category_name}-${nom.nominee_name ?? ''}-${i}`}
                     className="text-sm text-gray-500 dark:text-gray-400
                                px-2.5 py-0.5 rounded-full border
                                border-stone-200 dark:border-night-600
                                bg-stone-50 dark:bg-night-800"
                   >
-                    {nom.category_name}
+                    {label}
                   </span>
                 )
-              )}
+              })}
             </div>
           </div>
         )

@@ -270,10 +270,12 @@ def escape_sql(s: str) -> str:
 
 def build_sparql_query(imdb_ids: list[str]) -> str:
     """Build a SPARQL query to fetch Oscar noms/wins for a batch of IMDb IDs.
-    Returns imdbId, awardUri (QID), awardLabel, won, and ceremony year."""
+    Returns imdbId, awardUri (QID), awardLabel, won, ceremony year, and
+    optional nomineeName (P1706 'together with' qualifier — present for acting
+    awards where Wikidata stores the performer on the film's award statement)."""
     values = " ".join(f'"{iid}"' for iid in imdb_ids)
     return f"""
-SELECT ?imdbId ?awardUri ?awardLabel ?won ?year WHERE {{
+SELECT ?imdbId ?awardUri ?awardLabel ?won ?year ?nomineeName WHERE {{
   VALUES ?imdbId {{ {values} }}
   ?film wdt:P345 ?imdbId .
   {{
@@ -294,6 +296,13 @@ SELECT ?imdbId ?awardUri ?awardLabel ?won ?year WHERE {{
   OPTIONAL {{
     ?stmt pq:P585 ?date .
     BIND(YEAR(?date) AS ?year)
+  }}
+  OPTIONAL {{
+    ?stmt pq:P1706 ?nomineeEntity .
+    SERVICE wikibase:label {{
+      bd:serviceParam wikibase:language "en" .
+      ?nomineeEntity rdfs:label ?nomineeName .
+    }}
   }}
 }}
 """
@@ -319,11 +328,12 @@ def query_wikidata(imdb_ids: list[str]) -> list[dict]:
             rows = []
             for b in data.get("results", {}).get("bindings", []):
                 rows.append({
-                    "imdbId":     b.get("imdbId",     {}).get("value", ""),
-                    "awardUri":   b.get("awardUri",   {}).get("value", ""),
-                    "awardLabel": b.get("awardLabel", {}).get("value", ""),
-                    "won":        b.get("won",        {}).get("value", "false").lower() == "true",
-                    "year":       int(b["year"]["value"]) if "year" in b else None,
+                    "imdbId":      b.get("imdbId",      {}).get("value", ""),
+                    "awardUri":    b.get("awardUri",    {}).get("value", ""),
+                    "awardLabel":  b.get("awardLabel",  {}).get("value", ""),
+                    "won":         b.get("won",         {}).get("value", "false").lower() == "true",
+                    "year":        int(b["year"]["value"]) if "year" in b else None,
+                    "nomineeName": b.get("nomineeName", {}).get("value", "") or None,
                 })
             return rows
         except requests.exceptions.Timeout:
@@ -451,21 +461,21 @@ def main():
     print("All batches complete. Generating SQL…")
 
     # 6. Compile results per film + collect all QIDs seen
-    # Structure: imdb_id → list of (category_name, is_winner, ceremony_year)
-    imdb_noms: dict[str, list[tuple[str, bool, int | None]]] = {}
+    # Structure: imdb_id → list of (category_name, is_winner, ceremony_year, nominee_name)
+    imdb_noms: dict[str, list[tuple[str, bool, int | None, str | None]]] = {}
     unknown_categories: set[str] = set()
     all_qids_seen: dict[str, str] = {}   # QID → label (for logging)
 
     for imdb_id in imdb_to_filmids:
         rows  = nom_cache.get(imdb_id, [])
-        # Use (category_name, year, award_uri) as unique key — different URIs allowed per year!
         seen_keys: set[tuple] = set()
-        noms: list[tuple[str, bool, int | None]] = []
+        noms: list[tuple[str, bool, int | None, str | None]] = []
 
         for row in rows:
-            raw_label  = row.get("awardLabel", "")
-            award_uri  = row.get("awardUri", "")
-            qid        = extract_qid(award_uri)
+            raw_label    = row.get("awardLabel", "")
+            award_uri    = row.get("awardUri", "")
+            nominee_name = row.get("nomineeName") or None
+            qid          = extract_qid(award_uri)
             if qid:
                 all_qids_seen[qid] = raw_label
 
@@ -478,21 +488,21 @@ def main():
             won  = row["won"]
             year = row.get("year")
 
-            # Dedup key is (canon, year) only — the canonical name is what matters.
-            # Different QIDs that resolve to the SAME canonical name (e.g. two historical
-            # screenplay QIDs both → "Best Original Screenplay") must be collapsed.
-            # Different QIDs that resolve to DIFFERENT names (e.g. Q19024 → "Best Sound
-            # Mixing" vs Q869717 → "Best Sound Editing") are already distinct by canon.
-            dedup_key = (canon, year)
+            # Dedup key includes nominee_name so that multiple nominees in the same
+            # acting category (e.g. Amadeus: F. Murray Abraham + Tom Hulce, both
+            # Best Actor) are kept as separate rows rather than collapsed.
+            # For non-acting categories (nominee_name is None), dedup is on (canon, year)
+            # as before — prevents duplicate technical/craft nominations.
+            dedup_key = (canon, year, nominee_name)
             if dedup_key in seen_keys:
                 # Upgrade to win if incoming is win
                 if won:
-                    noms = [(c, w, y) for c, w, y in noms if (c, y) != dedup_key]
-                    noms.append((canon, True, year))
+                    noms = [(c, w, y, n) for c, w, y, n in noms if (c, y, n) != dedup_key]
+                    noms.append((canon, True, year, nominee_name))
                 # else skip duplicate
             else:
                 seen_keys.add(dedup_key)
-                noms.append((canon, won, year))
+                noms.append((canon, won, year, nominee_name))
 
         imdb_noms[imdb_id] = noms
 
@@ -504,18 +514,19 @@ def main():
         noms = imdb_noms.get(imdb_id, [])
         if not noms:
             continue
-        for (cat, won, year) in sorted(noms, key=lambda x: (x[2] or 0, x[0])):
-            year_sql = str(year) if year else "NULL"
-            won_sql  = "TRUE" if won else "FALSE"
-            cat_sql  = escape_sql(cat)
-            imdb_sql = escape_sql(imdb_id)
+        for (cat, won, year, nominee) in sorted(noms, key=lambda x: (x[2] or 0, x[0], x[3] or "")):
+            year_sql    = str(year) if year else "NULL"
+            won_sql     = "TRUE" if won else "FALSE"
+            cat_sql     = escape_sql(cat)
+            imdb_sql    = escape_sql(imdb_id)
+            nominee_sql = f"'{escape_sql(nominee)}'" if nominee else "NULL"
             insert_rows.append(
-                f"  ('{imdb_sql}', {year_sql}, '{cat_sql}', {won_sql})"
+                f"  ('{imdb_sql}', {year_sql}, '{cat_sql}', {won_sql}, {nominee_sql})"
             )
 
     with open(OUTPUT_SQL, "w") as f:
-        f.write("-- Generated by oscar_noms_fetch.py (Phase 8.5 v2)\n")
-        f.write("-- Run in Supabase SQL Editor AFTER film_oscar_noms_schema.sql\n")
+        f.write("-- Generated by oscar_noms_fetch.py (v3 — nominee_name support)\n")
+        f.write("-- Run in Supabase SQL Editor AFTER film_oscar_noms_add_nominee.sql\n")
         f.write(f"-- Total rows: {len(insert_rows)}\n\n")
 
         f.write("BEGIN;\n\n")
@@ -524,15 +535,14 @@ def main():
 
         if insert_rows:
             f.write("-- Join by omdb_id so integer film IDs don't need to match exactly\n")
-            f.write("INSERT INTO public.film_oscar_noms (film_id, ceremony_year, category_name, is_winner)\n")
-            f.write("SELECT f.id, v.ceremony_year, v.category_name, v.is_winner\n")
+            f.write("INSERT INTO public.film_oscar_noms (film_id, ceremony_year, category_name, is_winner, nominee_name)\n")
+            f.write("SELECT f.id, v.ceremony_year, v.category_name, v.is_winner, v.nominee_name\n")
             f.write("FROM public.films f\n")
             f.write("JOIN (\n  VALUES\n")
             f.write(",\n".join(insert_rows))
-            f.write("\n) AS v(omdb_id, ceremony_year, category_name, is_winner)\n")
+            f.write("\n) AS v(omdb_id, ceremony_year, category_name, is_winner, nominee_name)\n")
             f.write("  ON f.omdb_id = v.omdb_id\n")
-            f.write("ON CONFLICT (film_id, ceremony_year, category_name) DO UPDATE\n")
-            f.write("  SET is_winner = EXCLUDED.is_winner;\n")
+            f.write("ON CONFLICT DO NOTHING;\n")
 
         f.write("\nCOMMIT;\n")
 
@@ -575,7 +585,7 @@ def main():
     mismatches = []
     for film_id, imdb_id in film_to_imdb.items():
         noms = imdb_noms.get(imdb_id, [])
-        wd_wins   = sum(1 for _, won, _ in noms if won)
+        wd_wins   = sum(1 for _, won, _, _ in noms if won)
         omdb_wins = film_to_omdb_wins.get(film_id, 0)
         if wd_wins != omdb_wins and (wd_wins > 0 or omdb_wins > 0):
             title = film_to_title.get(film_id, "")
