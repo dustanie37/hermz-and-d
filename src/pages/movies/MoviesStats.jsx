@@ -1302,58 +1302,62 @@ export default function MoviesStats() {
     async function loadCrossover() {
       setCrossoverLoading(true)
 
-      const filmIds = Object.keys(allTimeData.filmMap)
+      // Use byFilm (keyed by film_id from combined_rankings) as the source of truth —
+      // filmMap only has entries where the films join succeeded, byFilm has all.
+      const rankedFilmIds = new Set(Object.keys(allTimeData.byFilm))
+      const totalFilmsOnLists = rankedFilmIds.size
 
-      // Oscar noms for all ranked films (batch by chunks if large)
+      // Fetch ALL film_oscar_noms — avoids .in() URL-length/type-mismatch issues.
+      // Table is ~2-5k rows max; Supabase default cap is 1000 so we must set limit.
       const { data: noms } = await supabase
         .from('film_oscar_noms')
         .select('film_id, category, is_winner')
-        .in('film_id', filmIds)
+        .limit(10000)
 
-      // Build per-film Oscar stats
-      const oscarMap = {} // { filmId: { wins, noms, winCats, nomCats } }
+      // Build per-film Oscar stats, but only for films on our combined lists
+      const oscarMap = {}
       ;(noms || []).forEach(n => {
-        if (!oscarMap[n.film_id]) oscarMap[n.film_id] = { wins: 0, noms: 0, winCats: [], nomCats: [] }
+        const id = String(n.film_id)
+        if (!rankedFilmIds.has(id)) return          // not on our lists → skip
+        if (!oscarMap[id]) oscarMap[id] = { wins: 0, noms: 0, winCats: [], nomCats: [] }
         if (n.is_winner) {
-          oscarMap[n.film_id].wins++
-          if (!oscarMap[n.film_id].winCats.includes(n.category)) oscarMap[n.film_id].winCats.push(n.category)
+          oscarMap[id].wins++
+          if (!oscarMap[id].winCats.includes(n.category)) oscarMap[id].winCats.push(n.category)
         } else {
-          oscarMap[n.film_id].noms++
-          if (!oscarMap[n.film_id].nomCats.includes(n.category)) oscarMap[n.film_id].nomCats.push(n.category)
+          oscarMap[id].noms++
+          if (!oscarMap[id].nomCats.includes(n.category)) oscarMap[id].nomCats.push(n.category)
         }
       })
 
-      // Build crossover film list (films with any Oscar data)
+      // Build crossover film list
       const films = Object.entries(oscarMap)
-        .filter(([, s]) => s.wins > 0 || s.noms > 0)
         .map(([filmId, stats]) => {
           const f = allTimeData.filmMap[filmId] || {}
           const ranks = allTimeData.byFilm[filmId] || {}
           const rankValues = Object.values(ranks).filter(Boolean)
           return {
             filmId,
-            title:           f.title,
-            poster_url:      f.poster_url,
-            director:        f.director,
-            release_year:    f.release_year,
-            oscarWins:       stats.wins,
-            oscarNoms:       stats.noms,
-            winCategories:   stats.winCats,
-            nomCategories:   stats.nomCats,
-            combinedRanks:   ranks,
-            eventCount:      rankValues.length,
+            title:            f.title,
+            poster_url:       f.poster_url,
+            director:         f.director,
+            release_year:     f.release_year,
+            oscarWins:        stats.wins,
+            oscarNoms:        stats.noms,
+            winCategories:    stats.winCats,
+            nomCategories:    stats.nomCats,
+            combinedRanks:    ranks,
+            eventCount:       rankValues.length,
             bestCombinedRank: rankValues.length ? Math.min(...rankValues) : null,
           }
         })
 
-      // Sort: wins desc, then best rank asc
+      // Sort: wins desc, then best combined rank asc
       films.sort((a, b) =>
         b.oscarWins - a.oscarWins || (a.bestCombinedRank ?? 999) - (b.bestCombinedRank ?? 999)
       )
 
       const totalWithNoms = films.length
       const totalWithWins = films.filter(f => f.oscarWins > 0).length
-      const totalFilmsOnLists = filmIds.length
 
       setCrossoverData({ films, totalWithNoms, totalWithWins, totalFilmsOnLists })
       setCrossoverLoading(false)
