@@ -60,17 +60,17 @@ export default function Home() {
       supabase.from('films').select('*', { count: 'exact', head: true }),
     ])
 
-    // #1 combined film from the most recent event
+    // Top 3 combined films from the most recent event
     const latestEvent = events?.[0]
-    let topFilm = null
+    let topFilms = []
     if (latestEvent) {
-      const { data: top } = await supabase
+      const { data: tops } = await supabase
         .from('combined_rankings')
         .select('combined_rank, films(id, title, poster_url)')
         .eq('event_id', latestEvent.id)
-        .eq('combined_rank', 1)
-        .maybeSingle()
-      topFilm = top?.films || null
+        .lte('combined_rank', 3)
+        .order('combined_rank', { ascending: true })
+      topFilms = (tops || []).map(t => ({ rank: t.combined_rank, ...t.films }))
     }
 
     const complete = (years || []).filter(y => y.status !== 'upcoming')
@@ -79,7 +79,7 @@ export default function Home() {
     const mostRecent = complete[0]
 
     setOscarData({ complete, mattWins, dustinWins, mostRecent })
-    setMoviesData({ events: events || [], filmCount: filmCount || 0, latestEvent, topFilm })
+    setMoviesData({ events: events || [], filmCount: filmCount || 0, latestEvent, topFilms })
     setLoading(false)
   }
 
@@ -225,51 +225,40 @@ export default function Home() {
             {loading || !moviesData ? (
               <SkeletonRows count={3} />
             ) : (
-              <div className="space-y-2 mb-5">
-                {/* Latest event */}
-                <StatRow label="Latest Event">
-                  <span className="text-film-500">{moviesData.latestEvent?.year ?? '—'}</span>
-                </StatRow>
+              <div className="mb-5">
+                {/* Latest event label */}
+                <div className="text-xs uppercase tracking-wider text-gray-500 font-medium mb-3">
+                  Current Top 3 — {moviesData.latestEvent?.year ?? '—'} Combined List
+                </div>
 
-                {/* #1 combined film */}
-                {moviesData.topFilm ? (
-                  <div className="flex items-center gap-3 py-2 px-3 bg-stone-50 dark:bg-night-900/60 rounded-lg">
-                    {moviesData.topFilm.poster_url ? (
-                      <img
-                        src={moviesData.topFilm.poster_url}
-                        alt={moviesData.topFilm.title}
-                        className="w-8 h-11 object-cover rounded flex-shrink-0 shadow-md"
-                      />
-                    ) : (
-                      <div className="w-8 h-11 bg-stone-200 dark:bg-night-700 rounded flex-shrink-0 flex items-center justify-center text-xs">
-                        🎬
+                {/* Top 3 posters */}
+                {moviesData.topFilms?.length > 0 ? (
+                  <div className="flex gap-3 justify-start">
+                    {moviesData.topFilms.map(film => (
+                      <div key={film.id} className="flex flex-col items-center gap-1.5 flex-1 min-w-0">
+                        {film.poster_url ? (
+                          <img
+                            src={film.poster_url}
+                            alt={film.title}
+                            className="w-full aspect-[2/3] object-cover rounded-lg shadow-lg"
+                          />
+                        ) : (
+                          <div className="w-full aspect-[2/3] bg-stone-200 dark:bg-night-700 rounded-lg flex items-center justify-center text-2xl shadow-lg">
+                            🎬
+                          </div>
+                        )}
+                        <div className="text-center w-full">
+                          <div className="text-film-500 text-xs font-bold leading-none mb-0.5">#{film.rank}</div>
+                          <div className="text-xs text-gray-700 dark:text-gray-300 font-medium leading-tight truncate">
+                            {film.title}
+                          </div>
+                        </div>
                       </div>
-                    )}
-                    <div className="min-w-0">
-                      <div className="text-xs uppercase tracking-wider text-gray-500 font-medium leading-none mb-0.5">
-                        #1 Combined {moviesData.latestEvent?.year}
-                      </div>
-                      <div className="text-sm font-semibold text-gray-900 dark:text-white truncate">
-                        {moviesData.topFilm.title}
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <StatRow label="# 1 Combined">
-                    <span className="text-gray-400">—</span>
-                  </StatRow>
-                )}
-
-                {/* Events */}
-                <StatRow label="Events">
-                  <div className="flex items-center gap-1">
-                    {moviesData.events.map((ev, i) => (
-                      <span key={ev.id} className="text-gray-500 text-xs">
-                        {ev.year}{i < moviesData.events.length - 1 ? ' ·' : ''}
-                      </span>
                     ))}
                   </div>
-                </StatRow>
+                ) : (
+                  <div className="text-gray-400 text-sm">—</div>
+                )}
               </div>
             )}
 
