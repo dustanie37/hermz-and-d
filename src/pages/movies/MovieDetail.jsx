@@ -431,10 +431,22 @@ export default function MovieDetail() {
     setOmdbRefreshing(true)
     setOmdbStatus(null)
     try {
-      // Prefer lookup by existing imdbID; fall back to title + year
-      const omdbData = film.omdb_id
-        ? await fetchFilmById(film.omdb_id)
-        : await searchFilmByTitle(film.title, film.release_year)
+      // Always re-read the film from DB first so we use the latest omdb_id,
+      // not whatever may be stale in React state
+      const { data: freshFilm } = await supabase
+        .from('films')
+        .select('id, title, release_year, omdb_id')
+        .eq('id', film.id)
+        .single()
+
+      const lookupId    = freshFilm?.omdb_id   ?? film.omdb_id
+      const lookupTitle = freshFilm?.title      ?? film.title
+      const lookupYear  = freshFilm?.release_year ?? film.release_year
+
+      // Prefer lookup by imdbID; fall back to title + year
+      const omdbData = lookupId
+        ? await fetchFilmById(lookupId)
+        : await searchFilmByTitle(lookupTitle, lookupYear)
 
       // Build update payload
       const update = {
