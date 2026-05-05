@@ -944,9 +944,10 @@ const MAJOR_CATS = [
 
 function CrossoverTab({ data }) {
   const { films, totalWithNoms, totalWithWins, totalFilmsOnLists } = data
-  const [filter,    setFilter]    = useState('all') // 'wins' | 'noms' | 'all'
-  const [catFilter, setCatFilter] = useState(null)  // null | category key string
-  const [expandedId, setExpandedId] = useState(null)
+  const [filter,      setFilter]      = useState('all') // 'wins' | 'noms' | 'all'
+  const [catFilter,   setCatFilter]   = useState(null)  // null | category key string
+  const [yearFilter,  setYearFilter]  = useState(null)  // null | 2001 | 2007 | 2016 | 2026
+  const [expandedId,  setExpandedId]  = useState(null)
 
   // Base filter (wins / noms / all)
   let displayed = filter === 'wins'
@@ -955,15 +956,28 @@ function CrossoverTab({ data }) {
     ? films.filter(f => f.oscarWins === 0 && f.oscarNoms > 0)
     : films
 
+  // Year filter — only films that appear on that event's combined list
+  if (yearFilter) {
+    displayed = displayed.filter(f => f.combinedRanks[yearFilter] != null)
+  }
+
   // Category filter (winners of a specific major category)
   if (catFilter) {
     displayed = displayed.filter(f => f.winCategories.includes(catFilter))
   }
 
+  // When a year is selected, sort by that year's rank; otherwise by best overall rank
+  displayed = [...displayed].sort((a, b) => {
+    if (yearFilter) {
+      const ra = a.combinedRanks[yearFilter] ?? 999
+      const rb = b.combinedRanks[yearFilter] ?? 999
+      return ra - rb || b.oscarWins - a.oscarWins
+    }
+    return b.oscarWins - a.oscarWins || (a.bestCombinedRank ?? 999) - (b.bestCombinedRank ?? 999)
+  })
+
   function toggleCat(key) {
     setCatFilter(prev => prev === key ? null : key)
-    // When picking a category filter, switch to winners view so noms-only films
-    // don't confusingly appear (category filter only matches wins)
     if (catFilter !== key) setFilter('all')
   }
 
@@ -1022,6 +1036,24 @@ function CrossoverTab({ data }) {
             </div>
           </div>
 
+          {/* Event year filter */}
+          <div className="flex items-center gap-2 flex-wrap mb-2">
+            <span className="text-xs uppercase tracking-wider text-gray-400 font-semibold flex-shrink-0">List:</span>
+            {[null, 2001, 2007, 2016, 2026].map(yr => (
+              <button
+                key={yr ?? 'all'}
+                onClick={() => setYearFilter(yr)}
+                className={`text-xs px-3 py-1 rounded-full border transition-all font-medium ${
+                  yearFilter === yr
+                    ? 'bg-film-600 border-film-600 text-white'
+                    : 'border-stone-300 dark:border-night-600 text-gray-500 dark:text-gray-400 hover:border-film-400 hover:text-film-600 dark:hover:text-film-400'
+                }`}
+              >
+                {yr ?? 'All'}
+              </button>
+            ))}
+          </div>
+
           {/* Major category filter — "Won:" pill row */}
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs uppercase tracking-wider text-gray-400 font-semibold flex-shrink-0">Won:</span>
@@ -1049,7 +1081,7 @@ function CrossoverTab({ data }) {
                 <th className="text-left px-3 py-2.5">Film</th>
                 <th className="text-center px-3 py-2.5">Wins</th>
                 <th className="text-center px-3 py-2.5">Noms</th>
-                <th className="text-center px-3 py-2.5 hidden sm:table-cell">Best Rank</th>
+                <th className="text-center px-3 py-2.5 hidden sm:table-cell">{yearFilter ? `${yearFilter} Rank` : 'Best Rank'}</th>
                 <th className="text-center px-3 py-2.5 hidden lg:table-cell">Combined Ranks</th>
               </tr>
             </thead>
@@ -1108,16 +1140,19 @@ function CrossoverTab({ data }) {
                         <span className="text-gray-500">{f.oscarNoms}</span>
                       </td>
 
-                      {/* Best combined rank */}
+                      {/* Best combined rank (or year-specific rank) */}
                       <td className="px-3 py-2.5 text-center hidden sm:table-cell">
-                        {f.bestCombinedRank !== null ? (
-                          <span className={`font-semibold ${
-                            f.bestCombinedRank <= 5  ? 'text-gold-500'
-                          : f.bestCombinedRank <= 15 ? 'text-film-400'
-                          : 'text-gray-400'}`}>
-                            #{f.bestCombinedRank}
-                          </span>
-                        ) : <span className="text-gray-500">—</span>}
+                        {(() => {
+                          const r = yearFilter ? f.combinedRanks[yearFilter] : f.bestCombinedRank
+                          return r != null ? (
+                            <span className={`font-semibold ${
+                              r <= 5  ? 'text-gold-500'
+                            : r <= 15 ? 'text-film-400'
+                            : 'text-gray-400'}`}>
+                              #{r}
+                            </span>
+                          ) : <span className="text-gray-500">—</span>
+                        })()}
                       </td>
 
                       {/* Per-event combined ranks */}
@@ -1182,8 +1217,12 @@ function CrossoverTab({ data }) {
 
           {displayed.length === 0 && (
             <div className="py-12 text-center text-gray-400 text-sm">
-              {catFilter
+              {catFilter && yearFilter
+                ? `No films on our ${yearFilter} combined list won ${catFilter}.`
+                : catFilter
                 ? `No films on our combined lists won ${catFilter}.`
+                : yearFilter
+                ? `No Oscar data for films on our ${yearFilter} combined list.`
                 : 'No films match this filter.'}
             </div>
           )}
