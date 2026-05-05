@@ -504,16 +504,6 @@ export default function MoviesList() {
                     {row.rank}
                   </span>
                 </div>
-
-                {/* Title overlay — bottom gradient */}
-                <div className="absolute inset-x-0 bottom-0
-                                bg-gradient-to-t from-black/90 via-black/50 to-transparent
-                                pt-8 pb-2.5 px-2.5">
-                  <p className="text-white font-semibold text-xs leading-snug
-                                line-clamp-2 group-hover:text-film-300 transition-colors">
-                    {film.title}
-                  </p>
-                </div>
               </Link>
             )
           })}
