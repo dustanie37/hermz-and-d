@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, Link, useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
+import { fetchFilmById, searchFilmByTitle } from '../../lib/omdb'
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, Legend, ResponsiveContainer,
@@ -280,7 +281,7 @@ export default function MovieDetail() {
   const { filmId }   = useParams()
   const location     = useLocation()
   const navigate     = useNavigate()
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, isDustin } = useAuth()
 
   const [film,       setFilm]       = useState(null)
   const [events,     setEvents]     = useState([])   // ranking_events ordered by year
@@ -296,6 +297,10 @@ export default function MovieDetail() {
   const [acclaimValue,   setAcclaimValue]   = useState('')
   const [acclaimSaving,  setAcclaimSaving]  = useState(false)
   const [acclaimError,   setAcclaimError]   = useState(null)
+
+  // OMDB refresh (admin only)
+  const [omdbRefreshing, setOmdbRefreshing] = useState(false)
+  const [omdbStatus,     setOmdbStatus]     = useState(null) // 'ok' | 'error' | null
 
   // Back-link: prefer the referrer passed via router state, else /movies/list
   const backTo = location.state?.from || '/movies/list'
@@ -419,6 +424,52 @@ export default function MovieDetail() {
     setAcclaimSaving(false)
   }
 
+  // ── OMDB refresh ──────────────────────────────────────────────────────────
+
+  async function refreshOmdb() {
+    if (!film) return
+    setOmdbRefreshing(true)
+    setOmdbStatus(null)
+    try {
+      // Prefer lookup by existing imdbID; fall back to title + year
+      const omdbData = film.omdb_id
+        ? await fetchFilmById(film.omdb_id)
+        : await searchFilmByTitle(film.title, film.release_year)
+
+      // Build update payload
+      const update = {
+        omdb_id:        omdbData.omdbId,
+        poster_url:     omdbData.posterUrl,
+        omdb_genres:    omdbData.genres,
+        director:       omdbData.director ?? film.director,
+        omdb_fetched_at: new Date().toISOString(),
+        actor_1:  omdbData.actors[0] ?? null,
+        actor_2:  omdbData.actors[1] ?? null,
+        actor_3:  omdbData.actors[2] ?? null,
+        actor_4:  omdbData.actors[3] ?? null,
+        actor_5:  omdbData.actors[4] ?? null,
+      }
+
+      const { error: saveErr } = await supabase
+        .from('films')
+        .update(update)
+        .eq('id', film.id)
+
+      if (saveErr) throw saveErr
+
+      // Optimistic local update
+      setFilm(f => ({ ...f, ...update }))
+      setOmdbStatus('ok')
+      setTimeout(() => setOmdbStatus(null), 3000)
+    } catch (e) {
+      console.error('OMDB refresh failed:', e)
+      setOmdbStatus('error')
+      setTimeout(() => setOmdbStatus(null), 5000)
+    } finally {
+      setOmdbRefreshing(false)
+    }
+  }
+
   // ── derived data ───────────────────────────────────────────────────────────
 
   // Which events does this film appear on (any of the three lists)
@@ -504,10 +555,35 @@ export default function MovieDetail() {
 
           {/* Poster */}
           <div className="md:w-52 flex-shrink-0 bg-stone-100 dark:bg-night-900
-                          flex items-stretch min-h-[200px] md:min-h-0">
+                          flex items-stretch min-h-[200px] md:min-h-0 relative">
             <div className="w-full p-4">
               <PosterFull url={film.poster_url} title={film.title} />
             </div>
+            {/* Admin: refresh OMDB button */}
+            {isDustin && (
+              <div className="absolute bottom-2 left-0 right-0 flex flex-col items-center gap-1 px-2">
+                <button
+                  onClick={refreshOmdb}
+                  disabled={omdbRefreshing}
+                  title="Re-pull poster + metadata from OMDB"
+                  className={`w-full text-xs px-2 py-1 rounded-lg font-medium transition-all
+                    ${omdbStatus === 'ok'
+                      ? 'bg-emerald-500/90 text-white'
+                      : omdbStatus === 'error'
+                      ? 'bg-red-500/90 text-white'
+                      : 'bg-black/50 text-white hover:bg-black/70 backdrop-blur-sm'
+                    } disabled:opacity-50`}
+                >
+                  {omdbRefreshing
+                    ? '↻ Refreshing…'
+                    : omdbStatus === 'ok'
+                    ? '✓ Updated'
+                    : omdbStatus === 'error'
+                    ? '✕ Failed'
+                    : '↻ Refresh OMDB'}
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Info */}
