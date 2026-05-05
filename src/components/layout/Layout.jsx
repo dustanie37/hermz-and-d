@@ -9,7 +9,7 @@ export default function Layout() {
         <Outlet />
       </main>
       <footer className="border-t border-stone-200 dark:border-night-800 py-6 text-center text-xs text-gray-400 dark:text-gray-600">
-        Hermz &amp; D — Est. 1995
+        Hermz &amp; D — Est. 1993
       </footer>
     </div>
   )

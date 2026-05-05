@@ -1,0 +1,37 @@
+All Wikidata award QIDs encountered during this run.
+QIDs not in QID_OVERRIDE are normalised by label (less precise).
+
+QID          In QID_OVERRIDE    Label
+--------------------------------------------------------------------------------
+Q102427      no                 Academy Award for Best Picture
+Q103360      no                 Academy Award for Best Director
+Q103618      no                 Academy Award for Best Actress
+Q103916      no                 Academy Award for Best Actor
+Q105304      no                 Academy Award for Best International Feature Film
+Q106291      no                 Academy Award for Best Supporting Actor
+Q106301      no                 Academy Award for Best Supporting Actress
+Q106800      no                 Academy Award for Best Animated Feature
+Q107258      no                 Academy Award for Best Writing, Adapted Screenplay
+Q112243      no                 Academy Award for Best Original Song
+Q131520      no                 Academy Award for Best Cinematography
+Q2032630     no                 Special Achievement Academy Award
+Q21995136    no                 Academy Award for Best Cinematography, Color
+Q21995139    no                 Academy Award for Best Cinematography, Black-and-White
+Q22120095    no                 Academy Award for Best Costume Design, Black-and-White
+Q22235305    no                 Academy Award for Best Original Musical or Comedy Score
+Q22235329    no                 Academy Award for Best Original Dramatic Score
+Q22253131    no                 Academy Award for Best Art Direction, Color
+Q22253133    no                 Academy Award for Best Art Direction, Black and White
+Q22344608    no                 Academy Award for Best Original Song Score
+Q22752734    no                 Academy Award for Best Original Score, no Musical
+Q22752811    no                 Academy Award for Best Score, Adaptation or Treatment
+Q22752868    no                 Academy Award for Best Original Dramatic or Comedy Score
+Q22917729    no                 Academy Award for Best Special Effects
+Q277536      no                 Academy Award for Best Costume Design
+Q277751      no                 Academy Award for Best Production Design
+Q281939      no                 Academy Award for Best Film Editing
+Q393686      no                 Academy Award for Best Visual Effects
+Q41417       no                 Academy Award for Best Writing, Original Screenplay
+Q487136      no                 Academy Award for Best Makeup and Hairstyling
+Q488651      no                 Academy Award for Best Original Score
+Q830079      no                 Academy Award for Best Sound

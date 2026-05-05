@@ -45,8 +45,6 @@ function formatDate(name) {
   return parts[1] || ''
 }
 
-const YEARS = Array.from({ length: 19 }, (_, i) => 2008 + i)
-
 // ── main component ────────────────────────────────────────────────────────────
 
 export default function OscarsYear() {
@@ -57,13 +55,21 @@ export default function OscarsYear() {
 
   const [yearData,    setYearData]    = useState(null)
   const [categories,  setCategories]  = useState([])
+  const [allYears,    setAllYears]    = useState([])
   const [loading,     setLoading]     = useState(true)
   const [error,       setError]       = useState(null)
   const [editMode,    setEditMode]    = useState(false)
   const [saving,      setSaving]      = useState(false)
+  const [yearEdit,    setYearEdit]    = useState({}) // tiebreaker fields draft
+
+  // Fetch all known years for dropdown + prev/next
+  useEffect(() => {
+    supabase.from('oscar_years').select('year').order('year', { ascending: true })
+      .then(({ data }) => setAllYears(data?.map(r => r.year) || []))
+  }, [])
 
   useEffect(() => {
-    if (!yearNum || yearNum < 2008 || yearNum > 2026) {
+    if (!yearNum || yearNum < 1990 || yearNum > 2100) {
       navigate('/oscars')
       return
     }
@@ -258,10 +264,99 @@ export default function OscarsYear() {
     }
   }
 
+  // ── Tiebreaker / year details save ───────────────────────────────────────
+
+  async function saveYearDetails() {
+    if (saving) return
+    setSaving(true)
+    try {
+      // Convert "H:MM" → "H:MM:00" and "M:SS" → "0:M:SS" for Postgres INTERVAL
+      function toRuntimeInterval(s) {
+        if (!s) return null
+        const p = s.trim().split(':')
+        if (p.length === 2) return `${p[0]}:${p[1]}:00`
+        return s
+      }
+      function toMonologueInterval(s) {
+        if (!s) return null
+        const p = s.trim().split(':')
+        if (p.length === 2) return `0:${p[0]}:${p[1]}`
+        return s
+      }
+
+      const patch = {}
+      if ('actual_runtime'         in yearEdit) patch.actual_runtime         = toRuntimeInterval(yearEdit.actual_runtime)
+      if ('matt_runtime_guess'     in yearEdit) patch.matt_runtime_guess     = toRuntimeInterval(yearEdit.matt_runtime_guess)
+      if ('dustin_runtime_guess'   in yearEdit) patch.dustin_runtime_guess   = toRuntimeInterval(yearEdit.dustin_runtime_guess)
+      if ('actual_monologue'       in yearEdit) patch.actual_monologue       = toMonologueInterval(yearEdit.actual_monologue)
+      if ('matt_monologue_guess'   in yearEdit) patch.matt_monologue_guess   = toMonologueInterval(yearEdit.matt_monologue_guess)
+      if ('dustin_monologue_guess' in yearEdit) patch.dustin_monologue_guess = toMonologueInterval(yearEdit.dustin_monologue_guess)
+
+      if (Object.keys(patch).length > 0) {
+        const { error: upErr } = await supabase
+          .from('oscar_years').update(patch).eq('id', yearData.id)
+        if (upErr) throw upErr
+      }
+      await fetchData(yearNum)
+      setYearEdit({})
+    } catch (err) {
+      console.error('Failed to save year details:', err)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function calculateWinner() {
+    if (saving) return
+    setSaving(true)
+    try {
+      const mattScore   = categories.filter(c => c.guesses.matt?.is_correct).length
+      const dustinScore = categories.filter(c => c.guesses.dustin?.is_correct).length
+      let winner = 'pending'
+      let tiebreakerUsed = false
+
+      if (mattScore > dustinScore) {
+        winner = 'matt'
+      } else if (dustinScore > mattScore) {
+        winner = 'dustin'
+      } else {
+        tiebreakerUsed = true
+        // Compare runtime guesses
+        const actual = yearData.actual_runtime
+        const mattG  = yearData.matt_runtime_guess
+        const dustG  = yearData.dustin_runtime_guess
+        if (actual && mattG && dustG) {
+          function toMins(s) {
+            const t = parseInterval(s)
+            return t ? t.h * 60 + t.m : null
+          }
+          const a = toMins(actual), m = toMins(mattG), d = toMins(dustG)
+          if (a !== null && m !== null && d !== null) {
+            const md = Math.abs(a - m), dd = Math.abs(a - d)
+            winner = md < dd ? 'matt' : dd < md ? 'dustin' : 'tied'
+          }
+        } else {
+          winner = 'tied'
+        }
+      }
+
+      const { error: upErr } = await supabase
+        .from('oscar_years').update({ winner, tiebreaker_used: tiebreakerUsed }).eq('id', yearData.id)
+      if (upErr) throw upErr
+      setYearData(prev => ({ ...prev, winner, tiebreaker_used: tiebreakerUsed }))
+    } catch (err) {
+      console.error('Failed to calculate winner:', err)
+    } finally {
+      setSaving(false)
+    }
+  }
+
   // ─────────────────────────────────────────────────────────────────────────
 
-  const prevYear = yearNum > 2008 ? yearNum - 1 : null
-  const nextYear = yearNum < 2026 ? yearNum + 1 : null
+  const sortedYears = [...allYears].sort((a, b) => a - b)
+  const currIdx  = sortedYears.indexOf(yearNum)
+  const prevYear = currIdx > 0 ? sortedYears[currIdx - 1] : null
+  const nextYear = currIdx < sortedYears.length - 1 ? sortedYears[currIdx + 1] : null
 
   if (loading) return (
     <div className="py-20 flex items-center justify-center">
@@ -299,7 +394,7 @@ export default function OscarsYear() {
               ← {prevYear}
             </Link>
           )}
-          <YearDropdown current={yearNum} />
+          <YearDropdown current={yearNum} allYears={allYears} />
           {nextYear && (
             <Link to={`/oscars/${nextYear}`} className="btn-ghost text-xs px-3 py-1.5">
               {nextYear} →
@@ -352,8 +447,22 @@ export default function OscarsYear() {
       />
 
       {/* ── Tiebreaker detail ── */}
-      {tb && (
+      {tb && !editMode && (
         <TiebreakerPanel yearData={yearData} mattWon={mattWon} />
+      )}
+
+      {/* ── Edit mode: year details / tiebreaker entry ── */}
+      {editMode && (
+        <YearDetailsEdit
+          yearData={yearData}
+          yearEdit={yearEdit}
+          setYearEdit={setYearEdit}
+          mattTotal={mattTotal}
+          dustinTotal={dustinTotal}
+          saving={saving}
+          onSave={saveYearDetails}
+          onCalculateWinner={calculateWinner}
+        />
       )}
 
       {/* ── Category table ── */}
@@ -423,17 +532,19 @@ function ScoreBanner({ mattTotal, dustinTotal, total, mattWon, dustinWon, tiebre
       {/* Dustin */}
       <div className={`flex-1 min-w-[120px] text-center rounded-xl py-4 px-3
         ${dustinWon
-          ? 'bg-gold-100 border border-gold-300 dark:bg-gold-900/40 dark:border-gold-700/30'
+          ? 'bg-film-100 border border-film-300 dark:bg-film-900/40 dark:border-film-700/30'
           : 'bg-stone-100 dark:bg-night-700/40'
         }`}>
         <div className={`text-4xl font-bold font-display
-          ${dustinWon ? 'text-gold-700 dark:text-gold-300' : 'text-gray-800 dark:text-white'}`}>
+          ${dustinWon ? 'text-film-700 dark:text-film-300' : 'text-gray-800 dark:text-white'}`}>
           {dustinTotal}
         </div>
         <div className="text-xs text-gray-500 mt-1 uppercase tracking-wide">Dust</div>
         {dustinWon && (
           <div className="mt-2">
-            <span className="badge-gold flex items-center gap-1">
+            <span className="inline-flex items-center justify-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium
+                             bg-film-200 text-film-800 border border-film-300
+                             dark:bg-film-800/40 dark:text-film-300 dark:border-film-600/40">
               <OscarIcon size={12} />
               {tiebreaker ? 'Won (tiebreaker)' : 'Winner'}
             </span>
@@ -605,6 +716,7 @@ function CategoryBlock({ cat, idx, yearNum, editMode, onToggleNominee, onChangeM
             winner={winner}
             editMode={editMode}
             onChange={onChangeMatt}
+            player="matt"
           />
         </td>
 
@@ -617,6 +729,7 @@ function CategoryBlock({ cat, idx, yearNum, editMode, onToggleNominee, onChangeM
             winner={winner}
             editMode={editMode}
             onChange={onChangeDustin}
+            player="dustin"
           />
         </td>
 
@@ -627,8 +740,21 @@ function CategoryBlock({ cat, idx, yearNum, editMode, onToggleNominee, onChangeM
 
 // ── GuessCell ─────────────────────────────────────────────────────────────────
 
-function GuessCell({ guess, isCorrect, nominees, winner, editMode, onChange }) {
+// player = 'matt' (gold) | 'dustin' (film blue)
+const PLAYER_CORRECT_TEXT = {
+  matt:   'text-gold-700 dark:text-gold-400',
+  dustin: 'text-film-600 dark:text-film-400',
+}
+const PLAYER_CORRECT_MARK = {
+  matt:   'text-gold-600 dark:text-gold-400',
+  dustin: 'text-film-500 dark:text-film-400',
+}
+
+function GuessCell({ guess, isCorrect, nominees, winner, editMode, onChange, player }) {
   if (!guess) return <span className="text-gray-300 text-sm dark:text-gray-600">—</span>
+
+  const correctText = PLAYER_CORRECT_TEXT[player] || 'text-gray-800 dark:text-gray-200'
+  const correctMark = PLAYER_CORRECT_MARK[player] || 'text-emerald-600 dark:text-emerald-400'
 
   if (editMode) {
     // Build dropdown options from nominees; include current guess if not in list
@@ -640,7 +766,7 @@ function GuessCell({ guess, isCorrect, nominees, winner, editMode, onChange }) {
       <div className="flex items-start gap-2">
         {/* Auto-derived ✓/✗ — read-only, reflects current winner */}
         <span className={`mt-1.5 flex-shrink-0 text-sm font-bold
-          ${derivedCorrect ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'}`}>
+          ${derivedCorrect ? correctMark : 'text-red-500'}`}>
           {derivedCorrect ? '✓' : '✗'}
         </span>
         <select
@@ -659,14 +785,11 @@ function GuessCell({ guess, isCorrect, nominees, winner, editMode, onChange }) {
   return (
     <div className="flex items-start gap-2">
       <span className={`mt-0.5 flex-shrink-0 text-sm font-bold
-        ${isCorrect ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'}`}>
+        ${isCorrect ? correctMark : 'text-red-500'}`}>
         {isCorrect ? '✓' : '✗'}
       </span>
       <span className={`text-sm leading-snug
-        ${isCorrect
-          ? 'text-gray-800 dark:text-gray-200'
-          : 'text-gray-500 dark:text-gray-400'
-        }`}>
+        ${isCorrect ? correctText : 'text-gray-500 dark:text-gray-400'}`}>
         {guess}
       </span>
     </div>
@@ -675,17 +798,152 @@ function GuessCell({ guess, isCorrect, nominees, winner, editMode, onChange }) {
 
 // ── YearDropdown ──────────────────────────────────────────────────────────────
 
-function YearDropdown({ current }) {
+function YearDropdown({ current, allYears }) {
   const navigate = useNavigate()
+  const sorted = [...allYears].sort((a, b) => b - a) // descending
   return (
     <select
       value={current}
       onChange={e => navigate(`/oscars/${e.target.value}`)}
       className="select text-xs px-2 py-1.5"
     >
-      {[...YEARS].reverse().map(y => (
+      {sorted.map(y => (
         <option key={y} value={y}>{y}</option>
       ))}
     </select>
+  )
+}
+
+// ── YearDetailsEdit ────────────────────────────────────────────────────────────
+
+function YearDetailsEdit({ yearData, yearEdit, setYearEdit, mattTotal, dustinTotal, saving, onSave, onCalculateWinner }) {
+  // Helper: read draft value or fall back to yearData
+  function fmtForInput(intervalStr) {
+    const t = parseInterval(intervalStr)
+    if (!t) return ''
+    return `${t.h}:${String(t.m).padStart(2, '0')}`
+  }
+  function fmtMonologueForInput(intervalStr) {
+    const t = parseInterval(intervalStr)
+    if (!t) return ''
+    return `${t.m}:${String(t.s).padStart(2, '0')}`
+  }
+
+  function val(field) {
+    return field in yearEdit ? yearEdit[field] : ''
+  }
+  function runtimeVal(field) {
+    if (field in yearEdit) return yearEdit[field]
+    return fmtForInput(yearData[field])
+  }
+  function monologueVal(field) {
+    if (field in yearEdit) return yearEdit[field]
+    return fmtMonologueForInput(yearData[field])
+  }
+  function set(field, v) { setYearEdit(prev => ({ ...prev, [field]: v })) }
+
+  const year = yearData.year
+  const showMonologue = year >= 2026
+
+  return (
+    <div className="mb-4 rounded-xl border border-amber-300/60 bg-amber-50/60 dark:border-amber-700/30 dark:bg-amber-900/10 p-4">
+      <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+        <span className="text-sm font-semibold text-amber-700 dark:text-amber-300">Year Details &amp; Tiebreaker</span>
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={onCalculateWinner}
+            disabled={saving}
+            className="text-xs px-3 py-1.5 rounded-lg bg-emerald-100 border border-emerald-400 text-emerald-700 font-medium
+                       hover:bg-emerald-200 dark:bg-emerald-900/40 dark:border-emerald-700/40 dark:text-emerald-300 transition-colors"
+          >
+            🏆 Calculate Winner ({mattTotal} vs {dustinTotal})
+          </button>
+          <button
+            onClick={onSave}
+            disabled={saving}
+            className="text-xs px-3 py-1.5 rounded-lg bg-amber-100 border border-amber-400 text-amber-700 font-medium
+                       hover:bg-amber-200 dark:bg-amber-900/40 dark:border-amber-600/60 dark:text-amber-300 transition-colors"
+          >
+            {saving ? '⏳ Saving…' : '💾 Save Tiebreaker Data'}
+          </button>
+        </div>
+      </div>
+
+      {/* Current winner status */}
+      <div className="mb-4 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+        <span>Status:</span>
+        <span className={`font-semibold ${yearData.winner === 'pending' ? 'text-gray-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+          {yearData.winner === 'pending' ? 'Pending' :
+           yearData.winner === 'tied'    ? 'Tied' :
+           yearData.winner === 'matt'    ? '🏆 Hermz wins' :
+           yearData.winner === 'dustin'  ? '🏆 Dust wins' : yearData.winner}
+        </span>
+        {yearData.tiebreaker_used && <span className="badge-tiebreaker">Tiebreaker</span>}
+      </div>
+
+      {/* Runtime inputs */}
+      <div className="grid grid-cols-3 gap-3 mb-3">
+        <div>
+          <label className="block text-xs text-gray-400 mb-1">Hermz Runtime Guess (H:MM)</label>
+          <input
+            type="text" placeholder="e.g. 3:22"
+            value={runtimeVal('matt_runtime_guess')}
+            onChange={e => set('matt_runtime_guess', e.target.value)}
+            className="input text-xs py-1.5 w-full"
+          />
+        </div>
+        <div>
+          <label className="block text-xs text-gray-400 mb-1">Actual Runtime (H:MM)</label>
+          <input
+            type="text" placeholder="e.g. 3:44"
+            value={runtimeVal('actual_runtime')}
+            onChange={e => set('actual_runtime', e.target.value)}
+            className="input text-xs py-1.5 w-full"
+          />
+        </div>
+        <div>
+          <label className="block text-xs text-gray-400 mb-1">Dust Runtime Guess (H:MM)</label>
+          <input
+            type="text" placeholder="e.g. 3:30"
+            value={runtimeVal('dustin_runtime_guess')}
+            onChange={e => set('dustin_runtime_guess', e.target.value)}
+            className="input text-xs py-1.5 w-full"
+          />
+        </div>
+      </div>
+
+      {/* Monologue inputs (2026+) */}
+      {showMonologue && (
+        <div className="grid grid-cols-3 gap-3 pt-3 border-t border-amber-200 dark:border-amber-700/20">
+          <div>
+            <label className="block text-xs text-gray-400 mb-1">Hermz Monologue Guess (M:SS)</label>
+            <input
+              type="text" placeholder="e.g. 12:30"
+              value={monologueVal('matt_monologue_guess')}
+              onChange={e => set('matt_monologue_guess', e.target.value)}
+              className="input text-xs py-1.5 w-full"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-gray-400 mb-1">Actual Monologue (M:SS)</label>
+            <input
+              type="text" placeholder="e.g. 14:00"
+              value={monologueVal('actual_monologue')}
+              onChange={e => set('actual_monologue', e.target.value)}
+              className="input text-xs py-1.5 w-full"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-gray-400 mb-1">Dust Monologue Guess (M:SS)</label>
+            <input
+              type="text" placeholder="e.g. 10:00"
+              value={monologueVal('dustin_monologue_guess')}
+              onChange={e => set('dustin_monologue_guess', e.target.value)}
+              className="input text-xs py-1.5 w-full"
+            />
+          </div>
+        </div>
+      )}
+    </div>
   )
 }

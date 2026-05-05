@@ -60,12 +60,28 @@ function pctStr(n, d) { return `${pct(n, d)}%` }
 function computeStreaks(sorted) {
   let mattCur = 0, dustinCur = 0, mattMax = 0, dustinMax = 0
   let mattMaxEnd = null, dustinMaxEnd = null
+  let mattStreakStart = null, dustinStreakStart = null
   for (const y of sorted) {
-    if (y.winner === 'matt')   { mattCur++;   dustinCur = 0; if (mattCur   > mattMax)   { mattMax   = mattCur;   mattMaxEnd   = y.year } }
-    else if (y.winner === 'dustin') { dustinCur++; mattCur = 0;  if (dustinCur > dustinMax) { dustinMax = dustinCur; dustinMaxEnd = y.year } }
-    else { mattCur = 0; dustinCur = 0 }
+    if (y.winner === 'matt') {
+      mattCur++; dustinCur = 0; dustinStreakStart = null
+      if (mattCur === 1) mattStreakStart = y.year
+      if (mattCur > mattMax) { mattMax = mattCur; mattMaxEnd = y.year }
+    } else if (y.winner === 'dustin') {
+      dustinCur++; mattCur = 0; mattStreakStart = null
+      if (dustinCur === 1) dustinStreakStart = y.year
+      if (dustinCur > dustinMax) { dustinMax = dustinCur; dustinMaxEnd = y.year }
+    } else {
+      mattCur = 0; dustinCur = 0; mattStreakStart = null; dustinStreakStart = null
+    }
   }
-  return { mattCurrent: mattCur, dustinCurrent: dustinCur, mattLongest: mattMax, dustinLongest: dustinMax, mattLongestEnd: mattMaxEnd, dustinLongestEnd: dustinMaxEnd }
+  const lastYear = sorted.length ? sorted[sorted.length - 1].year : null
+  return {
+    mattCurrent: mattCur, dustinCurrent: dustinCur,
+    mattStreakStart, dustinStreakStart,
+    mattLongest: mattMax, dustinLongest: dustinMax,
+    mattLongestEnd: mattMaxEnd, dustinLongestEnd: dustinMaxEnd,
+    lastYear,
+  }
 }
 
 // ── custom tooltips ───────────────────────────────────────────────────────────
@@ -73,7 +89,7 @@ function TimelineTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null
   return (
     <div className="bg-white dark:bg-night-800 border border-stone-200 dark:border-night-600 rounded-lg px-3 py-2 shadow-lg text-sm">
-      <p className="font-semibold text-gray-700 dark:text-gray-200 mb-1">{label}</p>
+      <p className="font-semibold text-gray-700 dark:text-white mb-1">{label}</p>
       {payload.map(p => (
         <p key={p.name} style={{ color: p.color }}>
           {p.name}: <span className="font-bold">{p.value}</span>
@@ -89,7 +105,7 @@ function DiffTooltip({ active, payload, label }) {
   const winner = val > 0 ? 'Hermz' : val < 0 ? 'Dust' : 'Tied'
   return (
     <div className="bg-white dark:bg-night-800 border border-stone-200 dark:border-night-600 rounded-lg px-3 py-2 shadow-lg text-sm">
-      <p className="font-semibold text-gray-700 dark:text-gray-200 mb-1">{label}</p>
+      <p className="font-semibold text-gray-700 dark:text-white mb-1">{label}</p>
       <p className="text-gray-600 dark:text-gray-300">
         Margin: <span className="font-bold">{Math.abs(val)}</span>
         {val !== 0 && <span className="ml-1 text-xs text-gray-400">({winner} won)</span>}
@@ -100,7 +116,7 @@ function DiffTooltip({ active, payload, label }) {
 
 function ChartDot(props) {
   const { cx, cy, tb, color } = props
-  if (tb) return <polygon key={`d-${cx}-${cy}`} points={`${cx},${cy-5} ${cx+5},${cy+4} ${cx-5},${cy+4}`} fill={color} stroke="none" />
+  if (tb) return <polygon key={`d-${cx}-${cy}`} points={`${cx},${cy-5} ${cx+5},${cy} ${cx},${cy+5} ${cx-5},${cy}`} fill={color} stroke="none" />
   return <circle key={`d-${cx}-${cy}`} cx={cx} cy={cy} r={3} fill={color} stroke="none" />
 }
 
@@ -166,7 +182,7 @@ export default function OscarsStats() {
     setLoading(true); setError(null)
     try {
       const { data: yrData, error: yrErr } = await supabase
-        .from('v_oscar_year_summary').select('*').order('year', { ascending: true })
+        .from('v_oscar_year_summary').select('*').eq('status', 'complete').order('year', { ascending: true })
       if (yrErr) throw yrErr
 
       // Include year + active_from/until so we can do drilldowns
@@ -210,7 +226,7 @@ export default function OscarsStats() {
         isNew:       c.active_from  !== null && c.active_from  > 2008,
       }))
 
-      setYears(yrData || [])
+      setYears((yrData || []).filter(y => y.winner && y.winner !== 'pending'))
       setCatData(cats)
     } catch (err) { setError(err.message) }
     finally { setLoading(false) }
@@ -268,7 +284,7 @@ export default function OscarsStats() {
         <h1 className="page-title flex items-center gap-3">
           <span>📊</span> All-Time Stats
         </h1>
-        <p className="text-gray-500 dark:text-gray-200 mt-1 text-sm">{years.length} ceremonies · 2008–2026</p>
+        <p className="text-gray-500 dark:text-white mt-1 text-sm">{years.length} ceremonies · 2008–2026</p>
       </div>
 
       {/* ══ Section 1: Overall record + correct ══════════════════════════════ */}
@@ -278,15 +294,15 @@ export default function OscarsStats() {
           <div className="grid grid-cols-3 gap-3 text-center">
             <PlayerStat name="Hermz" value={mattWins}   sub={pctStr(mattWins,   years.length)+' of years'} highlight={mattWins > dustinWins}   color="gold" />
             <div className="flex flex-col items-center justify-center">
-              <span className="text-gray-400 dark:text-gray-200 font-display text-xl">vs</span>
-              <span className="text-gray-400 dark:text-gray-200 text-xs mt-1">{years.length} years</span>
+              <span className="text-gray-400 dark:text-white font-display text-xl">vs</span>
+              <span className="text-gray-400 dark:text-white text-xs mt-1">{years.length} years</span>
             </div>
             <PlayerStat name="Dust"  value={dustinWins} sub={pctStr(dustinWins, years.length)+' of years'} highlight={dustinWins > mattWins} color="film" />
           </div>
           {tbYears.length > 0 && (
             <div className="mt-4 pt-4 border-t border-stone-100 dark:border-night-700 text-center">
               <span className="badge-tiebreaker mr-2">{tbYears.length} tiebreaker{tbYears.length>1?'s':''}</span>
-              <span className="text-xs text-gray-400 dark:text-gray-200">Hermz won {mattTbWins} · Dust won {dustinTbWins}</span>
+              <span className="text-xs text-gray-400 dark:text-white">Hermz won {mattTbWins} · Dust won {dustinTbWins}</span>
             </div>
           )}
         </div>
@@ -296,19 +312,19 @@ export default function OscarsStats() {
           <div className="grid grid-cols-3 gap-3 text-center">
             <PlayerStat name="Hermz" value={mattAllTime}   sub={pctStr(mattAllTime,   totalPossible)+' accuracy'} highlight={mattAllTime > dustinAllTime}   color="gold" />
             <div className="flex flex-col items-center justify-center">
-              <span className="text-gray-400 dark:text-gray-200 font-display text-xl">vs</span>
-              <span className="text-gray-400 dark:text-gray-200 text-xs mt-1">{totalPossible} possible</span>
+              <span className="text-gray-400 dark:text-white font-display text-xl">vs</span>
+              <span className="text-gray-400 dark:text-white text-xs mt-1">{totalPossible} possible</span>
             </div>
             <PlayerStat name="Dust"  value={dustinAllTime} sub={pctStr(dustinAllTime, totalPossible)+' accuracy'} highlight={dustinAllTime > mattAllTime} color="film" />
           </div>
           <div className="mt-4 pt-4 border-t border-stone-100 dark:border-night-700 grid grid-cols-2 gap-4 text-center">
             <div>
               <div className="text-xl font-bold font-display text-gray-800 dark:text-white">{(mattAllTime/years.length).toFixed(1)}</div>
-              <div className="text-xs text-gray-400 dark:text-gray-200">Hermz avg / year</div>
+              <div className="text-xs text-gray-400 dark:text-white">Hermz avg / year</div>
             </div>
             <div>
               <div className="text-xl font-bold font-display text-gray-800 dark:text-white">{(dustinAllTime/years.length).toFixed(1)}</div>
-              <div className="text-xs text-gray-400 dark:text-gray-200">Dust avg / year</div>
+              <div className="text-xs text-gray-400 dark:text-white">Dust avg / year</div>
             </div>
           </div>
         </div>
@@ -319,7 +335,7 @@ export default function OscarsStats() {
         <div className="card">
           <p className="stat-label mb-4">Win Streaks</p>
           <div className="space-y-4">
-            <StreakRow label="Active streak" mattVal={streaks.mattCurrent} dustinVal={streaks.dustinCurrent} />
+            <ActiveStreak streaks={streaks} />
           </div>
         </div>
         <div className="card">
@@ -342,7 +358,7 @@ export default function OscarsStats() {
       {/* ══ Section 3: Score Timeline ═════════════════════════════════════════ */}
       <div className="card">
         <p className="stat-label mb-1">Correct Guesses Over Time</p>
-        <p className="text-xs text-gray-400 dark:text-gray-200 mb-5">Per ceremony 2008–2026. ◆ = tiebreaker year.</p>
+        <p className="text-xs text-gray-400 dark:text-white mb-5">Per ceremony 2008–2026. ◆ = tiebreaker year.</p>
         <ResponsiveContainer width="100%" height={280}>
           <LineChart data={timelineData} margin={{ top:5, right:20, left:0, bottom:5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
@@ -359,7 +375,7 @@ export default function OscarsStats() {
       {/* ══ Section 4: Winning Margin ═════════════════════════════════════════ */}
       <div className="card">
         <p className="stat-label mb-1">Winning Margin by Year</p>
-        <p className="text-xs text-gray-400 dark:text-gray-200 mb-5">Positive = Hermz won · Negative = Dust won · 0 = decided by tiebreaker.</p>
+        <p className="text-xs text-gray-400 dark:text-white mb-5">Positive = Hermz won · Negative = Dust won · 0 = decided by tiebreaker.</p>
         <ResponsiveContainer width="100%" height={200}>
           <BarChart data={marginData} margin={{ top:5, right:20, left:0, bottom:5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
@@ -381,7 +397,7 @@ export default function OscarsStats() {
         <div className="px-6 pt-5 pb-3 border-b border-stone-100 dark:border-night-700 flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="stat-label">Category Accuracy</p>
-            <p className="text-xs text-gray-400 dark:text-gray-200 mt-0.5">All-time correct guesses per category · click any row to expand</p>
+            <p className="text-xs text-gray-400 dark:text-white mt-0.5">All-time correct guesses per category · click any row to expand</p>
           </div>
           <div className="flex items-center gap-1 bg-stone-100 dark:bg-night-700 rounded-lg p-1">
             {[['accuracy','Accuracy'],['h2h','Head-to-Head']].map(([val, label]) => (
@@ -402,25 +418,25 @@ export default function OscarsStats() {
           <div className="flex items-center justify-center gap-8 py-3 bg-stone-50 dark:bg-night-900/30 border-b border-stone-100 dark:border-night-700">
             <div className="text-center">
               <span className="text-2xl font-bold font-display" style={{ color: HC }}>{hCW}</span>
-              <div className="text-xs text-gray-400 dark:text-gray-200">Hermz leads</div>
+              <div className="text-xs text-gray-400 dark:text-white">Hermz leads</div>
             </div>
             <div className="text-center">
-              <span className="text-2xl font-bold font-display text-gray-400 dark:text-gray-200">{tied}</span>
-              <div className="text-xs text-gray-400 dark:text-gray-200">Tied</div>
+              <span className="text-2xl font-bold font-display text-gray-400 dark:text-white">{tied}</span>
+              <div className="text-xs text-gray-400 dark:text-white">Tied</div>
             </div>
             <div className="text-center">
               <span className="text-2xl font-bold font-display" style={{ color: DC }}>{dCW}</span>
-              <div className="text-xs text-gray-400 dark:text-gray-200">Dust leads</div>
+              <div className="text-xs text-gray-400 dark:text-white">Dust leads</div>
             </div>
           </div>
         )}
 
         {/* Accuracy legend */}
         {catView === 'accuracy' && (
-          <div className="flex items-center gap-4 px-6 py-2 border-b border-stone-100 dark:border-night-700 text-xs text-gray-400 dark:text-gray-200">
+          <div className="flex items-center gap-4 px-6 py-2 border-b border-stone-100 dark:border-night-700 text-xs text-gray-400 dark:text-white">
             <span style={{ color: HC }}>■ Hermz fills left</span>
             <span style={{ color: DC }}>■ Dust fills right</span>
-            <span className="text-gray-400 dark:text-gray-200">(brighter bar = category leader)</span>
+            <span className="text-gray-400 dark:text-white">(brighter bar = category leader)</span>
           </div>
         )}
 
@@ -476,33 +492,40 @@ function PlayerStat({ name, value, sub, highlight, color }) {
   )
 }
 
-function StreakRow({ label, mattVal, dustinVal }) {
-  const showMatt   = mattVal   > 0
-  const showDustin = dustinVal > 0
+function ActiveStreak({ streaks }) {
+  const { mattCurrent, dustinCurrent, mattStreakStart, dustinStreakStart, lastYear } = streaks
+
+  if (!mattCurrent && !dustinCurrent) {
+    return (
+      <div>
+        <div className="text-xs text-gray-400 dark:text-white mb-1.5">Active streak</div>
+        <div className="text-sm text-slate-500 dark:text-slate-400">No active streak</div>
+      </div>
+    )
+  }
+
+  const isHermz  = mattCurrent > 0
+  const count    = isHermz ? mattCurrent : dustinCurrent
+  const start    = isHermz ? mattStreakStart : dustinStreakStart
+  const end      = lastYear
+  const name     = isHermz ? 'Hermz' : 'Dust'
+  const bg       = isHermz ? 'bg-gold-600 border-gold-400' : 'bg-film-500 border-film-400'
+  const subColor = isHermz ? 'text-gold-100' : 'text-film-100'
+  const range    = start === end ? `${start}` : `${start}–${end}`
 
   return (
     <div>
-      <div className="text-xs text-gray-400 dark:text-white mb-1.5">{label}</div>
-      {!showMatt && !showDustin ? (
-        <div className="text-sm text-slate-500 dark:text-slate-400">No active streak</div>
-      ) : (
-        <div className="flex gap-3">
-          {showMatt && (
-            <div className="rounded-lg px-3 py-2 text-center border bg-gold-600 border-gold-400">
-              <span className="text-2xl font-bold font-display text-white">{mattVal}</span>
-              <span className="text-xs ml-1 text-gold-100">{mattVal === 1 ? 'yr' : 'yrs'}</span>
-              <div className="text-xs text-gold-100">Hermz</div>
-            </div>
-          )}
-          {showDustin && (
-            <div className="rounded-lg px-3 py-2 text-center border bg-film-500 border-film-400">
-              <span className="text-2xl font-bold font-display text-white">{dustinVal}</span>
-              <span className="text-xs ml-1 text-film-100">{dustinVal === 1 ? 'yr' : 'yrs'}</span>
-              <div className="text-xs text-film-100">Dust</div>
-            </div>
-          )}
+      <div className="text-xs text-gray-400 dark:text-white mb-2">Active streak</div>
+      <div className={`inline-flex items-center gap-4 rounded-xl px-5 py-3 border ${bg}`}>
+        <div className="text-center">
+          <span className="text-3xl font-bold font-display text-white">{count}</span>
+          <div className={`text-xs ${subColor}`}>{count === 1 ? 'year' : 'years'}</div>
         </div>
-      )}
+        <div>
+          <div className="text-white font-semibold text-sm">{name} is on a roll</div>
+          <div className={`text-xs ${subColor}`}>{range}</div>
+        </div>
+      </div>
     </div>
   )
 }
@@ -511,11 +534,11 @@ function PeakRow({ label, year, value, total, isWorst }) {
   return (
     <Link to={`/oscars/${year}`}
       className="flex items-center justify-between rounded-lg px-3 py-2 mb-2 bg-stone-100 dark:bg-night-700/30 hover:bg-stone-200 dark:hover:bg-night-700 transition-colors group">
-      <span className="text-xs text-gray-400 dark:text-gray-200">{label}</span>
+      <span className="text-xs text-gray-400 dark:text-white">{label}</span>
       <div className="text-right">
         <span className={`text-sm font-bold ${isWorst ? 'text-red-500 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}>{value}</span>
-        <span className="text-xs text-gray-400 dark:text-gray-200 ml-1">/ {total}</span>
-        <span className="text-xs text-gray-400 dark:text-gray-200 ml-2 group-hover:text-gold-600 dark:group-hover:text-gold-400 transition-colors">{year}</span>
+        <span className="text-xs text-gray-400 dark:text-white ml-1">/ {total}</span>
+        <span className="text-xs text-gray-400 dark:text-white ml-2 group-hover:text-gold-600 dark:group-hover:text-gold-400 transition-colors">{year}</span>
       </div>
     </Link>
   )

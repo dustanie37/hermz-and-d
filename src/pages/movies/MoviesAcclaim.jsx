@@ -44,19 +44,7 @@ function suggestAcclaim(film) {
   return { score, factors }
 }
 
-// ── ScoreBar ─────────────────────────────────────────────────────────────────
-
-function ScoreBar({ value }) {
-  if (value == null) return null
-  return (
-    <div className="w-16 h-1.5 rounded-full bg-stone-100 dark:bg-night-700 overflow-hidden">
-      <div
-        className="h-full rounded-full bg-gold-400 dark:bg-gold-500"
-        style={{ width: `${value * 10}%` }}
-      />
-    </div>
-  )
-}
+// ScoreBar removed — number display is sufficient
 
 // ── InlineEditor ──────────────────────────────────────────────────────────────
 
@@ -113,7 +101,6 @@ function InlineEditor({ film, onSaved }) {
             <span className="text-xl font-bold text-gold-600 dark:text-gold-400 font-display w-8 text-right">
               {film.acclaim_score}
             </span>
-            <ScoreBar value={film.acclaim_score} />
           </>
         ) : (
           <span className="text-sm text-gray-400 italic w-8 text-right">—</span>
@@ -555,12 +542,9 @@ export default function MoviesAcclaim() {
                         {isAuthenticated ? (
                           <InlineEditor film={film} onSaved={handleSaved} />
                         ) : film.acclaim_score != null ? (
-                          <div className="flex items-center gap-3">
-                            <span className="text-xl font-bold text-gold-600 dark:text-gold-400 font-display">
-                              {film.acclaim_score}
-                            </span>
-                            <ScoreBar value={film.acclaim_score} />
-                          </div>
+                          <span className="text-xl font-bold text-gold-600 dark:text-gold-400 font-display">
+                            {film.acclaim_score}
+                          </span>
                         ) : (
                           <span className="text-sm text-gray-400 italic">—</span>
                         )}

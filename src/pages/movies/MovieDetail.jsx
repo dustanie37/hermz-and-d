@@ -76,10 +76,10 @@ function PosterFull({ url, title }) {
 function ScoreCell({ value, max = 10 }) {
   if (value == null) return <span className="text-base text-gray-300 dark:text-gray-700">—</span>
   const pct = (value / max) * 100
-  const color = pct >= 80 ? 'text-emerald-600 dark:text-emerald-400'
-              : pct >= 60 ? 'text-gold-600 dark:text-gold-400'
-              : 'text-gray-600 dark:text-gray-400'
-  return <span className={`text-base font-semibold ${color}`}>{value}</span>
+  const color = value >= 8 ? 'text-emerald-600 dark:text-emerald-400'
+              : value >= 4 ? 'text-yellow-400 dark:text-yellow-300'
+              : 'text-red-500 dark:text-red-400'
+  return <span className={`text-lg font-semibold ${color}`}>{value}</span>
 }
 
 function RankBadge({ rank, label }) {
@@ -223,10 +223,12 @@ function OscarNomsList({ noms, filmYear }) {
     <div className="space-y-4">
       {years.map(yr => {
         const rows = byYear[yr]
-        // Sort: wins first, then alphabetical
+        // Sort: wins first, then category name, then nominee name
         const sorted = [...rows].sort((a, b) => {
           if (a.is_winner !== b.is_winner) return a.is_winner ? -1 : 1
-          return a.category_name.localeCompare(b.category_name)
+          const catCmp = a.category_name.localeCompare(b.category_name)
+          if (catCmp !== 0) return catCmp
+          return (a.nominee_name || '').localeCompare(b.nominee_name || '')
         })
 
         // Show year label only for multi-year films or when year differs from release year
@@ -241,26 +243,29 @@ function OscarNomsList({ noms, filmYear }) {
               </p>
             )}
             <div className="flex flex-wrap gap-2">
-              {sorted.map((nom, i) =>
-                nom.is_winner ? (
+              {sorted.map((nom, i) => {
+                const label = nom.nominee_name
+                  ? `${nom.category_name} — ${nom.nominee_name}`
+                  : nom.category_name
+                return nom.is_winner ? (
                   <span
-                    key={`${nom.category_name}-${i}`}
+                    key={`${nom.category_name}-${nom.nominee_name ?? ''}-${i}`}
                     className="badge-gold flex items-center gap-1 text-sm"
                   >
-                    🏆 {nom.category_name}
+                    🏆 {label}
                   </span>
                 ) : (
                   <span
-                    key={`${nom.category_name}-${i}`}
+                    key={`${nom.category_name}-${nom.nominee_name ?? ''}-${i}`}
                     className="text-sm text-gray-500 dark:text-gray-400
                                px-2.5 py-0.5 rounded-full border
                                border-stone-200 dark:border-night-600
                                bg-stone-50 dark:bg-night-800"
                   >
-                    {nom.category_name}
+                    {label}
                   </span>
                 )
-              )}
+              })}
             </div>
           </div>
         )
@@ -427,8 +432,10 @@ export default function MovieDetail() {
     : []
 
   // Actors array
-  const actors = [film?.actor_1, film?.actor_2, film?.actor_3, film?.actor_4, film?.actor_5]
-    .filter(Boolean)
+  const actors = [
+    film?.actor_1, film?.actor_2, film?.actor_3, film?.actor_4, film?.actor_5,
+    film?.actor_6, film?.actor_7, film?.actor_8, film?.actor_9, film?.actor_10,
+  ].filter(Boolean)
 
   // Oscar major wins
   const majorWins = OSCAR_WINS.filter(w => film?.[w.key])
@@ -520,8 +527,15 @@ export default function MovieDetail() {
 
               {/* Director */}
               {film.director && (
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
                   Directed by <span className="text-gray-700 dark:text-gray-300 font-medium">{film.director}</span>
+                </p>
+              )}
+
+              {/* Screenplay */}
+              {film.writer && (
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                  Written by <span className="text-gray-700 dark:text-gray-300 font-medium">{film.writer}</span>
                 </p>
               )}
 
@@ -553,31 +567,25 @@ export default function MovieDetail() {
             {/* Rank quick stats — most recent event */}
             <div className="flex flex-wrap gap-4 pt-4 border-t border-stone-100 dark:border-night-700">
               <div className="text-center">
-                <div className="text-2xl font-bold font-display" style={{ color: DC }}>
+                <div className="text-4xl font-bold font-display" style={{ color: DC }}>
                   {latestYear && dustinRows[latestYear] ? `#${dustinRows[latestYear].rank}` : 'NR'}
                 </div>
                 <div className="text-xs text-gray-400 uppercase tracking-wider">Dustin's Rank</div>
                 {latestYear && <div className="text-xs text-gray-400">{latestYear}</div>}
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold font-display" style={{ color: HC }}>
+                <div className="text-4xl font-bold font-display" style={{ color: HC }}>
                   {latestYear && mattRows[latestYear] ? `#${mattRows[latestYear].rank}` : 'NR'}
                 </div>
                 <div className="text-xs text-gray-400 uppercase tracking-wider">Hermz's Rank</div>
                 {latestYear && <div className="text-xs text-gray-400">{latestYear}</div>}
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 font-display">
+                <div className="text-4xl font-bold text-emerald-600 dark:text-emerald-400 font-display">
                   {latestYear && combined[latestYear] ? `#${combined[latestYear].combined_rank}` : 'NR'}
                 </div>
                 <div className="text-xs text-gray-400 uppercase tracking-wider">Combined Rank</div>
                 {latestYear && <div className="text-xs text-gray-400">{latestYear}</div>}
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-film-600 dark:text-film-400 font-display">
-                  {appearsIn.length}
-                </div>
-                <div className="text-xs text-gray-400 uppercase tracking-wider">Event{appearsIn.length !== 1 ? 's' : ''} Listed</div>
               </div>
             </div>
           </div>
@@ -945,7 +953,7 @@ export default function MovieDetail() {
           <div className="px-6 pt-5 pb-3 border-b border-stone-100 dark:border-night-700">
             <h2 className="section-title text-lg mb-0.5">Score History</h2>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              All scores out of 10 except Personal Impact which is out of 20
+              Only events in which the film was ranked by at least one player appear below. All scores out of 10 except Personal Impact (out of 20).
             </p>
           </div>
           <div className="overflow-x-auto">
@@ -1031,7 +1039,7 @@ export default function MovieDetail() {
                     if (!dustinRows[yr]) return null
                     return (
                       <td key={`d-total-${yr}`} className="table-cell text-center">
-                        <span className="text-base font-bold text-gray-900 dark:text-white">
+                        <span className="text-xl font-bold text-gray-900 dark:text-white">
                           {dustinRows[yr]?.total_score ?? '—'}
                         </span>
                       </td>
@@ -1041,7 +1049,7 @@ export default function MovieDetail() {
                     if (!mattRows[yr]) return null
                     return (
                       <td key={`m-total-${yr}`} className="table-cell text-center">
-                        <span className="text-base font-bold text-gray-900 dark:text-white">
+                        <span className="text-xl font-bold text-gray-900 dark:text-white">
                           {mattRows[yr]?.total_score ?? '—'}
                         </span>
                       </td>

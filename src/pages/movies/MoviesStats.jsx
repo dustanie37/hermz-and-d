@@ -82,7 +82,7 @@ function DecadeChart({ films, isDark }) {
       <BarChart data={data} layout="vertical" margin={{ left: 8, right: 20, top: 4, bottom: 4 }}>
         <XAxis type="number" tick={{ fill: textColor, fontSize: 11 }} allowDecimals={false} />
         <YAxis type="category" dataKey="decade" width={48} tick={{ fill: textColor, fontSize: 12 }} />
-        <Tooltip contentStyle={tooltipStyle(isDark)} labelStyle={{ color: isDark ? '#f3f4f6' : '#111827' }} />
+        <Tooltip contentStyle={tooltipStyle(isDark)} labelStyle={{ color: isDark ? '#f3f4f6' : '#111827' }} itemStyle={{ color: isDark ? '#f3f4f6' : '#111827' }} cursor={false} />
         <Bar dataKey="count" fill={DC} radius={[0, 4, 4, 0]} />
       </BarChart>
     </ResponsiveContainer>
@@ -108,7 +108,7 @@ function GenreChart({ films, isDark }) {
       <BarChart data={data} layout="vertical" margin={{ left: 8, right: 20, top: 4, bottom: 4 }}>
         <XAxis type="number" tick={{ fill: textColor, fontSize: 11 }} allowDecimals={false} />
         <YAxis type="category" dataKey="genre" width={128} tick={{ fill: textColor, fontSize: 11 }} />
-        <Tooltip contentStyle={tooltipStyle(isDark)} labelStyle={{ color: isDark ? '#f3f4f6' : '#111827' }} />
+        <Tooltip contentStyle={tooltipStyle(isDark)} labelStyle={{ color: isDark ? '#f3f4f6' : '#111827' }} itemStyle={{ color: isDark ? '#f3f4f6' : '#111827' }} cursor={false} />
         <Bar dataKey="count" fill={HC} radius={[0, 4, 4, 0]} />
       </BarChart>
     </ResponsiveContainer>
@@ -141,7 +141,7 @@ function DirectorChart({ films, isDark }) {
       <BarChart data={data} layout="vertical" margin={{ left: 8, right: 20, top: 4, bottom: 4 }}>
         <XAxis type="number" tick={{ fill: textColor, fontSize: 11 }} allowDecimals={false} />
         <YAxis type="category" dataKey="director" width={140} tick={{ fill: textColor, fontSize: 11 }} />
-        <Tooltip contentStyle={tooltipStyle(isDark)} labelStyle={{ color: isDark ? '#f3f4f6' : '#111827' }} />
+        <Tooltip contentStyle={tooltipStyle(isDark)} labelStyle={{ color: isDark ? '#f3f4f6' : '#111827' }} itemStyle={{ color: isDark ? '#f3f4f6' : '#111827' }} cursor={false} />
         <Bar dataKey="count" radius={[0, 4, 4, 0]}>
           {data.map((_, i) => <Cell key={i} fill={i % 2 === 0 ? HC : DC} />)}
         </Bar>
@@ -176,9 +176,47 @@ function ActorChart({ films, isDark }) {
       <BarChart data={data} layout="vertical" margin={{ left: 8, right: 20, top: 4, bottom: 4 }}>
         <XAxis type="number" tick={{ fill: textColor, fontSize: 11 }} allowDecimals={false} />
         <YAxis type="category" dataKey="actor" width={140} tick={{ fill: textColor, fontSize: 11 }} />
-        <Tooltip contentStyle={tooltipStyle(isDark)} labelStyle={{ color: isDark ? '#f3f4f6' : '#111827' }} />
+        <Tooltip contentStyle={tooltipStyle(isDark)} labelStyle={{ color: isDark ? '#f3f4f6' : '#111827' }} itemStyle={{ color: isDark ? '#f3f4f6' : '#111827' }} cursor={false} />
         <Bar dataKey="count" radius={[0, 4, 4, 0]}>
           {data.map((_, i) => <Cell key={i} fill={i % 2 === 0 ? DC : HC} />)}
+        </Bar>
+      </BarChart>
+    </ResponsiveContainer>
+  )
+}
+
+function WriterChart({ films, isDark }) {
+  const data = useMemo(() => {
+    const counts = {}
+    films.forEach(f => {
+      if (f.writer) {
+        f.writer.split(',').forEach(w => {
+          // Strip any parenthetical qualifier to get clean name, matching what movie pages display
+          const name = w.trim().replace(/\s*\(.*?\)\s*$/, '').trim()
+          if (name) counts[name] = (counts[name] || 0) + 1
+        })
+      }
+    })
+    return Object.entries(counts)
+      .filter(([, n]) => n > 1)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 15)
+      .map(([writer, count]) => ({ writer, count }))
+  }, [films])
+
+  if (data.length === 0) return (
+    <p className="text-gray-400 text-sm text-center py-6">No screenwriters with multiple films in this view.</p>
+  )
+
+  const textColor = isDark ? '#9ca3af' : '#6b7280'
+  return (
+    <ResponsiveContainer width="100%" height={Math.max(160, data.length * 30 + 20)}>
+      <BarChart data={data} layout="vertical" margin={{ left: 8, right: 20, top: 4, bottom: 4 }}>
+        <XAxis type="number" tick={{ fill: textColor, fontSize: 11 }} allowDecimals={false} />
+        <YAxis type="category" dataKey="writer" width={160} tick={{ fill: textColor, fontSize: 11 }} />
+        <Tooltip contentStyle={tooltipStyle(isDark)} labelStyle={{ color: isDark ? '#f3f4f6' : '#111827' }} itemStyle={{ color: isDark ? '#f3f4f6' : '#111827' }} cursor={false} />
+        <Bar dataKey="count" radius={[0, 4, 4, 0]}>
+          {data.map((_, i) => <Cell key={i} fill={i % 2 === 0 ? HC : DC} />)}
         </Bar>
       </BarChart>
     </ResponsiveContainer>
@@ -931,7 +969,7 @@ export default function MoviesStats() {
         .select(`
           combined_rank, film_id, event_id,
           ranking_events (year),
-          films (id, title, release_year, director, omdb_genres, custom_genre_1, actor_1, actor_2, actor_3, actor_4, actor_5, poster_url)
+          films (id, title, release_year, director, writer, omdb_genres, custom_genre_1, actor_1, actor_2, actor_3, actor_4, actor_5, poster_url)
         `)
       if (error) { setAllTimeLoading(false); return }
 
@@ -1031,7 +1069,7 @@ export default function MoviesStats() {
     async function fetchChartsFilms() {
       try {
         let filmList = []
-        const filmFields = `id, title, release_year, director, omdb_genres, custom_genre_1, custom_genre_2,
+        const filmFields = `id, title, release_year, director, writer, omdb_genres, custom_genre_1, custom_genre_2,
                             actor_1, actor_2, actor_3, actor_4, actor_5`
 
         if (view === 'combined') {
@@ -1197,6 +1235,14 @@ export default function MoviesStats() {
                   <h2 className="section-title text-lg mb-1">Top Actors</h2>
                   <p className="section-subtitle">Actors (from OMDB) with 2+ films on this list</p>
                   <ActorChart films={chartsFilms} isDark={isDark} />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div className="card">
+                  <h2 className="section-title text-lg mb-1">Top Screenwriters</h2>
+                  <p className="section-subtitle">Writers (from OMDB) with 2+ films on this list</p>
+                  <WriterChart films={chartsFilms} isDark={isDark} />
                 </div>
               </div>
             </>
