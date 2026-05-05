@@ -1316,7 +1316,7 @@ export default function MoviesStats() {
       // Supabase default cap is 1000 rows so we must set limit.
       const { data: noms, error: nomsErr } = await supabase
         .from('film_oscar_noms')
-        .select('film_id, category, is_winner')
+        .select('film_id, category_name, is_winner')
         .limit(10000)
 
       console.log('[Crossover] noms fetched:', noms?.length, 'error:', nomsErr?.message)
@@ -1335,10 +1335,10 @@ export default function MoviesStats() {
         if (!oscarMap[idStr]) oscarMap[idStr] = { wins: 0, noms: 0, winCats: [], nomCats: [] }
         if (n.is_winner) {
           oscarMap[idStr].wins++
-          if (!oscarMap[idStr].winCats.includes(n.category)) oscarMap[idStr].winCats.push(n.category)
+          if (!oscarMap[idStr].winCats.includes(n.category_name)) oscarMap[idStr].winCats.push(n.category_name)
         } else {
           oscarMap[idStr].noms++
-          if (!oscarMap[idStr].nomCats.includes(n.category)) oscarMap[idStr].nomCats.push(n.category)
+          if (!oscarMap[idStr].nomCats.includes(n.category_name)) oscarMap[idStr].nomCats.push(n.category_name)
         }
       })
 
