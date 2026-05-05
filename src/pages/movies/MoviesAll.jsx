@@ -12,6 +12,10 @@ const MATT_COLOR   = '#d97706'   // gold-600
 
 // ── sort helpers ──────────────────────────────────────────────────────────────
 
+function sortTitle(t) {
+  return (t || '').replace(/^(the|a|an)\s+/i, '').trim()
+}
+
 function defaultDir(key) {
   if (key === 'title') return 'asc'
   return 'asc'  // rank columns: rank 1 first
@@ -168,8 +172,8 @@ export default function MoviesAll() {
 
   // Column-group toggles
   const [showCombined, setShowCombined] = useState(true)
-  const [showDust, setShowDust]         = useState(false)
-  const [showMatt, setShowMatt]         = useState(false)
+  const [showDust, setShowDust]         = useState(true)
+  const [showMatt, setShowMatt]         = useState(true)
 
   const [search, setSearch]   = useState('')
   const [sortKey, setSortKey] = useState('title')
@@ -187,7 +191,7 @@ export default function MoviesAll() {
           { data: profData,     error: pe },
         ] = await Promise.all([
           supabase.from('films')
-            .select('id, title, release_year, director, poster_url')
+            .select('id, title, release_year, director, writer, actor_1, actor_2, actor_3, actor_4, actor_5, actor_6, actor_7, actor_8, actor_9, actor_10, poster_url')
             .order('title'),
           supabase.from('combined_rankings')
             .select('film_id, event_id, combined_rank'),
@@ -245,12 +249,20 @@ export default function MoviesAll() {
   const displayFilms = useMemo(() => {
     const q = search.trim().toLowerCase()
     const filtered = q
-      ? films.filter(f => f.title?.toLowerCase().includes(q))
+      ? films.filter(f => {
+          if (f.title?.toLowerCase().includes(q)) return true
+          if (f.director?.toLowerCase().includes(q)) return true
+          if (f.writer?.replace(/\s*\(.*?\)/g, '').toLowerCase().includes(q)) return true
+          for (let i = 1; i <= 5; i++) {
+            if (f[`actor_${i}`]?.toLowerCase().includes(q)) return true
+          }
+          return false
+        })
       : films
 
     return [...filtered].sort((a, b) => {
       if (sortKey === 'title') {
-        const cmp = (a.title || '').localeCompare(b.title || '')
+        const cmp = sortTitle(a.title).localeCompare(sortTitle(b.title))
         return sortDir === 'asc' ? cmp : -cmp
       }
       if (sortKey.startsWith('c_')) {
@@ -301,7 +313,7 @@ export default function MoviesAll() {
       <div className="flex flex-wrap items-center gap-3 mb-5">
         <input
           type="text"
-          placeholder="Search films…"
+          placeholder="Search title, director, actor, writer…"
           value={search}
           onChange={e => setSearch(e.target.value)}
           className="input text-sm w-60"
@@ -340,24 +352,13 @@ export default function MoviesAll() {
       </div>
 
       {/* Legend */}
-      <div className="flex items-center gap-4 mb-4 text-xs text-gray-500 dark:text-gray-500">
-        <span className="flex items-center gap-1.5">
-          <span className="font-bold text-gray-900 dark:text-white">42</span> Combined
+      <div className="flex items-center gap-2 mb-4 text-xs text-gray-500 dark:text-gray-500">
+        <span className="flex gap-0.5">
+          {[true, true, false, false].map((on, i) =>
+            <span key={i} className={`w-2 h-2 rounded-full inline-block ${on ? 'bg-film-500' : 'bg-gray-300 dark:bg-gray-700'}`} />
+          )}
         </span>
-        <span className="flex items-center gap-1.5">
-          <span className="font-bold" style={{ color: DUSTIN_COLOR }}>42</span> Dust
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="font-bold" style={{ color: MATT_COLOR }}>42</span> Hermz
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="flex gap-0.5">
-            {[true, true, false, false].map((on, i) =>
-              <span key={i} className={`w-2 h-2 rounded-full inline-block ${on ? 'bg-film-500' : 'bg-gray-300 dark:bg-gray-700'}`} />
-            )}
-          </span>
-          Combined list appearances (01 · 07 · 16 · 26)
-        </span>
+        Combined list appearances (01 · 07 · 16 · 26)
       </div>
 
       {/* Loading / error */}

@@ -75,8 +75,9 @@ export default function MoviesList() {
   const [loading, setLoading]         = useState(true)
   const [error, setError]             = useState(null)
 
-  // Sort state (no filters — filters live on stats page)
-  const [sortBy, setSortBy] = useState('rank')
+  // Sort + search state
+  const [sortBy, setSortBy]         = useState('rank')
+  const [searchTerm, setSearchTerm] = useState('')
 
   // ── fetch ranking events + profiles once ──────────────────────────────────
   useEffect(() => {
@@ -123,7 +124,7 @@ export default function MoviesList() {
               combined_rank, dustin_rank, matt_rank,
               total_score, dustin_score, matt_score, avg_rank,
               film_id,
-              films (id, title, release_year, director, poster_url)
+              films (id, title, release_year, director, writer, actor_1, actor_2, actor_3, actor_4, actor_5, poster_url)
             `)
             .eq('event_id', currentEvent.id)
             .order('combined_rank')
@@ -166,7 +167,7 @@ export default function MoviesList() {
             .from('individual_rankings')
             .select(`
               rank, total_score, score_personal_impact, film_id,
-              films (id, title, release_year, director, poster_url)
+              films (id, title, release_year, director, writer, actor_1, actor_2, actor_3, actor_4, actor_5, poster_url)
             `)
             .eq('event_id', currentEvent.id)
             .eq('user_id', userId)
@@ -211,6 +212,11 @@ export default function MoviesList() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [eventYear, view, profiles, events])
 
+  // ── sort helpers ───────────────────────────────────────────────────────────
+  function sortTitle(t) {
+    return (t || '').replace(/^(the|a|an)\s+/i, '').trim()
+  }
+
   // ── sorted rows ────────────────────────────────────────────────────────────
   const displayRows = useMemo(() => {
     if (sortBy === 'score') {
@@ -220,7 +226,7 @@ export default function MoviesList() {
     } else if (sortBy === 'year_desc') {
       return [...rows].sort((a, b) => (b.film?.release_year || 0) - (a.film?.release_year || 0))
     } else if (sortBy === 'title') {
-      return [...rows].sort((a, b) => (a.film?.title || '').localeCompare(b.film?.title || ''))
+      return [...rows].sort((a, b) => sortTitle(a.film?.title).localeCompare(sortTitle(b.film?.title)))
     } else if (sortBy === 'dustin_rank' && view === 'combined') {
       return [...rows].sort((a, b) => (a.dustinRank || 999) - (b.dustinRank || 999))
     } else if (sortBy === 'matt_rank' && view === 'combined') {
@@ -228,6 +234,24 @@ export default function MoviesList() {
     }
     return rows  // default: rank order
   }, [rows, sortBy, view])
+
+  // ── search filter (applied after sort) ───────────────────────────────────
+  const filteredRows = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase()
+    if (!term) return displayRows
+    return displayRows.filter(row => {
+      const f = row.film
+      if (!f) return false
+      if (f.title?.toLowerCase().includes(term)) return true
+      if (f.director?.toLowerCase().includes(term)) return true
+      // Strip parentheticals from writer string before matching
+      if (f.writer?.replace(/\s*\(.*?\)/g, '').toLowerCase().includes(term)) return true
+      for (let i = 1; i <= 5; i++) {
+        if (f[`actor_${i}`]?.toLowerCase().includes(term)) return true
+      }
+      return false
+    })
+  }, [displayRows, searchTerm])
 
   // ── event + view helpers ───────────────────────────────────────────────────
   function setEvent(year) {
@@ -245,7 +269,6 @@ export default function MoviesList() {
   // ── sort options ───────────────────────────────────────────────────────────
   const sortOptions = [
     { value: 'rank',      label: view === 'combined' ? 'Combined Rank' : 'Rank' },
-    { value: 'score',     label: 'Score (High → Low)' },
     { value: 'year',      label: 'Release Year (Old → New)' },
     { value: 'year_desc', label: 'Release Year (New → Old)' },
     { value: 'title',     label: 'Title (A–Z)' },
@@ -316,7 +339,7 @@ export default function MoviesList() {
         ))}
       </div>
 
-      {/* ── Sort bar ── */}
+      {/* ── Sort + search bar ── */}
       <div className="flex flex-wrap items-center gap-3 mb-5">
         <select
           value={sortBy}
@@ -337,8 +360,30 @@ export default function MoviesList() {
           </button>
         )}
 
-        <span className="ml-auto text-xs text-gray-400 dark:text-gray-600">
-          {displayRows.length} film{displayRows.length !== 1 ? 's' : ''}
+        <div className="relative ml-auto">
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            placeholder="Search title, director, actor, writer…"
+            className="input text-sm py-1.5 pl-3 pr-8 w-64"
+          />
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm('')}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400
+                         hover:text-gray-600 dark:hover:text-gray-300 text-xs"
+            >
+              ✕
+            </button>
+          )}
+        </div>
+
+        <span className="text-xs text-gray-400 dark:text-gray-600 flex-shrink-0">
+          {searchTerm
+            ? `${filteredRows.length} of ${displayRows.length}`
+            : `${displayRows.length} film${displayRows.length !== 1 ? 's' : ''}`
+          }
         </span>
       </div>
 
@@ -352,8 +397,18 @@ export default function MoviesList() {
         <div className="py-8 text-center text-red-400 text-sm">Error: {error}</div>
       )}
 
+      {/* ── No search results ── */}
+      {!loading && !error && displayRows.length > 0 && filteredRows.length === 0 && (
+        <div className="py-16 text-center text-gray-400 text-sm">
+          No films match <span className="font-semibold text-gray-600 dark:text-gray-300">"{searchTerm}"</span>
+          <button onClick={() => setSearchTerm('')} className="ml-2 underline hover:text-gray-600 dark:hover:text-gray-300">
+            Clear
+          </button>
+        </div>
+      )}
+
       {/* ── List table ── */}
-      {!loading && !error && displayRows.length > 0 && (
+      {!loading && !error && filteredRows.length > 0 && (
         <div className="card overflow-hidden p-0">
           <table className="w-full">
             <thead>
@@ -390,7 +445,7 @@ export default function MoviesList() {
             </thead>
 
             <tbody>
-              {displayRows.map(row => {
+              {filteredRows.map(row => {
                 const film = row.film
                 if (!film) return null
 

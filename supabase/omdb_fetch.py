@@ -266,7 +266,7 @@ def main():
         director = director if director else None
 
         actor_cols = []
-        for idx in range(5):
+        for idx in range(10):
             actor_cols.append(
                 f"actor_{idx+1} = {sql_str(actors[idx] if idx < len(actors) else None)}"
             )

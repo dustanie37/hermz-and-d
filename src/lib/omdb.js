@@ -34,7 +34,7 @@ function normalise(data) {
     .split(',')
     .map(a => a.trim())
     .filter(Boolean)
-    .slice(0, 5)
+    .slice(0, 10)  // OMDB typically returns 3–4; TMDb backfill fills the rest
 
   return {
     omdbId:    data.imdbID,

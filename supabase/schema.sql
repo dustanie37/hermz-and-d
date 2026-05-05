@@ -141,12 +141,17 @@ CREATE TABLE public.films (
   poster_url            TEXT,
   -- OMDB genres (comma-separated as returned by OMDB)
   omdb_genres           TEXT,
-  -- Top 5 actors from OMDB
+  -- Up to 10 actors from OMDB (most films have 3–4; actor_6+ via add_actor_columns.sql migration)
   actor_1               TEXT,
   actor_2               TEXT,
   actor_3               TEXT,
   actor_4               TEXT,
   actor_5               TEXT,
+  actor_6               TEXT,
+  actor_7               TEXT,
+  actor_8               TEXT,
+  actor_9               TEXT,
+  actor_10              TEXT,
   -- Acclaim (agreed score out of 10)
   acclaim_score         SMALLINT CHECK (acclaim_score BETWEEN 1 AND 10),
   -- Oscar data
