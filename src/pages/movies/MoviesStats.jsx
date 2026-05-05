@@ -927,6 +927,233 @@ function PodcastPrepTab({ allTimeData }) {
   )
 }
 
+// ── CROSSOVER TAB ────────────────────────────────────────────────────────────
+
+const EVENTS_LABEL = { 2001: '01', 2007: '07', 2016: '16', 2026: '26' }
+const HIGHLIGHT_CATS = [
+  'Best Picture', 'Best Director', 'Best Actor', 'Best Actress',
+  'Best Supporting Actor', 'Best Supporting Actress',
+]
+
+function CrossoverTab({ data }) {
+  const { films, totalWithNoms, totalWithWins, totalFilmsOnLists } = data
+  const [filter, setFilter] = useState('wins') // 'wins' | 'noms' | 'all'
+  const [expandedId, setExpandedId] = useState(null)
+
+  const displayed = filter === 'wins'
+    ? films.filter(f => f.oscarWins > 0)
+    : filter === 'noms'
+    ? films.filter(f => f.oscarWins === 0 && f.oscarNoms > 0)
+    : films
+
+  return (
+    <div className="space-y-8">
+
+      {/* ── Summary cards ── */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="card text-center py-5">
+          <div className="stat-value text-2xl">{totalFilmsOnLists}</div>
+          <div className="stat-label mt-1">Films on Our Lists</div>
+        </div>
+        <div className="card text-center py-5">
+          <div className="stat-value text-2xl text-gold-500">{totalWithNoms}</div>
+          <div className="stat-label mt-1">With Oscar Noms</div>
+        </div>
+        <div className="card text-center py-5">
+          <div className="stat-value text-2xl text-emerald-500">{totalWithWins}</div>
+          <div className="stat-label mt-1">With Oscar Wins</div>
+        </div>
+        <div className="card text-center py-5">
+          <div className="stat-value text-2xl text-gray-500">
+            {totalFilmsOnLists - totalWithNoms}
+          </div>
+          <div className="stat-label mt-1">No Oscar Data</div>
+        </div>
+      </div>
+
+      {/* ── Filter + table ── */}
+      <div className="card">
+        <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
+          <div>
+            <h2 className="section-title text-lg">Oscar × Our Rankings</h2>
+            <p className="section-subtitle">Films that appear on our combined lists and have Oscar nominations</p>
+          </div>
+          <div className="flex gap-1 p-1 bg-stone-100 dark:bg-night-800 rounded-xl">
+            {[
+              { v: 'wins', label: '🏆 Winners' },
+              { v: 'noms', label: '📜 Noms Only' },
+              { v: 'all',  label: 'All' },
+            ].map(opt => (
+              <button
+                key={opt.v}
+                onClick={() => setFilter(opt.v)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                  filter === opt.v
+                    ? 'bg-white dark:bg-night-600 text-gray-900 dark:text-white shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="table-header">
+                <th className="text-left px-3 py-2.5 w-8">#</th>
+                <th className="text-left px-3 py-2.5">Film</th>
+                <th className="text-center px-3 py-2.5">Wins</th>
+                <th className="text-center px-3 py-2.5">Noms</th>
+                <th className="text-center px-3 py-2.5 hidden sm:table-cell">Best Rank</th>
+                <th className="text-center px-3 py-2.5 hidden md:table-cell">Events</th>
+                <th className="text-center px-3 py-2.5 hidden lg:table-cell">Combined Ranks</th>
+              </tr>
+            </thead>
+            <tbody>
+              {displayed.map((f, i) => {
+                const isExpanded = expandedId === f.filmId
+                const hasBP = f.winCategories.includes('Best Picture')
+                const hasBD = f.winCategories.includes('Best Director')
+                return (
+                  <>
+                    <tr
+                      key={f.filmId}
+                      className="table-row-hover cursor-pointer border-t border-stone-100 dark:border-night-700"
+                      onClick={() => setExpandedId(isExpanded ? null : f.filmId)}
+                    >
+                      {/* Rank */}
+                      <td className="px-3 py-2.5 text-gray-400 text-xs">{i + 1}</td>
+
+                      {/* Film */}
+                      <td className="px-3 py-2.5">
+                        <div className="flex items-center gap-2.5">
+                          {f.poster_url ? (
+                            <img src={f.poster_url} alt={f.title}
+                              className="w-7 h-10 object-cover rounded shadow flex-shrink-0" />
+                          ) : (
+                            <div className="w-7 h-10 bg-stone-200 dark:bg-night-700 rounded flex-shrink-0" />
+                          )}
+                          <div className="min-w-0">
+                            <Link
+                              to={`/movies/${f.filmId}`}
+                              className="font-medium text-gray-900 dark:text-white hover:text-film-500 dark:hover:text-film-400 transition-colors truncate block"
+                              onClick={e => e.stopPropagation()}
+                            >
+                              {f.title}
+                            </Link>
+                            <div className="text-xs text-gray-400 flex items-center gap-1.5">
+                              {f.release_year && <span>{f.release_year}</span>}
+                              {hasBP && <span className="text-gold-500 font-medium">Best Picture</span>}
+                              {hasBD && !hasBP && <span className="text-purple-500 font-medium">Best Director</span>}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Wins */}
+                      <td className="px-3 py-2.5 text-center">
+                        {f.oscarWins > 0 ? (
+                          <span className="font-bold text-emerald-500">{f.oscarWins}</span>
+                        ) : (
+                          <span className="text-gray-400">—</span>
+                        )}
+                      </td>
+
+                      {/* Noms */}
+                      <td className="px-3 py-2.5 text-center">
+                        <span className="text-gray-500">{f.oscarNoms}</span>
+                      </td>
+
+                      {/* Best combined rank */}
+                      <td className="px-3 py-2.5 text-center hidden sm:table-cell">
+                        {f.bestCombinedRank !== null ? (
+                          <span className={`font-semibold ${
+                            f.bestCombinedRank <= 5  ? 'text-gold-500'
+                          : f.bestCombinedRank <= 15 ? 'text-film-400'
+                          : 'text-gray-400'}`}>
+                            #{f.bestCombinedRank}
+                          </span>
+                        ) : <span className="text-gray-500">—</span>}
+                      </td>
+
+                      {/* Event count */}
+                      <td className="px-3 py-2.5 text-center hidden md:table-cell">
+                        <span className="text-gray-400 text-xs">{f.eventCount}×</span>
+                      </td>
+
+                      {/* Per-event ranks */}
+                      <td className="px-3 py-2.5 text-center hidden lg:table-cell">
+                        <div className="flex items-center justify-center gap-1.5">
+                          {EVENTS_ORDER.map(yr => {
+                            const r = f.combinedRanks[yr]
+                            return (
+                              <div key={yr} className="text-center">
+                                <div className="text-xs text-gray-500 leading-none">{EVENTS_LABEL[yr]}</div>
+                                <div className={`text-xs font-medium leading-tight ${
+                                  r ? (r <= 5 ? 'text-gold-500' : r <= 15 ? 'text-film-400' : 'text-gray-400')
+                                    : 'text-gray-700 dark:text-gray-600'}`}>
+                                  {r ? `#${r}` : '–'}
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </td>
+                    </tr>
+
+                    {/* Expanded row: categories */}
+                    {isExpanded && (
+                      <tr key={`${f.filmId}-exp`} className="border-t border-stone-100 dark:border-night-700 bg-stone-50 dark:bg-night-900/40">
+                        <td />
+                        <td colSpan={6} className="px-4 py-3">
+                          {f.winCategories.length > 0 && (
+                            <div className="mb-2">
+                              <span className="text-xs uppercase tracking-wider text-emerald-500 font-semibold mr-2">Wins</span>
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {f.winCategories.map(c => (
+                                  <span key={c}
+                                    className="text-xs bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-2 py-0.5 rounded-full">
+                                    {c}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          {f.nomCategories.length > 0 && (
+                            <div>
+                              <span className="text-xs uppercase tracking-wider text-gray-400 font-semibold mr-2">Nominated</span>
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {f.nomCategories.map(c => (
+                                  <span key={c}
+                                    className="text-xs bg-stone-100 dark:bg-night-700 text-gray-500 dark:text-gray-400 px-2 py-0.5 rounded-full">
+                                    {c}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    )}
+                  </>
+                )
+              })}
+            </tbody>
+          </table>
+
+          {displayed.length === 0 && (
+            <div className="py-12 text-center text-gray-400 text-sm">No films match this filter.</div>
+          )}
+        </div>
+      </div>
+
+    </div>
+  )
+}
+
 // ── MAIN COMPONENT ────────────────────────────────────────────────────────────
 
 export default function MoviesStats() {
@@ -952,6 +1179,10 @@ export default function MoviesStats() {
   // Scores data (all individual rankings)
   const [scoresData, setScoresData]     = useState(null)
   const [scoresLoading, setScoresLoading] = useState(true)
+
+  // Crossover data (Oscar-nominated films on our lists)
+  const [crossoverData, setCrossoverData]     = useState(null)
+  const [crossoverLoading, setCrossoverLoading] = useState(false)
 
   // ── fetch meta (events + profiles) once ──────────────────────────────────
   useEffect(() => {
@@ -1064,6 +1295,74 @@ export default function MoviesStats() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profiles])
 
+  // ── fetch crossover data when tab = crossover + allTimeData ready ────────
+  useEffect(() => {
+    if (tab !== 'crossover' || !allTimeData || crossoverData) return
+
+    async function loadCrossover() {
+      setCrossoverLoading(true)
+
+      const filmIds = Object.keys(allTimeData.filmMap)
+
+      // Oscar noms for all ranked films (batch by chunks if large)
+      const { data: noms } = await supabase
+        .from('film_oscar_noms')
+        .select('film_id, category, is_winner')
+        .in('film_id', filmIds)
+
+      // Build per-film Oscar stats
+      const oscarMap = {} // { filmId: { wins, noms, winCats, nomCats } }
+      ;(noms || []).forEach(n => {
+        if (!oscarMap[n.film_id]) oscarMap[n.film_id] = { wins: 0, noms: 0, winCats: [], nomCats: [] }
+        if (n.is_winner) {
+          oscarMap[n.film_id].wins++
+          if (!oscarMap[n.film_id].winCats.includes(n.category)) oscarMap[n.film_id].winCats.push(n.category)
+        } else {
+          oscarMap[n.film_id].noms++
+          if (!oscarMap[n.film_id].nomCats.includes(n.category)) oscarMap[n.film_id].nomCats.push(n.category)
+        }
+      })
+
+      // Build crossover film list (films with any Oscar data)
+      const films = Object.entries(oscarMap)
+        .filter(([, s]) => s.wins > 0 || s.noms > 0)
+        .map(([filmId, stats]) => {
+          const f = allTimeData.filmMap[filmId] || {}
+          const ranks = allTimeData.byFilm[filmId] || {}
+          const rankValues = Object.values(ranks).filter(Boolean)
+          return {
+            filmId,
+            title:           f.title,
+            poster_url:      f.poster_url,
+            director:        f.director,
+            release_year:    f.release_year,
+            oscarWins:       stats.wins,
+            oscarNoms:       stats.noms,
+            winCategories:   stats.winCats,
+            nomCategories:   stats.nomCats,
+            combinedRanks:   ranks,
+            eventCount:      rankValues.length,
+            bestCombinedRank: rankValues.length ? Math.min(...rankValues) : null,
+          }
+        })
+
+      // Sort: wins desc, then best rank asc
+      films.sort((a, b) =>
+        b.oscarWins - a.oscarWins || (a.bestCombinedRank ?? 999) - (b.bestCombinedRank ?? 999)
+      )
+
+      const totalWithNoms = films.length
+      const totalWithWins = films.filter(f => f.oscarWins > 0).length
+      const totalFilmsOnLists = filmIds.length
+
+      setCrossoverData({ films, totalWithNoms, totalWithWins, totalFilmsOnLists })
+      setCrossoverLoading(false)
+    }
+
+    loadCrossover()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, allTimeData])
+
   // ── fetch charts tab data when event/view/meta changes ───────────────────
   useEffect(() => {
     if (Object.keys(profiles).length === 0 || events.length === 0) return
@@ -1121,10 +1420,11 @@ export default function MoviesStats() {
 
   // ── tab definitions ───────────────────────────────────────────────────────
   const TABS = [
-    { value: 'charts',    label: '📊 Charts'      },
-    { value: 'allevents', label: '📈 All Events'   },
-    { value: 'scores',    label: '🎯 Scores'       },
-    { value: 'podcast',   label: '🎙️ Podcast Prep' },
+    { value: 'charts',    label: '📊 Charts'        },
+    { value: 'allevents', label: '📈 All Events'     },
+    { value: 'scores',    label: '🎯 Scores'         },
+    { value: 'podcast',   label: '🎙️ Podcast Prep'  },
+    { value: 'crossover', label: '🔀 Crossover'      },
   ]
 
   // ── render ────────────────────────────────────────────────────────────────
@@ -1327,6 +1627,23 @@ export default function MoviesStats() {
             <div className="py-8 text-center text-red-400 text-sm">Failed to load data.</div>
           ) : (
             <PodcastPrepTab allTimeData={allTimeData} />
+          )}
+        </>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════════════ */}
+      {/* TAB: CROSSOVER                                                        */}
+      {/* ══════════════════════════════════════════════════════════════════════ */}
+      {tab === 'crossover' && (
+        <>
+          {(crossoverLoading || allTimeLoading) ? (
+            <div className="py-16 flex items-center justify-center">
+              <span className="text-gray-400 animate-pulse">Loading crossover data…</span>
+            </div>
+          ) : !crossoverData ? (
+            <div className="py-8 text-center text-red-400 text-sm">Failed to load crossover data.</div>
+          ) : (
+            <CrossoverTab data={crossoverData} />
           )}
         </>
       )}
