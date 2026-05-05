@@ -95,6 +95,7 @@ OMDB_OVERRIDES = {
     "the truth about cats and dogs:1996":                                           "tt0117983",
     "mission impossible 4 ghost protocol:2011":                                     "tt1229238",
     "mission impossible 6 fallout:2018":                                            "tt4912910",
+    "les miserables:2012":                                                          "tt1707380",   # Tom Hooper / Hugh Jackman — was mis-matched to The Score (tt0227445)
 }
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
