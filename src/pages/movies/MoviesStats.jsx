@@ -154,7 +154,8 @@ function ActorChart({ films, isDark }) {
   const data = useMemo(() => {
     const counts = {}
     films.forEach(f => {
-      ['actor_1','actor_2','actor_3','actor_4','actor_5'].forEach(key => {
+      ['actor_1','actor_2','actor_3','actor_4','actor_5',
+       'actor_6','actor_7','actor_8','actor_9','actor_10'].forEach(key => {
         const actor = f[key]
         if (actor) counts[actor] = (counts[actor] || 0) + 1
       })
@@ -227,6 +228,7 @@ function QuickStats({ films }) {
   const decades   = {}
   const genres    = {}
   const directors = {}
+  const actors    = {}
 
   films.forEach(f => {
     const d = decade(f.release_year)
@@ -237,19 +239,25 @@ function QuickStats({ films }) {
       const dir = f.director.split(',')[0].trim()
       directors[dir] = (directors[dir] || 0) + 1
     }
+    for (let i = 1; i <= 10; i++) {
+      const actor = f[`actor_${i}`]
+      if (actor) actors[actor] = (actors[actor] || 0) + 1
+    }
   })
 
   const topDecade   = Object.entries(decades).sort(([,a],[,b])   => b - a)[0]
   const topGenre    = Object.entries(genres).sort(([,a],[,b])    => b - a)[0]
   const topDirector = Object.entries(directors).sort(([,a],[,b]) => b - a)[0]
+  const topActor    = Object.entries(actors).sort(([,a],[,b])    => b - a)[0]
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+    <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-8">
       {[
         { label: 'Total Films',  value: films.length,                                    icon: '🎞️' },
         { label: 'Top Decade',   value: topDecade   ? decadeLabel(Number(topDecade[0]))  : '—', icon: '📅' },
         { label: 'Top Genre',    value: topGenre    ? topGenre[0]    : '—',              icon: '🎭' },
-        { label: 'Top Director', value: topDirector ? topDirector[0] : '—',             icon: '🎬' },
+        { label: 'Top Director', value: topDirector ? topDirector[0] : '—',              icon: '🎬' },
+        { label: 'Top Actor',    value: topActor    ? topActor[0]    : '—',              icon: '🌟' },
       ].map(s => (
         <div key={s.label} className="card text-center py-4">
           <div className="text-xl mb-1">{s.icon}</div>
@@ -969,7 +977,7 @@ export default function MoviesStats() {
         .select(`
           combined_rank, film_id, event_id,
           ranking_events (year),
-          films (id, title, release_year, director, writer, omdb_genres, custom_genre_1, actor_1, actor_2, actor_3, actor_4, actor_5, poster_url)
+          films (id, title, release_year, director, writer, omdb_genres, custom_genre_1, actor_1, actor_2, actor_3, actor_4, actor_5, actor_6, actor_7, actor_8, actor_9, actor_10, poster_url)
         `)
       if (error) { setAllTimeLoading(false); return }
 
@@ -1070,7 +1078,8 @@ export default function MoviesStats() {
       try {
         let filmList = []
         const filmFields = `id, title, release_year, director, writer, omdb_genres, custom_genre_1, custom_genre_2,
-                            actor_1, actor_2, actor_3, actor_4, actor_5`
+                            actor_1, actor_2, actor_3, actor_4, actor_5,
+                            actor_6, actor_7, actor_8, actor_9, actor_10`
 
         if (view === 'combined') {
           const { data, error: err } = await supabase
@@ -1233,7 +1242,7 @@ export default function MoviesStats() {
                 </div>
                 <div className="card">
                   <h2 className="section-title text-lg mb-1">Top Actors</h2>
-                  <p className="section-subtitle">Actors (from OMDB) with 2+ films on this list</p>
+                  <p className="section-subtitle">Actors with 2+ films on this list</p>
                   <ActorChart films={chartsFilms} isDark={isDark} />
                 </div>
               </div>
@@ -1241,7 +1250,7 @@ export default function MoviesStats() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div className="card">
                   <h2 className="section-title text-lg mb-1">Top Screenwriters</h2>
-                  <p className="section-subtitle">Writers (from OMDB) with 2+ films on this list</p>
+                  <p className="section-subtitle">Writers with 2+ films on this list</p>
                   <WriterChart films={chartsFilms} isDark={isDark} />
                 </div>
               </div>
