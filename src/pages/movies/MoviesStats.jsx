@@ -930,21 +930,42 @@ function PodcastPrepTab({ allTimeData }) {
 // ── CROSSOVER TAB ────────────────────────────────────────────────────────────
 
 const EVENTS_LABEL = { 2001: '01', 2007: '07', 2016: '16', 2026: '26' }
-const HIGHLIGHT_CATS = [
-  'Best Picture', 'Best Director', 'Best Actor', 'Best Actress',
-  'Best Supporting Actor', 'Best Supporting Actress',
+
+const MAJOR_CATS = [
+  { key: 'Best Picture',             label: 'Picture'         },
+  { key: 'Best Director',            label: 'Director'        },
+  { key: 'Best Actor',               label: 'Actor'           },
+  { key: 'Best Actress',             label: 'Actress'         },
+  { key: 'Best Supporting Actor',    label: 'Supp. Actor'     },
+  { key: 'Best Supporting Actress',  label: 'Supp. Actress'   },
+  { key: 'Best Original Screenplay', label: 'Orig. Screenplay'},
+  { key: 'Best Adapted Screenplay',  label: 'Adapt. Screenplay'},
 ]
 
 function CrossoverTab({ data }) {
   const { films, totalWithNoms, totalWithWins, totalFilmsOnLists } = data
-  const [filter, setFilter] = useState('all') // 'wins' | 'noms' | 'all'
+  const [filter,    setFilter]    = useState('all') // 'wins' | 'noms' | 'all'
+  const [catFilter, setCatFilter] = useState(null)  // null | category key string
   const [expandedId, setExpandedId] = useState(null)
 
-  const displayed = filter === 'wins'
+  // Base filter (wins / noms / all)
+  let displayed = filter === 'wins'
     ? films.filter(f => f.oscarWins > 0)
     : filter === 'noms'
     ? films.filter(f => f.oscarWins === 0 && f.oscarNoms > 0)
     : films
+
+  // Category filter (winners of a specific major category)
+  if (catFilter) {
+    displayed = displayed.filter(f => f.winCategories.includes(catFilter))
+  }
+
+  function toggleCat(key) {
+    setCatFilter(prev => prev === key ? null : key)
+    // When picking a category filter, switch to winners view so noms-only films
+    // don't confusingly appear (category filter only matches wins)
+    if (catFilter !== key) setFilter('all')
+  }
 
   return (
     <div className="space-y-8">
@@ -953,7 +974,7 @@ function CrossoverTab({ data }) {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="card text-center py-5">
           <div className="stat-value text-2xl">{totalFilmsOnLists}</div>
-          <div className="stat-label mt-1">Films on Our Lists</div>
+          <div className="stat-label mt-1">On Combined Lists</div>
         </div>
         <div className="card text-center py-5">
           <div className="stat-value text-2xl text-gold-500">{totalWithNoms}</div>
@@ -973,27 +994,48 @@ function CrossoverTab({ data }) {
 
       {/* ── Filter + table ── */}
       <div className="card">
-        <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
-          <div>
-            <h2 className="section-title text-lg">Oscar × Our Rankings</h2>
-            <p className="section-subtitle">Films that appear on our combined lists and have Oscar nominations</p>
+        <div className="mb-5">
+          <div className="flex items-start justify-between flex-wrap gap-3 mb-4">
+            <div>
+              <h2 className="section-title text-lg">Oscar × Our Rankings</h2>
+              <p className="section-subtitle">Films on our combined lists with Oscar recognition</p>
+            </div>
+            {/* Wins / Noms / All toggle */}
+            <div className="flex gap-1 p-1 bg-stone-100 dark:bg-night-800 rounded-xl flex-shrink-0">
+              {[
+                { v: 'all',  label: 'All'         },
+                { v: 'wins', label: '🏆 Winners'  },
+                { v: 'noms', label: '📜 Noms Only' },
+              ].map(opt => (
+                <button
+                  key={opt.v}
+                  onClick={() => { setFilter(opt.v); setCatFilter(null) }}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                    filter === opt.v && !catFilter
+                      ? 'bg-white dark:bg-night-600 text-gray-900 dark:text-white shadow-sm'
+                      : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="flex gap-1 p-1 bg-stone-100 dark:bg-night-800 rounded-xl">
-            {[
-              { v: 'wins', label: '🏆 Winners' },
-              { v: 'noms', label: '📜 Noms Only' },
-              { v: 'all',  label: 'All' },
-            ].map(opt => (
+
+          {/* Major category filter — "Won:" pill row */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs uppercase tracking-wider text-gray-400 font-semibold flex-shrink-0">Won:</span>
+            {MAJOR_CATS.map(cat => (
               <button
-                key={opt.v}
-                onClick={() => setFilter(opt.v)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                  filter === opt.v
-                    ? 'bg-white dark:bg-night-600 text-gray-900 dark:text-white shadow-sm'
-                    : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                key={cat.key}
+                onClick={() => toggleCat(cat.key)}
+                className={`text-xs px-3 py-1 rounded-full border transition-all font-medium ${
+                  catFilter === cat.key
+                    ? 'bg-emerald-500 border-emerald-500 text-white'
+                    : 'border-stone-300 dark:border-night-600 text-gray-500 dark:text-gray-400 hover:border-emerald-400 hover:text-emerald-600 dark:hover:text-emerald-400'
                 }`}
               >
-                {opt.label}
+                {cat.label}
               </button>
             ))}
           </div>
@@ -1008,7 +1050,6 @@ function CrossoverTab({ data }) {
                 <th className="text-center px-3 py-2.5">Wins</th>
                 <th className="text-center px-3 py-2.5">Noms</th>
                 <th className="text-center px-3 py-2.5 hidden sm:table-cell">Best Rank</th>
-                <th className="text-center px-3 py-2.5 hidden md:table-cell">Events</th>
                 <th className="text-center px-3 py-2.5 hidden lg:table-cell">Combined Ranks</th>
               </tr>
             </thead>
@@ -1062,7 +1103,7 @@ function CrossoverTab({ data }) {
                         )}
                       </td>
 
-                      {/* Noms */}
+                      {/* Total noms (includes wins) */}
                       <td className="px-3 py-2.5 text-center">
                         <span className="text-gray-500">{f.oscarNoms}</span>
                       </td>
@@ -1079,12 +1120,7 @@ function CrossoverTab({ data }) {
                         ) : <span className="text-gray-500">—</span>}
                       </td>
 
-                      {/* Event count */}
-                      <td className="px-3 py-2.5 text-center hidden md:table-cell">
-                        <span className="text-gray-400 text-xs">{f.eventCount}×</span>
-                      </td>
-
-                      {/* Per-event ranks */}
+                      {/* Per-event combined ranks */}
                       <td className="px-3 py-2.5 text-center hidden lg:table-cell">
                         <div className="flex items-center justify-center gap-1.5">
                           {EVENTS_ORDER.map(yr => {
@@ -1104,14 +1140,14 @@ function CrossoverTab({ data }) {
                       </td>
                     </tr>
 
-                    {/* Expanded row: categories */}
+                    {/* Expanded row: win + nom category pills */}
                     {isExpanded && (
                       <tr key={`${f.filmId}-exp`} className="border-t border-stone-100 dark:border-night-700 bg-stone-50 dark:bg-night-900/40">
                         <td />
-                        <td colSpan={6} className="px-4 py-3">
+                        <td colSpan={5} className="px-4 py-3">
                           {f.winCategories.length > 0 && (
                             <div className="mb-2">
-                              <span className="text-xs uppercase tracking-wider text-emerald-500 font-semibold mr-2">Wins</span>
+                              <span className="text-xs uppercase tracking-wider text-emerald-500 font-semibold mr-2">Won</span>
                               <div className="flex flex-wrap gap-1 mt-1">
                                 {f.winCategories.map(c => (
                                   <span key={c}
@@ -1145,7 +1181,11 @@ function CrossoverTab({ data }) {
           </table>
 
           {displayed.length === 0 && (
-            <div className="py-12 text-center text-gray-400 text-sm">No films match this filter.</div>
+            <div className="py-12 text-center text-gray-400 text-sm">
+              {catFilter
+                ? `No films on our combined lists won ${catFilter}.`
+                : 'No films match this filter.'}
+            </div>
           )}
         </div>
       </div>
@@ -1333,11 +1373,12 @@ export default function MoviesStats() {
                      || Object.prototype.hasOwnProperty.call(byFilmRaw, n.film_id)
         if (!inLists) return
         if (!oscarMap[idStr]) oscarMap[idStr] = { wins: 0, noms: 0, winCats: [], nomCats: [] }
+        // Every row is a nomination (wins are nominations too)
+        oscarMap[idStr].noms++
         if (n.is_winner) {
           oscarMap[idStr].wins++
           if (!oscarMap[idStr].winCats.includes(n.category_name)) oscarMap[idStr].winCats.push(n.category_name)
         } else {
-          oscarMap[idStr].noms++
           if (!oscarMap[idStr].nomCats.includes(n.category_name)) oscarMap[idStr].nomCats.push(n.category_name)
         }
       })
