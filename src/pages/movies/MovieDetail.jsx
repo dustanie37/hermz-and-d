@@ -304,6 +304,15 @@ export default function MovieDetail() {
   const [omdbOverrideId, setOmdbOverrideId] = useState('')
   const [fixInfoOpen,    setFixInfoOpen]    = useState(false)
 
+  // Oscar nomination editor (admin)
+  const [oscarCategory,  setOscarCategory]  = useState('')
+  const [oscarCustomCat, setOscarCustomCat] = useState('')
+  const [oscarIsWinner,  setOscarIsWinner]  = useState(false)
+  const [oscarNominee,   setOscarNominee]   = useState('')
+  const [oscarYear,      setOscarYear]      = useState('')
+  const [oscarSaving,    setOscarSaving]    = useState(false)
+  const [oscarError,     setOscarError]     = useState(null)
+
   // Back-link: prefer the referrer passed via router state, else /movies/list
   const backTo = location.state?.from || '/movies/list'
 
@@ -483,6 +492,43 @@ export default function MovieDetail() {
     }
   }
 
+  // ── Oscar nomination editor ────────────────────────────────────────────────
+
+  async function addOscarNom() {
+    const cat = oscarCategory === '__custom__' ? oscarCustomCat.trim() : oscarCategory
+    if (!cat) { setOscarError('Select or enter a category'); return }
+    setOscarSaving(true)
+    setOscarError(null)
+    const { data: inserted, error: err } = await supabase
+      .from('film_oscar_noms')
+      .insert({
+        film_id:        film.id,
+        category_name:  cat,
+        is_winner:      oscarIsWinner,
+        nominee_name:   oscarNominee.trim() || null,
+        ceremony_year:  oscarYear ? Number(oscarYear) : null,
+      })
+      .select()
+      .single()
+    if (err) { setOscarError(err.message); setOscarSaving(false); return }
+    setOscarNoms(prev => [...prev, inserted])
+    // Reset form
+    setOscarCategory('')
+    setOscarCustomCat('')
+    setOscarIsWinner(false)
+    setOscarNominee('')
+    setOscarYear('')
+    setOscarSaving(false)
+  }
+
+  async function deleteOscarNom(id) {
+    const { error: err } = await supabase
+      .from('film_oscar_noms')
+      .delete()
+      .eq('id', id)
+    if (!err) setOscarNoms(prev => prev.filter(n => n.id !== id))
+  }
+
   // ── derived data ───────────────────────────────────────────────────────────
 
   // Which events does this film appear on (any of the three lists)
@@ -562,44 +608,190 @@ export default function MovieDetail() {
         {isDustin && (
           <div className="flex flex-col items-end gap-2">
             <button
-              onClick={() => { setFixInfoOpen(o => !o); setOmdbStatus(null) }}
+              onClick={() => { setFixInfoOpen(o => !o); setOmdbStatus(null); setOscarError(null) }}
               className="text-xs text-gray-400 hover:text-film-500 dark:hover:text-film-400
                          transition-colors flex items-center gap-1"
             >
-              🔧 Fix Info
+              🔧 {fixInfoOpen ? 'Close' : 'Fix Info'}
             </button>
 
             {fixInfoOpen && (
-              <div className="flex items-center gap-2 p-2.5 rounded-xl
-                              bg-stone-100 dark:bg-night-800
-                              border border-stone-200 dark:border-night-600">
-                <input
-                  type="text"
-                  value={omdbOverrideId}
-                  onChange={e => setOmdbOverrideId(e.target.value)}
-                  placeholder="IMDb ID override (e.g. tt0000000)"
-                  className="text-xs px-2.5 py-1.5 rounded-lg w-52
-                             bg-white dark:bg-night-700
-                             border border-stone-300 dark:border-night-500
-                             text-gray-900 dark:text-white placeholder-gray-400
-                             focus:outline-none focus:ring-2 focus:ring-film-400"
-                />
-                <button
-                  onClick={refreshOmdb}
-                  disabled={omdbRefreshing}
-                  className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all whitespace-nowrap
-                    ${omdbStatus === 'ok'
-                      ? 'bg-emerald-500 text-white'
-                      : omdbStatus === 'error'
-                      ? 'bg-red-500 text-white'
-                      : 'bg-film-600 text-white hover:bg-film-700'
-                    } disabled:opacity-50`}
-                >
-                  {omdbRefreshing ? '↻ Refreshing…'
-                    : omdbStatus === 'ok' ? '✓ Updated'
-                    : omdbStatus === 'error' ? '✕ Failed'
-                    : '↻ Refresh OMDB'}
-                </button>
+              <div className="w-full max-w-lg rounded-xl border border-stone-200 dark:border-night-600
+                              bg-stone-50 dark:bg-night-800 divide-y divide-stone-200 dark:divide-night-600
+                              shadow-md text-sm">
+
+                {/* ── OMDB section ── */}
+                <div className="p-3 space-y-2">
+                  <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Poster / Metadata
+                  </p>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={omdbOverrideId}
+                      onChange={e => setOmdbOverrideId(e.target.value)}
+                      placeholder="IMDb ID override (e.g. tt0000000)"
+                      className="flex-1 text-xs px-2.5 py-1.5 rounded-lg
+                                 bg-white dark:bg-night-700
+                                 border border-stone-300 dark:border-night-500
+                                 text-gray-900 dark:text-white placeholder-gray-400
+                                 focus:outline-none focus:ring-2 focus:ring-film-400"
+                    />
+                    <button
+                      onClick={refreshOmdb}
+                      disabled={omdbRefreshing}
+                      className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all whitespace-nowrap
+                        ${omdbStatus === 'ok' ? 'bg-emerald-500 text-white'
+                          : omdbStatus === 'error' ? 'bg-red-500 text-white'
+                          : 'bg-film-600 text-white hover:bg-film-700'
+                        } disabled:opacity-50`}
+                    >
+                      {omdbRefreshing ? '↻ Refreshing…'
+                        : omdbStatus === 'ok' ? '✓ Updated'
+                        : omdbStatus === 'error' ? '✕ Failed'
+                        : '↻ Refresh OMDB'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* ── Oscar nominations section ── */}
+                <div className="p-3 space-y-3">
+                  <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Oscar Nominations
+                  </p>
+
+                  {/* Existing entries */}
+                  {oscarNoms.length > 0 && (
+                    <div className="space-y-1 max-h-40 overflow-y-auto">
+                      {[...oscarNoms]
+                        .sort((a, b) => (a.is_winner === b.is_winner ? 0 : a.is_winner ? -1 : 1))
+                        .map(nom => (
+                        <div key={nom.id}
+                          className="flex items-center justify-between gap-2 text-xs
+                                     px-2 py-1 rounded-lg
+                                     bg-white dark:bg-night-700
+                                     border border-stone-200 dark:border-night-600">
+                          <span className="flex items-center gap-1.5 min-w-0">
+                            {nom.is_winner
+                              ? <span className="text-gold-500">🏆</span>
+                              : <span className="text-gray-400">●</span>}
+                            <span className="text-gray-800 dark:text-gray-200 truncate">
+                              {nom.category_name}
+                              {nom.nominee_name && (
+                                <span className="text-gray-400 ml-1">— {nom.nominee_name}</span>
+                              )}
+                            </span>
+                          </span>
+                          <button
+                            onClick={() => deleteOscarNom(nom.id)}
+                            className="text-gray-300 hover:text-red-400 dark:text-gray-600
+                                       dark:hover:text-red-400 transition-colors flex-shrink-0"
+                            title="Remove"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Add form */}
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <select
+                        value={oscarCategory}
+                        onChange={e => setOscarCategory(e.target.value)}
+                        className="flex-1 text-xs px-2 py-1.5 rounded-lg
+                                   bg-white dark:bg-night-700
+                                   border border-stone-300 dark:border-night-500
+                                   text-gray-900 dark:text-white
+                                   focus:outline-none focus:ring-2 focus:ring-film-400"
+                      >
+                        <option value="">— Category —</option>
+                        {[
+                          'Best Picture','Best Director',
+                          'Best Actor','Best Actress',
+                          'Best Supporting Actor','Best Supporting Actress',
+                          'Best Original Screenplay','Best Adapted Screenplay',
+                          'Best Cinematography','Best Film Editing',
+                          'Best Original Score','Best Original Song',
+                          'Best Sound','Best Sound Mixing','Best Sound Editing','Best Sound Effects Editing',
+                          'Best Visual Effects','Best Special Visual Effects',
+                          'Best Production Design','Best Art Direction',
+                          'Best Costume Design','Best Makeup and Hairstyling',
+                          'Best Animated Feature','Best International Feature Film',
+                          'Best Documentary Feature',
+                        ].map(c => <option key={c} value={c}>{c}</option>)}
+                        <option value="__custom__">Other…</option>
+                      </select>
+
+                      <button
+                        onClick={() => setOscarIsWinner(w => !w)}
+                        className={`text-xs px-2.5 py-1.5 rounded-lg font-medium transition-all whitespace-nowrap
+                          ${oscarIsWinner
+                            ? 'bg-gold-500 text-white'
+                            : 'bg-white dark:bg-night-700 text-gray-500 dark:text-gray-400 border border-stone-300 dark:border-night-500'
+                          }`}
+                      >
+                        {oscarIsWinner ? '🏆 Won' : '● Nom'}
+                      </button>
+                    </div>
+
+                    {oscarCategory === '__custom__' && (
+                      <input
+                        type="text"
+                        value={oscarCustomCat}
+                        onChange={e => setOscarCustomCat(e.target.value)}
+                        placeholder="Category name"
+                        className="w-full text-xs px-2.5 py-1.5 rounded-lg
+                                   bg-white dark:bg-night-700
+                                   border border-stone-300 dark:border-night-500
+                                   text-gray-900 dark:text-white placeholder-gray-400
+                                   focus:outline-none focus:ring-2 focus:ring-film-400"
+                      />
+                    )}
+
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={oscarNominee}
+                        onChange={e => setOscarNominee(e.target.value)}
+                        placeholder="Nominee name (acting categories only)"
+                        className="flex-1 text-xs px-2.5 py-1.5 rounded-lg
+                                   bg-white dark:bg-night-700
+                                   border border-stone-300 dark:border-night-500
+                                   text-gray-900 dark:text-white placeholder-gray-400
+                                   focus:outline-none focus:ring-2 focus:ring-film-400"
+                      />
+                      <input
+                        type="number"
+                        value={oscarYear}
+                        onChange={e => setOscarYear(e.target.value)}
+                        placeholder="Year"
+                        className="w-20 text-xs px-2 py-1.5 rounded-lg text-center
+                                   bg-white dark:bg-night-700
+                                   border border-stone-300 dark:border-night-500
+                                   text-gray-900 dark:text-white placeholder-gray-400
+                                   focus:outline-none focus:ring-2 focus:ring-film-400"
+                      />
+                    </div>
+
+                    {oscarError && (
+                      <p className="text-xs text-red-400">{oscarError}</p>
+                    )}
+
+                    <button
+                      onClick={addOscarNom}
+                      disabled={oscarSaving}
+                      className="w-full text-xs px-3 py-1.5 rounded-lg font-medium
+                                 bg-film-600 text-white hover:bg-film-700 transition-colors
+                                 disabled:opacity-50"
+                    >
+                      {oscarSaving ? 'Adding…' : '+ Add Nomination'}
+                    </button>
+                  </div>
+                </div>
+
               </div>
             )}
           </div>
