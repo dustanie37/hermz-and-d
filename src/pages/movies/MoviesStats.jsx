@@ -937,7 +937,7 @@ const HIGHLIGHT_CATS = [
 
 function CrossoverTab({ data }) {
   const { films, totalWithNoms, totalWithWins, totalFilmsOnLists } = data
-  const [filter, setFilter] = useState('wins') // 'wins' | 'noms' | 'all'
+  const [filter, setFilter] = useState('all') // 'wins' | 'noms' | 'all'
   const [expandedId, setExpandedId] = useState(null)
 
   const displayed = filter === 'wins'
@@ -1302,38 +1302,54 @@ export default function MoviesStats() {
     async function loadCrossover() {
       setCrossoverLoading(true)
 
-      // Use byFilm (keyed by film_id from combined_rankings) as the source of truth —
-      // filmMap only has entries where the films join succeeded, byFilm has all.
-      const rankedFilmIds = new Set(Object.keys(allTimeData.byFilm))
-      const totalFilmsOnLists = rankedFilmIds.size
+      // byFilm keys are whatever JS used when setting byFilm[filmId] — could be
+      // a number (if Supabase returned film_id as number, JS coerces to string key)
+      // or a string UUID. Store both raw keys AND numeric versions for lookup.
+      const byFilmRaw = allTimeData.byFilm
+      const filmMapRaw = allTimeData.filmMap
+      const totalFilmsOnLists = Object.keys(byFilmRaw).length
 
-      // Fetch ALL film_oscar_noms — avoids .in() URL-length/type-mismatch issues.
-      // Table is ~2-5k rows max; Supabase default cap is 1000 so we must set limit.
-      const { data: noms } = await supabase
+      console.log('[Crossover] byFilm keys sample:', Object.keys(byFilmRaw).slice(0, 5))
+      console.log('[Crossover] totalFilmsOnLists:', totalFilmsOnLists)
+
+      // Fetch ALL film_oscar_noms (no filter — avoids .in() issues).
+      // Supabase default cap is 1000 rows so we must set limit.
+      const { data: noms, error: nomsErr } = await supabase
         .from('film_oscar_noms')
         .select('film_id, category, is_winner')
         .limit(10000)
 
-      // Build per-film Oscar stats, but only for films on our combined lists
+      console.log('[Crossover] noms fetched:', noms?.length, 'error:', nomsErr?.message)
+      if (noms?.length) console.log('[Crossover] sample nom film_ids:', noms.slice(0, 5).map(n => `${n.film_id} (${typeof n.film_id})`))
+
+      // Build per-film Oscar stats.
+      // Try both String(id) and Number(id) for the byFilm lookup to handle
+      // any type inconsistency between combined_rankings and film_oscar_noms.
       const oscarMap = {}
       ;(noms || []).forEach(n => {
-        const id = String(n.film_id)
-        if (!rankedFilmIds.has(id)) return          // not on our lists → skip
-        if (!oscarMap[id]) oscarMap[id] = { wins: 0, noms: 0, winCats: [], nomCats: [] }
+        const idStr = String(n.film_id)
+        // Check if this film is on our combined lists (try string key, then numeric)
+        const inLists = Object.prototype.hasOwnProperty.call(byFilmRaw, idStr)
+                     || Object.prototype.hasOwnProperty.call(byFilmRaw, n.film_id)
+        if (!inLists) return
+        if (!oscarMap[idStr]) oscarMap[idStr] = { wins: 0, noms: 0, winCats: [], nomCats: [] }
         if (n.is_winner) {
-          oscarMap[id].wins++
-          if (!oscarMap[id].winCats.includes(n.category)) oscarMap[id].winCats.push(n.category)
+          oscarMap[idStr].wins++
+          if (!oscarMap[idStr].winCats.includes(n.category)) oscarMap[idStr].winCats.push(n.category)
         } else {
-          oscarMap[id].noms++
-          if (!oscarMap[id].nomCats.includes(n.category)) oscarMap[id].nomCats.push(n.category)
+          oscarMap[idStr].noms++
+          if (!oscarMap[idStr].nomCats.includes(n.category)) oscarMap[idStr].nomCats.push(n.category)
         }
       })
+
+      console.log('[Crossover] oscarMap size:', Object.keys(oscarMap).length, 'sample keys:', Object.keys(oscarMap).slice(0,3))
 
       // Build crossover film list
       const films = Object.entries(oscarMap)
         .map(([filmId, stats]) => {
-          const f = allTimeData.filmMap[filmId] || {}
-          const ranks = allTimeData.byFilm[filmId] || {}
+          // Resolve film metadata — try string key then numeric key
+          const f = filmMapRaw[filmId] || filmMapRaw[Number(filmId)] || {}
+          const ranks = byFilmRaw[filmId] || byFilmRaw[Number(filmId)] || {}
           const rankValues = Object.values(ranks).filter(Boolean)
           return {
             filmId,
@@ -1358,6 +1374,8 @@ export default function MoviesStats() {
 
       const totalWithNoms = films.length
       const totalWithWins = films.filter(f => f.oscarWins > 0).length
+
+      console.log('[Crossover] final: films=', films.length, 'withWins=', totalWithWins)
 
       setCrossoverData({ films, totalWithNoms, totalWithWins, totalFilmsOnLists })
       setCrossoverLoading(false)
