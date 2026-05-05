@@ -301,6 +301,8 @@ export default function MovieDetail() {
   // OMDB refresh (admin only)
   const [omdbRefreshing, setOmdbRefreshing] = useState(false)
   const [omdbStatus,     setOmdbStatus]     = useState(null) // 'ok' | 'error' | null
+  const [omdbOverrideId, setOmdbOverrideId] = useState('')
+  const [fixInfoOpen,    setFixInfoOpen]    = useState(false)
 
   // Back-link: prefer the referrer passed via router state, else /movies/list
   const backTo = location.state?.from || '/movies/list'
@@ -439,7 +441,7 @@ export default function MovieDetail() {
         .eq('id', film.id)
         .single()
 
-      const lookupId    = freshFilm?.omdb_id || film.omdb_id
+      const lookupId    = omdbOverrideId.trim() || freshFilm?.omdb_id || film.omdb_id
       const lookupTitle = freshFilm?.title        ?? film.title
       const lookupYear  = freshFilm?.release_year ?? film.release_year
 
@@ -548,14 +550,60 @@ export default function MovieDetail() {
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
 
-      {/* ── Back link ── */}
-      <div>
+      {/* ── Back link + admin Fix Info ── */}
+      <div className="flex items-center justify-between">
         <button
           onClick={() => navigate(-1)}
           className="text-sm text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors flex items-center gap-1"
         >
           ← Back
         </button>
+
+        {isDustin && (
+          <div className="flex flex-col items-end gap-2">
+            <button
+              onClick={() => { setFixInfoOpen(o => !o); setOmdbStatus(null) }}
+              className="text-xs text-gray-400 hover:text-film-500 dark:hover:text-film-400
+                         transition-colors flex items-center gap-1"
+            >
+              🔧 Fix Info
+            </button>
+
+            {fixInfoOpen && (
+              <div className="flex items-center gap-2 p-2.5 rounded-xl
+                              bg-stone-100 dark:bg-night-800
+                              border border-stone-200 dark:border-night-600">
+                <input
+                  type="text"
+                  value={omdbOverrideId}
+                  onChange={e => setOmdbOverrideId(e.target.value)}
+                  placeholder="IMDb ID override (e.g. tt0000000)"
+                  className="text-xs px-2.5 py-1.5 rounded-lg w-52
+                             bg-white dark:bg-night-700
+                             border border-stone-300 dark:border-night-500
+                             text-gray-900 dark:text-white placeholder-gray-400
+                             focus:outline-none focus:ring-2 focus:ring-film-400"
+                />
+                <button
+                  onClick={refreshOmdb}
+                  disabled={omdbRefreshing}
+                  className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all whitespace-nowrap
+                    ${omdbStatus === 'ok'
+                      ? 'bg-emerald-500 text-white'
+                      : omdbStatus === 'error'
+                      ? 'bg-red-500 text-white'
+                      : 'bg-film-600 text-white hover:bg-film-700'
+                    } disabled:opacity-50`}
+                >
+                  {omdbRefreshing ? '↻ Refreshing…'
+                    : omdbStatus === 'ok' ? '✓ Updated'
+                    : omdbStatus === 'error' ? '✕ Failed'
+                    : '↻ Refresh OMDB'}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* ══════════════════════════════════════════════════════════
@@ -566,35 +614,10 @@ export default function MovieDetail() {
 
           {/* Poster */}
           <div className="md:w-52 flex-shrink-0 bg-stone-100 dark:bg-night-900
-                          flex items-stretch min-h-[200px] md:min-h-0 relative">
+                          flex items-stretch min-h-[200px] md:min-h-0">
             <div className="w-full p-4">
               <PosterFull url={film.poster_url} title={film.title} />
             </div>
-            {/* Admin: refresh OMDB button */}
-            {isDustin && (
-              <div className="absolute bottom-2 left-0 right-0 flex flex-col items-center gap-1 px-2">
-                <button
-                  onClick={refreshOmdb}
-                  disabled={omdbRefreshing}
-                  title="Re-pull poster + metadata from OMDB"
-                  className={`w-full text-xs px-2 py-1 rounded-lg font-medium transition-all
-                    ${omdbStatus === 'ok'
-                      ? 'bg-emerald-500/90 text-white'
-                      : omdbStatus === 'error'
-                      ? 'bg-red-500/90 text-white'
-                      : 'bg-black/50 text-white hover:bg-black/70 backdrop-blur-sm'
-                    } disabled:opacity-50`}
-                >
-                  {omdbRefreshing
-                    ? '↻ Refreshing…'
-                    : omdbStatus === 'ok'
-                    ? '✓ Updated'
-                    : omdbStatus === 'error'
-                    ? '✕ Failed'
-                    : '↻ Refresh OMDB'}
-                </button>
-              </div>
-            )}
           </div>
 
           {/* Info */}
