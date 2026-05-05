@@ -301,7 +301,6 @@ export default function MovieDetail() {
   // OMDB refresh (admin only)
   const [omdbRefreshing, setOmdbRefreshing] = useState(false)
   const [omdbStatus,     setOmdbStatus]     = useState(null) // 'ok' | 'error' | null
-  const [omdbOverrideId, setOmdbOverrideId] = useState('')   // manual imdbID input
 
   // Back-link: prefer the referrer passed via router state, else /movies/list
   const backTo = location.state?.from || '/movies/list'
@@ -440,8 +439,7 @@ export default function MovieDetail() {
         .eq('id', film.id)
         .single()
 
-      // Manual override ID takes top priority, then DB value, then title+year
-      const lookupId    = omdbOverrideId.trim() || freshFilm?.omdb_id || film.omdb_id
+      const lookupId    = freshFilm?.omdb_id || film.omdb_id
       const lookupTitle = freshFilm?.title        ?? film.title
       const lookupYear  = freshFilm?.release_year ?? film.release_year
 
@@ -575,15 +573,6 @@ export default function MovieDetail() {
             {/* Admin: refresh OMDB button */}
             {isDustin && (
               <div className="absolute bottom-2 left-0 right-0 flex flex-col items-center gap-1 px-2">
-                <input
-                  type="text"
-                  value={omdbOverrideId}
-                  onChange={e => setOmdbOverrideId(e.target.value)}
-                  placeholder="IMDb ID (e.g. tt0000000)"
-                  className="w-full text-xs px-2 py-1 rounded-lg
-                             bg-black/60 backdrop-blur-sm text-white placeholder-gray-400
-                             border border-white/20 focus:outline-none focus:border-white/50"
-                />
                 <button
                   onClick={refreshOmdb}
                   disabled={omdbRefreshing}
