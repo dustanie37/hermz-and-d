@@ -7,6 +7,11 @@ const UPDATES = [
       {
         tag: 'Films',
         color: 'film',
+        text: 'Watchlist upgraded to three lists — Want to Watch (films not yet seen), Seen It (first-time views with notes for ranking consideration), and Rewatched (rewatches with ranking notes). Films can be moved between lists with one tap. Notes are click-to-edit inline.',
+      },
+      {
+        tag: 'Films',
+        color: 'film',
         text: 'Combined ranking color unified to teal across all Films pages — Rankings, All Films, External Lists, and Film Detail now all use consistent cinema-teal for combined-rank numbers.',
       },
       {

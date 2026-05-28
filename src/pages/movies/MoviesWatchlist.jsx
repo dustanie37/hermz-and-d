@@ -466,13 +466,18 @@ export default function MoviesWatchlist() {
         .from('films').select('id').eq('omdb_id', omdbItem.imdbId).maybeSingle()
       filmId = match?.id ?? null
     }
+    // Guard: film_id must be a valid integer or null (prevents "NaN" type errors)
+    const safeFilmId = (filmId !== null && filmId !== undefined && !Number.isNaN(filmId))
+      ? filmId
+      : null
+
     const entry = {
       user_id:    user.id,
       title:      omdbItem.title,
       year:       omdbItem.year ? String(omdbItem.year) : null,
       poster_url: omdbItem.posterUrl ?? null,
       imdb_id:    omdbItem.imdbId ?? null,
-      film_id:    filmId,
+      film_id:    safeFilmId,
       list_type:  listType,
       notes:      null,
     }
