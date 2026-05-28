@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { useParams, Link, useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
-import { fetchFilmById, searchFilmByTitle } from '../../lib/omdb'
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, Legend, ResponsiveContainer,
@@ -281,7 +280,7 @@ export default function MovieDetail() {
   const { filmId }   = useParams()
   const location     = useLocation()
   const navigate     = useNavigate()
-  const { isAuthenticated, isDustin } = useAuth()
+  const { isAuthenticated } = useAuth()
 
   const [film,       setFilm]       = useState(null)
   const [events,     setEvents]     = useState([])   // ranking_events ordered by year
@@ -297,13 +296,6 @@ export default function MovieDetail() {
   const [acclaimValue,   setAcclaimValue]   = useState('')
   const [acclaimSaving,  setAcclaimSaving]  = useState(false)
   const [acclaimError,   setAcclaimError]   = useState(null)
-
-  // OMDB refresh (admin only)
-  const [omdbRefreshing, setOmdbRefreshing] = useState(false)
-  const [omdbStatus,     setOmdbStatus]     = useState(null) // 'ok' | 'error' | null
-  const [omdbOverrideId, setOmdbOverrideId] = useState('')
-  const [fixInfoOpen,    setFixInfoOpen]    = useState(false)
-
 
   // Back-link: prefer the referrer passed via router state, else /movies/list
   const backTo = location.state?.from || '/movies/list'
@@ -427,63 +419,6 @@ export default function MovieDetail() {
     setAcclaimSaving(false)
   }
 
-  // ── OMDB refresh ──────────────────────────────────────────────────────────
-
-  async function refreshOmdb() {
-    if (!film) return
-    setOmdbRefreshing(true)
-    setOmdbStatus(null)
-    try {
-      // Always re-read the film from DB first so we use the latest omdb_id,
-      // not whatever may be stale in React state
-      const { data: freshFilm } = await supabase
-        .from('films')
-        .select('id, title, release_year, omdb_id')
-        .eq('id', film.id)
-        .single()
-
-      const lookupId    = omdbOverrideId.trim() || freshFilm?.omdb_id || film.omdb_id
-      const lookupTitle = freshFilm?.title        ?? film.title
-      const lookupYear  = freshFilm?.release_year ?? film.release_year
-
-      const omdbData = lookupId
-        ? await fetchFilmById(lookupId)
-        : await searchFilmByTitle(lookupTitle, lookupYear)
-
-      // Build update payload
-      const update = {
-        omdb_id:        omdbData.omdbId,
-        poster_url:     omdbData.posterUrl,
-        omdb_genres:    omdbData.genres,
-        director:       omdbData.director ?? film.director,
-        omdb_fetched_at: new Date().toISOString(),
-        actor_1:  omdbData.actors[0] ?? null,
-        actor_2:  omdbData.actors[1] ?? null,
-        actor_3:  omdbData.actors[2] ?? null,
-        actor_4:  omdbData.actors[3] ?? null,
-        actor_5:  omdbData.actors[4] ?? null,
-      }
-
-      const { error: saveErr } = await supabase
-        .from('films')
-        .update(update)
-        .eq('id', film.id)
-
-      if (saveErr) throw saveErr
-
-      // Optimistic local update
-      setFilm(f => ({ ...f, ...update }))
-      setOmdbStatus('ok')
-      setTimeout(() => setOmdbStatus(null), 3000)
-    } catch (e) {
-      console.error('OMDB refresh failed:', e)
-      setOmdbStatus('error')
-      setTimeout(() => setOmdbStatus(null), 5000)
-    } finally {
-      setOmdbRefreshing(false)
-    }
-  }
-
   // ── derived data ───────────────────────────────────────────────────────────
 
   // Which events does this film appear on (any of the three lists)
@@ -551,58 +486,14 @@ export default function MovieDetail() {
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
 
-      {/* ── Back link + admin Fix Info ── */}
-      <div className="flex items-center justify-between">
+      {/* ── Back link ── */}
+      <div>
         <button
           onClick={() => navigate(-1)}
           className="text-sm text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors flex items-center gap-1"
         >
           ← Back
         </button>
-
-        {isDustin && (
-          <div className="flex flex-col items-end gap-2">
-            <button
-              onClick={() => { setFixInfoOpen(o => !o); setOmdbStatus(null); setOscarError(null) }}
-              className="text-xs text-gray-400 hover:text-film-500 dark:hover:text-film-400
-                         transition-colors flex items-center gap-1"
-            >
-              🔧 {fixInfoOpen ? 'Close' : 'Fix Info'}
-            </button>
-
-            {fixInfoOpen && (
-              <div className="flex items-center gap-2 p-2.5 rounded-xl
-                              bg-stone-100 dark:bg-night-800
-                              border border-stone-200 dark:border-night-600">
-                <input
-                  type="text"
-                  value={omdbOverrideId}
-                  onChange={e => setOmdbOverrideId(e.target.value)}
-                  placeholder="IMDb ID override (e.g. tt0000000)"
-                  className="text-xs px-2.5 py-1.5 rounded-lg w-52
-                             bg-white dark:bg-night-700
-                             border border-stone-300 dark:border-night-500
-                             text-gray-900 dark:text-white placeholder-gray-400
-                             focus:outline-none focus:ring-2 focus:ring-film-400"
-                />
-                <button
-                  onClick={refreshOmdb}
-                  disabled={omdbRefreshing}
-                  className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all whitespace-nowrap
-                    ${omdbStatus === 'ok' ? 'bg-emerald-500 text-white'
-                      : omdbStatus === 'error' ? 'bg-red-500 text-white'
-                      : 'bg-film-600 text-white hover:bg-film-700'
-                    } disabled:opacity-50`}
-                >
-                  {omdbRefreshing ? '↻ Refreshing…'
-                    : omdbStatus === 'ok' ? '✓ Updated'
-                    : omdbStatus === 'error' ? '✕ Failed'
-                    : '↻ Refresh OMDB'}
-                </button>
-              </div>
-            )}
-          </div>
-        )}
       </div>
 
       {/* ══════════════════════════════════════════════════════════

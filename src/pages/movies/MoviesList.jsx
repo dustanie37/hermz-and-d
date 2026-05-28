@@ -2,29 +2,6 @@ import { useState, useEffect, useMemo } from 'react'
 import { Link, useSearchParams, useLocation } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 
-// ── view mode icons ────────────────────────────────────────────────────────────
-
-function ListViewIcon() {
-  return (
-    <svg viewBox="0 0 18 18" fill="currentColor" className="w-4 h-4">
-      <rect x="2" y="3" width="14" height="2" rx="1" />
-      <rect x="2" y="8" width="14" height="2" rx="1" />
-      <rect x="2" y="13" width="14" height="2" rx="1" />
-    </svg>
-  )
-}
-
-function GridViewIcon() {
-  return (
-    <svg viewBox="0 0 18 18" fill="currentColor" className="w-4 h-4">
-      <rect x="2" y="2" width="6" height="6" rx="1.5" />
-      <rect x="10" y="2" width="6" height="6" rx="1.5" />
-      <rect x="2" y="10" width="6" height="6" rx="1.5" />
-      <rect x="10" y="10" width="6" height="6" rx="1.5" />
-    </svg>
-  )
-}
-
 // ── constants ─────────────────────────────────────────────────────────────────
 
 const EVENTS_ORDER = [2001, 2007, 2016, 2026]
@@ -101,9 +78,6 @@ export default function MoviesList() {
   // Sort + search state
   const [sortBy, setSortBy]         = useState('rank')
   const [searchTerm, setSearchTerm] = useState('')
-
-  // Display mode: 'list' (default) | 'grid'
-  const [displayMode, setDisplayMode] = useState('list')
 
   // ── fetch ranking events + profiles once ──────────────────────────────────
   useEffect(() => {
@@ -367,31 +341,26 @@ export default function MoviesList() {
 
       {/* ── Sort + search bar ── */}
       <div className="flex flex-wrap items-center gap-3 mb-5">
-        {/* Sort — hidden in grid mode (grid is always rank order) */}
-        {displayMode === 'list' && (
-          <>
-            <select
-              value={sortBy}
-              onChange={e => setSortBy(e.target.value)}
-              className="select text-sm pr-8"
-            >
-              {sortOptions.map(opt => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
+        <select
+          value={sortBy}
+          onChange={e => setSortBy(e.target.value)}
+          className="select text-sm pr-8"
+        >
+          {sortOptions.map(opt => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
+        </select>
 
-            {sortBy !== 'rank' && (
-              <button
-                onClick={() => setSortBy('rank')}
-                className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-              >
-                ✕ Reset sort
-              </button>
-            )}
-          </>
+        {sortBy !== 'rank' && (
+          <button
+            onClick={() => setSortBy('rank')}
+            className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+          >
+            ✕ Reset sort
+          </button>
         )}
 
-        <div className={`relative ${displayMode === 'list' ? 'ml-auto' : ''}`}>
+        <div className="relative ml-auto">
           <input
             type="text"
             value={searchTerm}
@@ -416,32 +385,6 @@ export default function MoviesList() {
             : `${displayRows.length} film${displayRows.length !== 1 ? 's' : ''}`
           }
         </span>
-
-        {/* ── List / Grid toggle ── */}
-        <div className={`flex gap-0.5 p-0.5 bg-stone-100 dark:bg-night-800 rounded-lg ${displayMode === 'list' ? '' : 'ml-auto'}`}>
-          <button
-            onClick={() => setDisplayMode('list')}
-            title="List view"
-            className={`p-1.5 rounded-md transition-all ${
-              displayMode === 'list'
-                ? 'bg-white dark:bg-night-600 text-gray-900 dark:text-white shadow-sm'
-                : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
-            }`}
-          >
-            <ListViewIcon />
-          </button>
-          <button
-            onClick={() => setDisplayMode('grid')}
-            title="Grid view"
-            className={`p-1.5 rounded-md transition-all ${
-              displayMode === 'grid'
-                ? 'bg-white dark:bg-night-600 text-gray-900 dark:text-white shadow-sm'
-                : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
-            }`}
-          >
-            <GridViewIcon />
-          </button>
-        </div>
       </div>
 
       {/* ── Loading / error ── */}
@@ -464,54 +407,8 @@ export default function MoviesList() {
         </div>
       )}
 
-      {/* ── Grid view ── */}
-      {!loading && !error && filteredRows.length > 0 && displayMode === 'grid' && (
-        <div className="grid gap-4"
-          style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))' }}>
-          {filteredRows.map(row => {
-            const film = row.film
-            if (!film) return null
-            return (
-              <Link
-                key={film.id}
-                to={`/movies/${film.id}`}
-                state={{ from: location.pathname + location.search }}
-                className="group relative rounded-xl overflow-hidden shadow-md
-                           hover:shadow-xl hover:scale-[1.03] transition-all duration-200
-                           bg-stone-200 dark:bg-night-700"
-                style={{ aspectRatio: '2/3' }}
-              >
-                {/* Poster */}
-                {film.poster_url ? (
-                  <img
-                    src={film.poster_url}
-                    alt={film.title}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-4xl">
-                    🎬
-                  </div>
-                )}
-
-                {/* Rank badge — top-left */}
-                <div className="absolute top-2 left-2">
-                  <span className="inline-flex items-center justify-center
-                                   w-8 h-8 rounded-full
-                                   bg-black/70 backdrop-blur-sm
-                                   text-white font-display font-bold text-sm
-                                   shadow-md">
-                    {row.rank}
-                  </span>
-                </div>
-              </Link>
-            )
-          })}
-        </div>
-      )}
-
       {/* ── List table ── */}
-      {!loading && !error && filteredRows.length > 0 && displayMode === 'list' && (
+      {!loading && !error && filteredRows.length > 0 && (
         <div className="card overflow-hidden p-0">
           <table className="w-full">
             <thead>
