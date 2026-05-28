@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
+import FilmStill from '../../components/FilmStill'
 
 // ── Algorithm ─────────────────────────────────────────────────────────────────
 
@@ -36,15 +37,13 @@ function suggestAcclaim(film) {
     else { pts += 0.5; factors.push(`IMDB Top 250`) }
   }
   if (film.national_film_registry) { pts += 0.5; factors.push('NFR') }
-  if (film.nyt_2000s_rank != null)       pts += 0.25
-  if (film.afi_comedies_rank != null)    pts += 0.25
+  if (film.nyt_2000s_rank != null)        pts += 0.25
+  if (film.afi_comedies_rank != null)     pts += 0.25
   if (film.variety_comedies_rank != null) pts += 0.25
 
   const score = Math.min(10, Math.max(1, Math.round(2 + pts * 0.8)))
   return { score, factors }
 }
-
-// ScoreBar removed — number display is sufficient
 
 // ── InlineEditor ──────────────────────────────────────────────────────────────
 
@@ -58,37 +57,24 @@ function InlineEditor({ film, onSaved }) {
 
   function startEdit() {
     setVal(film.acclaim_score != null ? String(film.acclaim_score) : '')
-    setErr(null)
-    setEditing(true)
+    setErr(null); setEditing(true)
     setTimeout(() => inputRef.current?.focus(), 50)
   }
-
   function cancel() { setEditing(false); setErr(null) }
 
   async function save() {
     const parsed = parseInt(val, 10)
-    if (isNaN(parsed) || parsed < 1 || parsed > 10) {
-      setErr('1–10'); return
-    }
+    if (isNaN(parsed) || parsed < 1 || parsed > 10) { setErr('1–10'); return }
     setSaving(true)
-    const { error } = await supabase
-      .from('films').update({ acclaim_score: parsed }).eq('id', film.id)
+    const { error } = await supabase.from('films').update({ acclaim_score: parsed }).eq('id', film.id)
     setSaving(false)
     if (error) { setErr(error.message); return }
-    setEditing(false)
-    onSaved(film.id, parsed)
+    setEditing(false); onSaved(film.id, parsed)
   }
-
-  async function applySuggestion() {
-    if (!suggest) return
-    setVal(String(suggest.score))
-    setErr(null)
-  }
-
+  function applySuggestion() { if (suggest) { setVal(String(suggest.score)); setErr(null) } }
   async function clear() {
     setSaving(true)
-    const { error } = await supabase
-      .from('films').update({ acclaim_score: null }).eq('id', film.id)
+    const { error } = await supabase.from('films').update({ acclaim_score: null }).eq('id', film.id)
     setSaving(false)
     if (!error) { setEditing(false); onSaved(film.id, null) }
   }
@@ -97,25 +83,18 @@ function InlineEditor({ film, onSaved }) {
     return (
       <div className="flex items-center gap-3">
         {film.acclaim_score != null ? (
-          <>
-            <span className="text-xl font-bold text-gold-600 dark:text-gold-400 font-display w-8 text-right">
-              {film.acclaim_score}
-            </span>
-          </>
+          <span className="font-display text-2xl text-gold-400 tracking-wide leading-none w-8 text-right">
+            {film.acclaim_score}
+          </span>
         ) : (
-          <span className="text-sm text-gray-400 italic w-8 text-right">—</span>
+          <span className="font-mono text-[10px] tracking-kicker text-gray-600 w-8 text-right italic">—</span>
         )}
         {suggest && (
-          <span className="text-xs text-gray-400 hidden sm:inline">
-            ≈{suggest.score}
-          </span>
+          <span className="font-mono text-[10px] tracking-kicker text-gray-500 hidden sm:inline">≈{suggest.score}</span>
         )}
-        <button
-          onClick={startEdit}
-          className="ml-1 text-xs text-gray-400 hover:text-gold-500 dark:hover:text-gold-400
-                     transition-colors"
-          title="Edit acclaim score"
-        >
+        <button onClick={startEdit}
+          className="ml-1 text-xs text-gray-500 hover:text-gold-400 transition-colors"
+          title="Edit acclaim score">
           ✏️
         </button>
       </div>
@@ -124,77 +103,44 @@ function InlineEditor({ film, onSaved }) {
 
   return (
     <div className="flex flex-col gap-1.5">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
         <input
           ref={inputRef}
           type="number" min="1" max="10"
           value={val}
           onChange={e => setVal(e.target.value)}
-          onKeyDown={e => {
-            if (e.key === 'Enter') save()
-            if (e.key === 'Escape') cancel()
-          }}
+          onKeyDown={e => { if (e.key === 'Enter') save(); if (e.key === 'Escape') cancel() }}
           placeholder="1–10"
-          className="w-16 px-2 py-1 text-center text-base font-bold
-                     rounded border border-stone-300 dark:border-night-500
-                     bg-white dark:bg-night-800 text-gray-900 dark:text-white
-                     focus:outline-none focus:ring-2 focus:ring-gold-400"
+          className="w-16 px-2 py-1 text-center font-display text-xl tracking-wide
+                     rounded bg-night-800 border border-night-500 text-white
+                     focus:outline-none focus:border-gold-500 focus:ring-1 focus:ring-gold-500/30"
         />
-        <button
-          onClick={save} disabled={saving}
-          className="btn-primary text-xs px-3 py-1 disabled:opacity-50"
-        >
+        <button onClick={save} disabled={saving} className="btn-gold text-xs px-3 py-1 disabled:opacity-50">
           {saving ? '…' : 'Save'}
         </button>
         <button onClick={cancel} className="btn-ghost text-xs px-2 py-1">✕</button>
         {suggest && (
-          <button
-            onClick={applySuggestion}
-            className="text-xs text-gray-400 hover:text-gold-500 dark:hover:text-gold-400
-                       transition-colors"
-            title={`Apply algorithm suggestion: ${suggest.score}/10`}
-          >
+          <button onClick={applySuggestion}
+            className="font-mono text-[10px] tracking-kicker text-cinema-400 hover:text-cinema-300 transition-colors uppercase"
+            title={`Apply algorithm suggestion: ${suggest.score}/10`}>
             Use ≈{suggest.score}
           </button>
         )}
         {film.acclaim_score != null && (
-          <button
-            onClick={clear}
-            className="text-xs text-red-400 hover:text-red-500 transition-colors ml-auto"
-          >
+          <button onClick={clear} className="text-xs text-red-400 hover:text-red-300 transition-colors ml-auto">
             Clear
           </button>
         )}
       </div>
       {err && <p className="text-xs text-red-400">{err}</p>}
       {suggest && suggest.factors.length > 0 && (
-        <div className="flex flex-wrap gap-1">
+        <div className="flex flex-wrap gap-2">
           {suggest.factors.map((f, i) => (
-            <span key={i} className="text-xs text-gray-400">{f}</span>
+            <span key={i} className="font-mono text-[10px] tracking-kicker text-gray-500 uppercase">{f}</span>
           ))}
         </div>
       )}
     </div>
-  )
-}
-
-// ── PosterThumb ───────────────────────────────────────────────────────────────
-
-function PosterThumb({ url, title }) {
-  const [err, setErr] = useState(false)
-  if (!url || err) {
-    return (
-      <div className="w-8 h-11 flex items-center justify-center
-                      bg-stone-100 dark:bg-night-700 rounded text-base flex-shrink-0">
-        🎬
-      </div>
-    )
-  }
-  return (
-    <img
-      src={url} alt={title} onError={() => setErr(true)}
-      className="w-8 h-11 object-cover rounded flex-shrink-0"
-    />
   )
 }
 
@@ -205,28 +151,23 @@ const EVENTS = [2001, 2007, 2016, 2026]
 export default function MoviesAcclaim() {
   const { isAuthenticated } = useAuth()
 
-  const [films,        setFilms]       = useState([])
-  const [filmRanks,    setFilmRanks]   = useState({})  // { filmId: { 2001: {dustin,matt,combined}, … } }
-  const [loading,      setLoading]     = useState(true)
-  const [error,        setError]       = useState(null)
+  const [films,     setFilms]     = useState([])
+  const [filmRanks, setFilmRanks] = useState({})
+  const [loading,   setLoading]   = useState(true)
+  const [error,     setError]     = useState(null)
 
-  // Filters & sort
-  const [eventFilter,  setEventFilter]  = useState('all')     // 'all' | '2001' | '2007' | '2016' | '2026'
-  const [scoreFilter,  setScoreFilter]  = useState('all')     // 'all' | 'unscored' | 'scored'
-  const [sortBy,       setSortBy]       = useState('rank')    // 'rank' | 'title' | 'score' | 'suggest'
-  const [search,       setSearch]       = useState('')
+  const [eventFilter, setEventFilter] = useState('all')
+  const [scoreFilter, setScoreFilter] = useState('all')
+  const [sortBy,      setSortBy]      = useState('rank')
+  const [search,      setSearch]      = useState('')
 
-  // Stats
   const scoredCount   = films.filter(f => f.acclaim_score != null).length
   const unscoredCount = films.length - scoredCount
 
-  useEffect(() => {
-    fetchAll()
-  }, [])
+  useEffect(() => { fetchAll() }, [])
 
   async function fetchAll() {
-    setLoading(true)
-    setError(null)
+    setLoading(true); setError(null)
     try {
       const [
         { data: filmData, error: fe },
@@ -235,20 +176,12 @@ export default function MoviesAcclaim() {
         { data: evData,   error: ee },
       ] = await Promise.all([
         supabase.from('films').select('*').order('title'),
-        supabase
-          .from('individual_rankings')
-          .select('film_id, rank, ranking_events(year), profiles(username)'),
-        supabase
-          .from('combined_rankings')
-          .select('film_id, combined_rank, ranking_events(year)'),
+        supabase.from('individual_rankings').select('film_id, rank, ranking_events(year), profiles(username)'),
+        supabase.from('combined_rankings').select('film_id, combined_rank, ranking_events(year)'),
         supabase.from('ranking_events').select('id,year').order('year'),
       ])
-      if (fe) throw fe
-      if (ie) throw ie
-      if (ce) throw ce
-      if (ee) throw ee
+      if (fe) throw fe; if (ie) throw ie; if (ce) throw ce; if (ee) throw ee
 
-      // Build rank index: { filmId: { eventYear: { dustin, matt, combined } } }
       const ranks = {}
       ;(indData || []).forEach(r => {
         const yr = r.ranking_events?.year
@@ -279,20 +212,15 @@ export default function MoviesAcclaim() {
     setFilms(prev => prev.map(f => f.id === filmId ? { ...f, acclaim_score: newScore } : f))
   }
 
-  // ── Derived / filtered list ──────────────────────────────────────────────
-
   const eventYear = eventFilter === 'all' ? null : parseInt(eventFilter, 10)
 
   let displayed = films.filter(f => {
-    // Event filter
     if (eventYear) {
       const ranks = filmRanks[f.id]?.[eventYear]
       if (!ranks) return false
     }
-    // Score filter
     if (scoreFilter === 'scored'   && f.acclaim_score == null) return false
     if (scoreFilter === 'unscored' && f.acclaim_score != null) return false
-    // Search
     if (search) {
       const q = search.toLowerCase()
       if (!f.title.toLowerCase().includes(q) && !(f.director || '').toLowerCase().includes(q)) return false
@@ -300,7 +228,6 @@ export default function MoviesAcclaim() {
     return true
   })
 
-  // Sort
   displayed = [...displayed].sort((a, b) => {
     if (sortBy === 'title') return a.title.localeCompare(b.title)
     if (sortBy === 'score') {
@@ -314,7 +241,6 @@ export default function MoviesAcclaim() {
       const sb = suggestAcclaim(b)?.score ?? 0
       return sb - sa
     }
-    // Default: rank (within selected event, or title)
     if (eventYear) {
       const ra = filmRanks[a.id]?.[eventYear]?.combined ?? filmRanks[a.id]?.[eventYear]?.dustin ?? 9999
       const rb = filmRanks[b.id]?.[eventYear]?.combined ?? filmRanks[b.id]?.[eventYear]?.dustin ?? 9999
@@ -323,268 +249,214 @@ export default function MoviesAcclaim() {
     return a.title.localeCompare(b.title)
   })
 
-  // ── Render ───────────────────────────────────────────────────────────────
-
-  if (loading) return (
-    <div className="max-w-5xl mx-auto px-4 py-16 flex items-center justify-center">
-      <span className="text-gray-400 animate-pulse text-sm">Loading films…</span>
-    </div>
-  )
-
-  if (error) return (
-    <div className="max-w-5xl mx-auto px-4 py-16 text-center">
-      <p className="text-red-400 text-sm mb-4">{error}</p>
-    </div>
-  )
+  const pct = films.length ? Math.round((scoredCount / films.length) * 100) : 0
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
-
-      {/* ── Header ── */}
-      <div>
-        <div className="flex items-baseline gap-3 mb-1">
-          <h1 className="font-display text-3xl font-bold text-gray-900 dark:text-white">
-            Acclaim Scores
+    <div>
+      {/* ── HERO ───────────────────────────────────────────────────────────── */}
+      <FilmStill
+        title="Hermz and D Acclaim Scores"
+        hue={42}
+        mood="warm"
+        className="w-full h-[300px] sm:h-[340px]"
+      >
+        <div className="absolute inset-0 scrim-bottom" />
+        <div className="absolute inset-x-0 bottom-0 px-6 sm:px-10 pb-7 z-10">
+          <div className="flex items-center gap-3 mb-3">
+            <Link to="/movies" className="font-mono text-[11px] tracking-kicker text-film-400 hover:text-film-300 transition-colors">
+              ← FILMS
+            </Link>
+            <span className="text-gray-700">/</span>
+            <span className="font-mono text-[11px] tracking-kicker text-white uppercase">Acclaim</span>
+          </div>
+          <h1 className="font-display text-5xl sm:text-6xl text-white tracking-wide leading-none">
+            ACCLAIM SCORES
           </h1>
+          <p className="font-serif italic text-base text-gray-400 mt-3">
+            Agreed score out of 10 per film — informed by Oscar history and external critics.
+          </p>
         </div>
-        <p className="text-sm text-gray-500 dark:text-gray-400">
-          Agreed-upon score out of 10 per film — informed by Oscar history and external critics lists.
-        </p>
-      </div>
+      </FilmStill>
 
-      {/* ── Stats strip ── */}
-      <div className="flex flex-wrap gap-6">
-        <div className="text-center">
-          <div className="text-2xl font-bold font-display text-gold-600 dark:text-gold-400">
-            {scoredCount}
-          </div>
-          <div className="text-xs text-gray-400 uppercase tracking-wider">Scored</div>
-        </div>
-        <div className="text-center">
-          <div className="text-2xl font-bold font-display text-gray-400">
-            {unscoredCount}
-          </div>
-          <div className="text-xs text-gray-400 uppercase tracking-wider">Unscored</div>
-        </div>
-        <div className="text-center">
-          <div className="text-2xl font-bold font-display text-gray-900 dark:text-white">
-            {films.length}
-          </div>
-          <div className="text-xs text-gray-400 uppercase tracking-wider">Total Films</div>
-        </div>
-        {/* Progress bar */}
-        <div className="flex-1 flex items-center">
-          <div className="w-full h-2 rounded-full bg-stone-100 dark:bg-night-700 overflow-hidden">
-            <div
-              className="h-full rounded-full bg-gold-400 dark:bg-gold-500 transition-all"
-              style={{ width: `${films.length ? (scoredCount / films.length) * 100 : 0}%` }}
-            />
-          </div>
-          <span className="ml-3 text-xs text-gray-400 whitespace-nowrap">
-            {films.length ? Math.round((scoredCount / films.length) * 100) : 0}%
-          </span>
-        </div>
-      </div>
+      {/* ── BODY ──────────────────────────────────────────────────────────── */}
+      <div className="max-w-5xl mx-auto px-6 sm:px-10 py-8 space-y-6">
 
-      {!isAuthenticated && (
-        <div className="rounded-lg border border-amber-200 dark:border-amber-800
-                        bg-amber-50 dark:bg-amber-900/20 px-4 py-3 text-sm
-                        text-amber-700 dark:text-amber-400">
-          Log in to edit acclaim scores.
-        </div>
-      )}
-
-      {/* ── Controls ── */}
-      <div className="card p-4">
-        <div className="flex flex-wrap gap-3 items-end">
-
-          {/* Search */}
-          <div className="flex-1 min-w-48">
-            <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1">Search</label>
-            <input
-              type="text"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="Film title or director…"
-              className="w-full px-3 py-1.5 rounded-lg border border-stone-300 dark:border-night-500
-                         bg-white dark:bg-night-800 text-sm text-gray-900 dark:text-white
-                         focus:outline-none focus:ring-2 focus:ring-gold-400"
-            />
+        {loading ? (
+          <div className="py-16 flex items-center justify-center">
+            <span className="font-mono text-[11px] tracking-kicker text-gray-500 animate-pulse">LOADING FILMS…</span>
           </div>
-
-          {/* Event filter */}
-          <div>
-            <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1">Event</label>
-            <select
-              value={eventFilter}
-              onChange={e => setEventFilter(e.target.value)}
-              className="px-3 py-1.5 rounded-lg border border-stone-300 dark:border-night-500
-                         bg-white dark:bg-night-800 text-sm text-gray-900 dark:text-white
-                         focus:outline-none focus:ring-2 focus:ring-gold-400"
-            >
-              <option value="all">All Films</option>
-              {EVENTS.map(y => (
-                <option key={y} value={String(y)}>{y} List</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Score filter */}
-          <div>
-            <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1">Score</label>
-            <select
-              value={scoreFilter}
-              onChange={e => setScoreFilter(e.target.value)}
-              className="px-3 py-1.5 rounded-lg border border-stone-300 dark:border-night-500
-                         bg-white dark:bg-night-800 text-sm text-gray-900 dark:text-white
-                         focus:outline-none focus:ring-2 focus:ring-gold-400"
-            >
-              <option value="all">All</option>
-              <option value="unscored">Unscored only</option>
-              <option value="scored">Scored only</option>
-            </select>
-          </div>
-
-          {/* Sort */}
-          <div>
-            <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1">Sort</label>
-            <select
-              value={sortBy}
-              onChange={e => setSortBy(e.target.value)}
-              className="px-3 py-1.5 rounded-lg border border-stone-300 dark:border-night-500
-                         bg-white dark:bg-night-800 text-sm text-gray-900 dark:text-white
-                         focus:outline-none focus:ring-2 focus:ring-gold-400"
-            >
-              <option value="rank">By rank{eventYear ? ` (${eventYear})` : ''}</option>
-              <option value="title">By title</option>
-              <option value="score">By acclaim score</option>
-              <option value="suggest">By suggested score</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Result count */}
-        <p className="text-xs text-gray-400 mt-3">
-          Showing {displayed.length} film{displayed.length !== 1 ? 's' : ''}
-          {search && ` matching "${search}"`}
-        </p>
-      </div>
-
-      {/* ── Film list ── */}
-      <div className="card p-0 overflow-hidden">
-        {displayed.length === 0 ? (
-          <div className="text-center py-12 text-sm text-gray-400 italic">
-            No films match the current filters.
-          </div>
+        ) : error ? (
+          <div className="py-16 text-center text-red-400 text-sm">{error}</div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr>
-                  {eventYear && (
-                    <th className="table-header text-center w-12">Rank</th>
-                  )}
-                  <th className="table-header">Film</th>
-                  <th className="table-header w-52">
-                    Acclaim Score
-                    {isAuthenticated && (
-                      <span className="font-normal text-gray-400 ml-1 text-xs">(click ✏️ to edit)</span>
-                    )}
-                  </th>
-                  <th className="table-header hidden md:table-cell">Oscar</th>
-                  <th className="table-header hidden lg:table-cell text-right">Detail</th>
-                </tr>
-              </thead>
-              <tbody>
-                {displayed.map(film => {
-                  const suggest   = suggestAcclaim(film)
-                  const filmRank  = eventYear
-                    ? (filmRanks[film.id]?.[eventYear]?.combined ?? filmRanks[film.id]?.[eventYear]?.dustin ?? null)
-                    : null
+          <>
+            {/* Stats strip */}
+            <div className="card flex flex-wrap items-center gap-6">
+              <div className="text-center">
+                <div className="font-display text-3xl text-gold-400 leading-none tracking-wide">{scoredCount}</div>
+                <div className="font-mono text-[10px] tracking-kicker text-gray-500 mt-2 uppercase">Scored</div>
+              </div>
+              <div className="text-center">
+                <div className="font-display text-3xl text-gray-500 leading-none tracking-wide">{unscoredCount}</div>
+                <div className="font-mono text-[10px] tracking-kicker text-gray-500 mt-2 uppercase">Unscored</div>
+              </div>
+              <div className="text-center">
+                <div className="font-display text-3xl text-white leading-none tracking-wide">{films.length}</div>
+                <div className="font-mono text-[10px] tracking-kicker text-gray-500 mt-2 uppercase">Total Films</div>
+              </div>
+              <div className="flex-1 min-w-48 flex items-center gap-3">
+                <div className="flex-1 h-1.5 rounded-full bg-night-700 overflow-hidden">
+                  <div className="h-full bg-gold-500 transition-all" style={{ width: `${pct}%` }} />
+                </div>
+                <span className="font-mono text-[10px] tracking-kicker text-gray-400 whitespace-nowrap">{pct}%</span>
+              </div>
+            </div>
 
-                  return (
-                    <tr key={film.id} className={`table-row-hover ${film.acclaim_score == null ? 'opacity-80' : ''}`}>
-                      {/* Rank */}
-                      {eventYear && (
-                        <td className="table-cell text-center">
-                          {filmRank
-                            ? <span className="text-base font-bold text-gray-700 dark:text-gray-300">#{filmRank}</span>
-                            : <span className="text-xs text-gray-400">NR</span>
-                          }
-                        </td>
-                      )}
+            {!isAuthenticated && (
+              <div className="rounded-xl border border-cinema-500/30 bg-cinema-500/10
+                              px-4 py-3 text-sm text-cinema-300">
+                Log in to edit acclaim scores.
+              </div>
+            )}
 
-                      {/* Film info */}
-                      <td className="table-cell">
-                        <div className="flex items-center gap-3">
-                          <PosterThumb url={film.poster_url} title={film.title} />
-                          <div className="min-w-0">
-                            <div className="font-medium text-gray-900 dark:text-white text-sm leading-tight truncate">
-                              {film.title}
-                            </div>
-                            <div className="text-xs text-gray-400">
-                              {film.release_year}{film.director ? ` · ${film.director}` : ''}
-                            </div>
-                            {/* Suggestion factors (mobile) */}
-                            {suggest && suggest.factors.length > 0 && (
-                              <div className="flex flex-wrap gap-1 mt-0.5 md:hidden">
-                                {suggest.factors.slice(0, 3).map((f, i) => (
-                                  <span key={i} className="text-xs text-gray-400">{f}</span>
-                                ))}
+            {/* Controls */}
+            <div className="card">
+              <div className="flex flex-wrap gap-4 items-end">
+                <div className="flex-1 min-w-48">
+                  <label className="block font-mono text-[10px] tracking-kicker text-gray-400 uppercase mb-1.5">Search</label>
+                  <input
+                    type="text" value={search} onChange={e => setSearch(e.target.value)}
+                    placeholder="Film title or director…"
+                    className="input text-sm w-full"
+                  />
+                </div>
+                <div>
+                  <label className="block font-mono text-[10px] tracking-kicker text-gray-400 uppercase mb-1.5">Event</label>
+                  <select value={eventFilter} onChange={e => setEventFilter(e.target.value)} className="select text-sm pr-8">
+                    <option value="all" className="bg-night-900">All Films</option>
+                    {EVENTS.map(y => <option key={y} value={String(y)} className="bg-night-900">{y} List</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-mono text-[10px] tracking-kicker text-gray-400 uppercase mb-1.5">Score</label>
+                  <select value={scoreFilter} onChange={e => setScoreFilter(e.target.value)} className="select text-sm pr-8">
+                    <option value="all" className="bg-night-900">All</option>
+                    <option value="unscored" className="bg-night-900">Unscored only</option>
+                    <option value="scored" className="bg-night-900">Scored only</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-mono text-[10px] tracking-kicker text-gray-400 uppercase mb-1.5">Sort</label>
+                  <select value={sortBy} onChange={e => setSortBy(e.target.value)} className="select text-sm pr-8">
+                    <option value="rank" className="bg-night-900">By rank{eventYear ? ` (${eventYear})` : ''}</option>
+                    <option value="title" className="bg-night-900">By title</option>
+                    <option value="score" className="bg-night-900">By acclaim score</option>
+                    <option value="suggest" className="bg-night-900">By suggested score</option>
+                  </select>
+                </div>
+              </div>
+              <p className="font-mono text-[10px] tracking-kicker text-gray-500 mt-4 uppercase">
+                Showing {displayed.length} film{displayed.length !== 1 ? 's' : ''}
+                {search && ` · matching "${search}"`}
+              </p>
+            </div>
+
+            {/* Film list */}
+            <div className="card p-0 overflow-hidden">
+              {displayed.length === 0 ? (
+                <div className="text-center py-12 text-sm text-gray-500 italic">
+                  No films match the current filters.
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr>
+                        {eventYear && <th className="table-header text-center w-12">Rank</th>}
+                        <th className="table-header">Film</th>
+                        <th className="table-header w-56">
+                          Acclaim
+                          {isAuthenticated && (
+                            <span className="font-mono font-normal text-gray-600 ml-1 lowercase tracking-normal">· click ✏️ to edit</span>
+                          )}
+                        </th>
+                        <th className="table-header hidden md:table-cell">Oscar</th>
+                        <th className="table-header hidden lg:table-cell text-right">Detail</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {displayed.map(film => {
+                        const suggest = suggestAcclaim(film)
+                        const filmRank = eventYear
+                          ? (filmRanks[film.id]?.[eventYear]?.combined ?? filmRanks[film.id]?.[eventYear]?.dustin ?? null)
+                          : null
+
+                        return (
+                          <tr key={film.id} className={`table-row-hover ${film.acclaim_score == null ? 'opacity-80' : ''}`}>
+                            {eventYear && (
+                              <td className="table-cell text-center">
+                                {filmRank
+                                  ? <span className="font-display text-xl text-white tracking-wide leading-none">#{filmRank}</span>
+                                  : <span className="font-mono text-[10px] tracking-kicker text-gray-600">NR</span>
+                                }
+                              </td>
+                            )}
+                            <td className="table-cell">
+                              <div className="flex items-center gap-3">
+                                <FilmStill src={film.poster_url} title={film.title}
+                                           className="w-10 h-14 rounded border border-white/10 flex-shrink-0" />
+                                <div className="min-w-0">
+                                  <div className="text-sm font-semibold text-white leading-tight truncate">{film.title}</div>
+                                  <div className="font-mono text-[10px] tracking-kicker text-gray-500 mt-1 uppercase">
+                                    {film.release_year}{film.director ? ` · ${film.director}` : ''}
+                                  </div>
+                                  {suggest && suggest.factors.length > 0 && (
+                                    <div className="flex flex-wrap gap-2 mt-1 md:hidden">
+                                      {suggest.factors.slice(0, 3).map((f, i) => (
+                                        <span key={i} className="font-mono text-[10px] tracking-kicker text-gray-500 uppercase">{f}</span>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
                               </div>
-                            )}
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* Acclaim editor */}
-                      <td className="table-cell">
-                        {isAuthenticated ? (
-                          <InlineEditor film={film} onSaved={handleSaved} />
-                        ) : film.acclaim_score != null ? (
-                          <span className="text-xl font-bold text-gold-600 dark:text-gold-400 font-display">
-                            {film.acclaim_score}
-                          </span>
-                        ) : (
-                          <span className="text-sm text-gray-400 italic">—</span>
-                        )}
-                      </td>
-
-                      {/* Oscar summary */}
-                      <td className="table-cell hidden md:table-cell">
-                        {(film.oscar_nominations || 0) > 0 ? (
-                          <div className="text-xs text-gray-500 dark:text-gray-400">
-                            {film.oscar_wins > 0 && (
-                              <span className="text-gold-600 dark:text-gold-400 font-semibold mr-1">
-                                🏆{film.oscar_wins}W
-                              </span>
-                            )}
-                            {film.oscar_nominations}N
-                          </div>
-                        ) : (
-                          <span className="text-xs text-gray-400">—</span>
-                        )}
-                      </td>
-
-                      {/* Detail link */}
-                      <td className="table-cell hidden lg:table-cell text-right">
-                        <Link
-                          to={`/movies/${film.id}`}
-                          className="text-xs text-gray-400 hover:text-gold-500 dark:hover:text-gold-400
-                                     transition-colors"
-                        >
-                          View →
-                        </Link>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
+                            </td>
+                            <td className="table-cell">
+                              {isAuthenticated ? (
+                                <InlineEditor film={film} onSaved={handleSaved} />
+                              ) : film.acclaim_score != null ? (
+                                <span className="font-display text-2xl text-gold-400 tracking-wide leading-none">{film.acclaim_score}</span>
+                              ) : (
+                                <span className="font-mono text-[10px] tracking-kicker text-gray-600">—</span>
+                              )}
+                            </td>
+                            <td className="table-cell hidden md:table-cell">
+                              {(film.oscar_nominations || 0) > 0 ? (
+                                <div className="font-mono text-[11px] tracking-kicker text-gray-400">
+                                  {film.oscar_wins > 0 && (
+                                    <span className="text-gold-400 mr-1">🏆{film.oscar_wins}W</span>
+                                  )}
+                                  {film.oscar_nominations}N
+                                </div>
+                              ) : (
+                                <span className="font-mono text-[10px] tracking-kicker text-gray-600">—</span>
+                              )}
+                            </td>
+                            <td className="table-cell hidden lg:table-cell text-right">
+                              <Link to={`/movies/${film.id}`}
+                                className="font-mono text-[10px] tracking-kicker text-gray-500 hover:text-gold-400 transition-colors uppercase">
+                                View →
+                              </Link>
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </>
         )}
       </div>
-
     </div>
   )
 }

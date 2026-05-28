@@ -3,26 +3,32 @@ import { useAuth } from '../context/AuthContext'
 
 // ── Tool card ─────────────────────────────────────────────────────────────────
 
-function ToolCard({ to, icon, title, description, tag }) {
+function ToolCard({ to, title, description, tag, accent = 'gold' }) {
+  const dot = accent === 'film' ? 'bg-film-500' : 'bg-gold-500'
   return (
-    <Link to={to} className="card-hover p-5 flex items-start gap-4">
-      <div className="text-2xl shrink-0 mt-0.5">{icon}</div>
+    <Link to={to}
+      className="group flex items-start gap-4 p-5 rounded-xl
+                 bg-night-800 border border-night-600/60
+                 hover:border-gold-500/60 hover:-translate-y-0.5 transition-all">
+      <span className={`mt-2 w-1.5 h-1.5 rounded-full ${dot} flex-shrink-0`} />
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2 mb-1">
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{title}</h3>
+        <div className="flex items-center gap-2 mb-1.5">
+          <h3 className="font-display text-lg text-white tracking-wide leading-none
+                          group-hover:text-gold-400 transition-colors">
+            {title}
+          </h3>
           {tag && (
-            <span className="text-xs px-2 py-0.5 rounded-full bg-gold-100 text-gold-700
-                             dark:bg-gold-900/30 dark:text-gold-400 font-medium">
+            <span className="font-mono text-[9px] tracking-cinema text-gold-500
+                             px-1.5 py-px rounded bg-gold-500/10 border border-gold-500/30
+                             uppercase">
               {tag}
             </span>
           )}
         </div>
-        <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">{description}</p>
+        <p className="text-sm text-gray-400 leading-relaxed">{description}</p>
       </div>
-      <svg className="w-4 h-4 text-gray-300 dark:text-gray-600 shrink-0 mt-0.5" fill="none"
-        viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-      </svg>
+      <span className="font-mono text-[11px] tracking-kicker text-gray-600 flex-shrink-0 mt-2
+                       group-hover:text-gold-400 transition-colors">→</span>
     </Link>
   )
 }
@@ -31,13 +37,12 @@ function ToolCard({ to, icon, title, description, tag }) {
 
 function Section({ title, children }) {
   return (
-    <div className="mb-8">
-      <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-3">
-        {title}
-      </h2>
-      <div className="flex flex-col gap-2">
-        {children}
+    <div className="mb-10">
+      <div className="flex items-center gap-3 mb-4">
+        <span className="kicker">{title}</span>
+        <span className="flex-1 h-px bg-night-700" />
       </div>
+      <div className="flex flex-col gap-3">{children}</div>
     </div>
   )
 }
@@ -46,17 +51,30 @@ function Section({ title, children }) {
 
 export default function Settings() {
   const { displayName, isDustin } = useAuth()
+  const dotColor = isDustin ? 'bg-film-500' : 'bg-gold-500'
+  const nameColor = isDustin ? 'text-film-400' : 'text-gold-400'
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8">
+    <div className="max-w-2xl mx-auto px-6 sm:px-10 py-10">
 
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold font-display text-gray-900 dark:text-gray-100 mb-1">
-          Settings
+      <div className="mb-10">
+        <div className="flex items-center gap-3 mb-3">
+          <Link to="/" className="font-mono text-[11px] tracking-kicker text-gray-500 hover:text-gold-400 transition-colors">
+            ← HOME
+          </Link>
+          <span className="text-gray-700">/</span>
+          <span className="font-mono text-[11px] tracking-kicker text-white uppercase">Settings</span>
+        </div>
+        <h1 className="font-display text-5xl text-white tracking-wide leading-none">
+          SETTINGS
         </h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400">
-          Signed in as <span className="font-medium text-gray-700 dark:text-gray-300">{displayName}</span>
+        <p className="font-serif italic text-base text-gray-400 mt-3 flex items-center gap-2">
+          Signed in as
+          <span className={`inline-flex items-center gap-1.5 ${nameColor} font-sans not-italic font-medium`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${dotColor}`} />
+            {displayName}
+          </span>
         </p>
       </div>
 
@@ -65,10 +83,16 @@ export default function Settings() {
         <Section title="Admin Tools">
           <ToolCard
             to="/movies/backfill"
-            icon="🎭"
             title="TMDb Actor Backfill"
             description="Fetch up to 10 cast members per film from The Movie Database and save to Supabase. Run once after adding the actor_6–10 columns."
             tag="One-time"
+            accent="gold"
+          />
+          <ToolCard
+            to="/movies/oscar-backfill"
+            title="Oscar Noms Backfill"
+            description="Query Wikidata for each film missing Oscar nomination data and save category-level results to Supabase. Fixes the ~120 films with win/nom counts but no category breakdown."
+            accent="film"
           />
         </Section>
       )}
@@ -76,24 +100,24 @@ export default function Settings() {
       {/* Pending SQL — Dustin only */}
       {isDustin && (
         <Section title="Pending Supabase Steps">
-          <div className="card p-5">
+          <div className="card">
             <div className="flex items-start gap-3">
-              <span className="text-lg shrink-0">🗄️</span>
-              <div>
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
+              <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-cinema-500 flex-shrink-0" />
+              <div className="min-w-0">
+                <h3 className="font-display text-lg text-white tracking-wide leading-none mb-2">
                   add_actor_columns.sql
                 </h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-                  Adds <code className="bg-stone-100 dark:bg-night-700 px-1 rounded">actor_6</code> through{' '}
-                  <code className="bg-stone-100 dark:bg-night-700 px-1 rounded">actor_10</code> columns to the{' '}
-                  <code className="bg-stone-100 dark:bg-night-700 px-1 rounded">films</code> table.
+                <p className="text-sm text-gray-400 mb-4 leading-relaxed">
+                  Adds <code className="font-mono text-[12px] bg-night-700 text-cinema-400 px-1.5 py-0.5 rounded">actor_6</code> through{' '}
+                  <code className="font-mono text-[12px] bg-night-700 text-cinema-400 px-1.5 py-0.5 rounded">actor_10</code> columns to the{' '}
+                  <code className="font-mono text-[12px] bg-night-700 text-cinema-400 px-1.5 py-0.5 rounded">films</code> table.
                   Run this in Supabase SQL Editor before using the Actor Backfill tool.
                 </p>
                 <a
                   href="https://supabase.com/dashboard/project/fpbjpefcrxdgwhautswl/sql"
                   target="_blank"
                   rel="noreferrer"
-                  className="text-xs text-film-600 dark:text-film-400 hover:underline font-medium"
+                  className="btn-cinema text-xs"
                 >
                   Open Supabase SQL Editor →
                 </a>
@@ -105,15 +129,16 @@ export default function Settings() {
 
       {/* Account */}
       <Section title="Account">
-        <div className="card p-5">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{displayName}</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                {isDustin ? 'Owner' : 'Player'}
-              </p>
-            </div>
+        <div className="card flex items-center justify-between">
+          <div>
+            <p className="font-display text-2xl text-white tracking-wide leading-none">
+              {displayName}
+            </p>
+            <p className="font-mono text-[10px] tracking-kicker text-gray-500 mt-2 uppercase">
+              {isDustin ? '● Owner' : '● Player'}
+            </p>
           </div>
+          <span className={`w-2 h-12 rounded-sm ${dotColor}`} />
         </div>
       </Section>
 

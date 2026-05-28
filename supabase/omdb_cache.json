@@ -232,86 +232,8 @@
     "Website": "N/A",
     "Response": "True"
   },
-  "8": {
-    "Title": "Star Wars: Episode V - The Empire Strikes Back",
-    "Year": "1980",
-    "Rated": "PG",
-    "Released": "18 Jun 1980",
-    "Runtime": "124 min",
-    "Genre": "Action, Adventure, Fantasy",
-    "Director": "Irvin Kershner",
-    "Writer": "Leigh Brackett, Lawrence Kasdan, George Lucas",
-    "Actors": "Mark Hamill, Harrison Ford, Carrie Fisher",
-    "Plot": "After the Empire overpowers the Rebel Alliance, Luke Skywalker begins training with Jedi Master Yoda, while Darth Vader and bounty hunter Boba Fett pursue his friends across the galaxy.",
-    "Language": "English",
-    "Country": "United States",
-    "Awards": "Won 1 Oscar. 27 wins & 21 nominations total",
-    "Poster": "https://m.media-amazon.com/images/M/MV5BMTkxNGFlNDktZmJkNC00MDdhLTg0MTEtZjZiYWI3MGE5NWIwXkEyXkFqcGc@._V1_SX300.jpg",
-    "Ratings": [
-      {
-        "Source": "Internet Movie Database",
-        "Value": "8.7/10"
-      },
-      {
-        "Source": "Rotten Tomatoes",
-        "Value": "93%"
-      },
-      {
-        "Source": "Metacritic",
-        "Value": "82/100"
-      }
-    ],
-    "Metascore": "82",
-    "imdbRating": "8.7",
-    "imdbVotes": "1,495,152",
-    "imdbID": "tt0080684",
-    "Type": "movie",
-    "DVD": "N/A",
-    "BoxOffice": "$292,753,960",
-    "Production": "N/A",
-    "Website": "N/A",
-    "Response": "True"
-  },
-  "9": {
-    "Title": "Star Wars: Episode IV - A New Hope",
-    "Year": "1977",
-    "Rated": "PG",
-    "Released": "25 May 1977",
-    "Runtime": "121 min",
-    "Genre": "Action, Adventure, Fantasy",
-    "Director": "George Lucas",
-    "Writer": "George Lucas",
-    "Actors": "Mark Hamill, Harrison Ford, Carrie Fisher",
-    "Plot": "Luke Skywalker joins forces with a Jedi Knight, a cocky pilot, a Wookiee and two droids to save the galaxy from the Empire's world-destroying battle station, while also attempting to rescue Princess Leia from the mysterious Darth ...",
-    "Language": "English",
-    "Country": "United States",
-    "Awards": "Won 6 Oscars. 70 wins & 31 nominations total",
-    "Poster": "https://m.media-amazon.com/images/M/MV5BOGUwMDk0Y2MtNjBlNi00NmRiLTk2MWYtMGMyMDlhYmI4ZDBjXkEyXkFqcGc@._V1_SX300.jpg",
-    "Ratings": [
-      {
-        "Source": "Internet Movie Database",
-        "Value": "8.6/10"
-      },
-      {
-        "Source": "Rotten Tomatoes",
-        "Value": "94%"
-      },
-      {
-        "Source": "Metacritic",
-        "Value": "90/100"
-      }
-    ],
-    "Metascore": "90",
-    "imdbRating": "8.6",
-    "imdbVotes": "1,555,851",
-    "imdbID": "tt0076759",
-    "Type": "movie",
-    "DVD": "N/A",
-    "BoxOffice": "$460,998,507",
-    "Production": "N/A",
-    "Website": "N/A",
-    "Response": "True"
-  },
+  "8": null,
+  "9": null,
   "10": {
     "Title": "Amadeus",
     "Year": "1984",
@@ -548,46 +470,7 @@
     "Website": "N/A",
     "Response": "True"
   },
-  "16": {
-    "Title": "Much Ado About Nothing",
-    "Year": "1993",
-    "Rated": "PG-13",
-    "Released": "02 Jul 1993",
-    "Runtime": "111 min",
-    "Genre": "Comedy, Drama, Romance",
-    "Director": "Kenneth Branagh",
-    "Writer": "William Shakespeare, Kenneth Branagh",
-    "Actors": "Kenneth Branagh, Emma Thompson, Keanu Reeves",
-    "Plot": "Young lovers, and soon to wed, Hero and Claudio conspire to get verbal sparring partners and confirmed singles, Benedick and Beatrice, to wed as well.",
-    "Language": "English",
-    "Country": "United Kingdom, United States",
-    "Awards": "Nominated for 1 BAFTA Award5 wins & 11 nominations total",
-    "Poster": "https://m.media-amazon.com/images/M/MV5BOTI3MmI1NmYtZGI4Zi00ZWNiLWJjYWItYTVlOThiZGYzNWE5XkEyXkFqcGc@._V1_SX300.jpg",
-    "Ratings": [
-      {
-        "Source": "Internet Movie Database",
-        "Value": "7.3/10"
-      },
-      {
-        "Source": "Rotten Tomatoes",
-        "Value": "90%"
-      },
-      {
-        "Source": "Metacritic",
-        "Value": "80/100"
-      }
-    ],
-    "Metascore": "80",
-    "imdbRating": "7.3",
-    "imdbVotes": "54,656",
-    "imdbID": "tt0107616",
-    "Type": "movie",
-    "DVD": "N/A",
-    "BoxOffice": "$22,549,338",
-    "Production": "N/A",
-    "Website": "N/A",
-    "Response": "True"
-  },
+  "16": null,
   "17": {
     "Title": "The Princess Bride",
     "Year": "1987",
@@ -668,46 +551,7 @@
     "Website": "N/A",
     "Response": "True"
   },
-  "19": {
-    "Title": "Star Wars: Episode VI - Return of the Jedi",
-    "Year": "1983",
-    "Rated": "PG",
-    "Released": "25 May 1983",
-    "Runtime": "131 min",
-    "Genre": "Action, Adventure, Fantasy",
-    "Director": "Richard Marquand",
-    "Writer": "Lawrence Kasdan, George Lucas",
-    "Actors": "Mark Hamill, Harrison Ford, Carrie Fisher",
-    "Plot": "After rescuing Han Solo from Jabba the Hutt, the Rebel Alliance attempts to destroy the second Death Star while Luke struggles to help Darth Vader back from the dark side.",
-    "Language": "English, Kikuyu, Tagalog, Kalmyk-Oirat, Quechua, Polish",
-    "Country": "United States",
-    "Awards": "Nominated for 4 Oscars. 25 wins & 23 nominations total",
-    "Poster": "https://m.media-amazon.com/images/M/MV5BNWEwOTI0MmUtMGNmNy00ODViLTlkZDQtZTg1YmQ3MDgyNTUzXkEyXkFqcGc@._V1_SX300.jpg",
-    "Ratings": [
-      {
-        "Source": "Internet Movie Database",
-        "Value": "8.3/10"
-      },
-      {
-        "Source": "Rotten Tomatoes",
-        "Value": "83%"
-      },
-      {
-        "Source": "Metacritic",
-        "Value": "58/100"
-      }
-    ],
-    "Metascore": "58",
-    "imdbRating": "8.3",
-    "imdbVotes": "1,200,333",
-    "imdbID": "tt0086190",
-    "Type": "movie",
-    "DVD": "N/A",
-    "BoxOffice": "$316,566,101",
-    "Production": "N/A",
-    "Website": "N/A",
-    "Response": "True"
-  },
+  "19": null,
   "20": {
     "Title": "Braveheart",
     "Year": "1995",
@@ -1029,46 +873,7 @@
     "Website": "N/A",
     "Response": "True"
   },
-  "29": {
-    "Title": "O Brother, Where Art Thou?",
-    "Year": "2000",
-    "Rated": "PG-13",
-    "Released": "02 Feb 2001",
-    "Runtime": "107 min",
-    "Genre": "Adventure, Comedy, Crime",
-    "Director": "Joel Coen, Ethan Coen",
-    "Writer": "Homer, Ethan Coen, Joel Coen",
-    "Actors": "George Clooney, John Turturro, Tim Blake Nelson",
-    "Plot": "In the deep south during the 1930s, three escaped convicts search for hidden treasure while a relentless lawman pursues them.",
-    "Language": "English",
-    "Country": "United Kingdom, France, United States",
-    "Awards": "Nominated for 2 Oscars. 8 wins & 38 nominations total",
-    "Poster": "https://m.media-amazon.com/images/M/MV5BMDhmMzZkYzctOTQ4MS00NWEzLWI1YzMtNTllZDhkYjgwOWQ0XkEyXkFqcGc@._V1_SX300.jpg",
-    "Ratings": [
-      {
-        "Source": "Internet Movie Database",
-        "Value": "7.7/10"
-      },
-      {
-        "Source": "Rotten Tomatoes",
-        "Value": "78%"
-      },
-      {
-        "Source": "Metacritic",
-        "Value": "69/100"
-      }
-    ],
-    "Metascore": "69",
-    "imdbRating": "7.7",
-    "imdbVotes": "349,722",
-    "imdbID": "tt0190590",
-    "Type": "movie",
-    "DVD": "N/A",
-    "BoxOffice": "$45,512,588",
-    "Production": "N/A",
-    "Website": "N/A",
-    "Response": "True"
-  },
+  "29": null,
   "30": {
     "Title": "Psycho",
     "Year": "1960",
@@ -1109,46 +914,7 @@
     "Website": "N/A",
     "Response": "True"
   },
-  "31": {
-    "Title": "Indiana Jones and the Last Crusade",
-    "Year": "1989",
-    "Rated": "PG-13",
-    "Released": "24 May 1989",
-    "Runtime": "127 min",
-    "Genre": "Action, Adventure",
-    "Director": "Steven Spielberg",
-    "Writer": "Jeffrey Boam, George Lucas, Menno Meyjes",
-    "Actors": "Harrison Ford, Sean Connery, Alison Doody",
-    "Plot": "In 1938, after his father goes missing while pursuing the Holy Grail, Indiana Jones finds himself up against the Nazis again to stop them from obtaining its powers.",
-    "Language": "English, German, Greek, Latin, Italian",
-    "Country": "United States, United Kingdom, Spain, Italy, Jordan",
-    "Awards": "Won 1 Oscar. 9 wins & 24 nominations total",
-    "Poster": "https://m.media-amazon.com/images/M/MV5BNGIxNzQ0YzYtMjNmYi00YjBlLWFjNzEtNGE3ZGFmYTczM2MwXkEyXkFqcGc@._V1_SX300.jpg",
-    "Ratings": [
-      {
-        "Source": "Internet Movie Database",
-        "Value": "8.2/10"
-      },
-      {
-        "Source": "Rotten Tomatoes",
-        "Value": "84%"
-      },
-      {
-        "Source": "Metacritic",
-        "Value": "65/100"
-      }
-    ],
-    "Metascore": "65",
-    "imdbRating": "8.2",
-    "imdbVotes": "858,909",
-    "imdbID": "tt0097576",
-    "Type": "movie",
-    "DVD": "N/A",
-    "BoxOffice": "$197,171,806",
-    "Production": "N/A",
-    "Website": "N/A",
-    "Response": "True"
-  },
+  "31": null,
   "32": {
     "Title": "Toy Story 2",
     "Year": "1999",
@@ -1189,46 +955,7 @@
     "Website": "N/A",
     "Response": "True"
   },
-  "33": {
-    "Title": "Newsies",
-    "Year": "1992",
-    "Rated": "PG",
-    "Released": "10 Apr 1992",
-    "Runtime": "121 min",
-    "Genre": "Drama, Family, History",
-    "Director": "Kenny Ortega",
-    "Writer": "Bob Tzudiker, Noni White",
-    "Actors": "Christian Bale, Bill Pullman, Robert Duvall",
-    "Plot": "A musical based on the New York City newsboy strike of 1899. When young newspaper sellers are exploited beyond reason by their bosses they set out to enact change and are met by the ruthlessness of big business.",
-    "Language": "English",
-    "Country": "United States",
-    "Awards": "1 win & 6 nominations total",
-    "Poster": "https://m.media-amazon.com/images/M/MV5BYzBjMjgzZTAtNmNkMy00NTM2LWExNTktYTQ5ZGVhMDhhZGVkXkEyXkFqcGc@._V1_SX300.jpg",
-    "Ratings": [
-      {
-        "Source": "Internet Movie Database",
-        "Value": "6.9/10"
-      },
-      {
-        "Source": "Rotten Tomatoes",
-        "Value": "39%"
-      },
-      {
-        "Source": "Metacritic",
-        "Value": "46/100"
-      }
-    ],
-    "Metascore": "46",
-    "imdbRating": "6.9",
-    "imdbVotes": "23,649",
-    "imdbID": "tt0104990",
-    "Type": "movie",
-    "DVD": "N/A",
-    "BoxOffice": "$2,819,485",
-    "Production": "N/A",
-    "Website": "N/A",
-    "Response": "True"
-  },
+  "33": null,
   "34": {
     "Title": "Pulp Fiction",
     "Year": "1994",
@@ -1621,46 +1348,7 @@
     "Website": "N/A",
     "Response": "True"
   },
-  "44": {
-    "Title": "Ferris Bueller's Day Off",
-    "Year": "1986",
-    "Rated": "PG-13",
-    "Released": "11 Jun 1986",
-    "Runtime": "103 min",
-    "Genre": "Comedy",
-    "Director": "John Hughes",
-    "Writer": "John Hughes",
-    "Actors": "Matthew Broderick, Alan Ruck, Mia Sara",
-    "Plot": "A brash, cocky high school senior, tired of skipping school to spend a boring day at home, is determined to enjoy an epic day roaring around his favorite Chicago sites, enlisting his best friend and girlfriend to join him on the a...",
-    "Language": "English, German",
-    "Country": "United States",
-    "Awards": "3 wins & 1 nomination total",
-    "Poster": "https://m.media-amazon.com/images/M/MV5BZWYwMjUxNjMtMzE0MC00NDM3LWIxMmQtYmEyNWVjNjdlZGZjXkEyXkFqcGc@._V1_SX300.jpg",
-    "Ratings": [
-      {
-        "Source": "Internet Movie Database",
-        "Value": "7.8/10"
-      },
-      {
-        "Source": "Rotten Tomatoes",
-        "Value": "83%"
-      },
-      {
-        "Source": "Metacritic",
-        "Value": "61/100"
-      }
-    ],
-    "Metascore": "61",
-    "imdbRating": "7.8",
-    "imdbVotes": "413,405",
-    "imdbID": "tt0091042",
-    "Type": "movie",
-    "DVD": "N/A",
-    "BoxOffice": "$70,136,369",
-    "Production": "N/A",
-    "Website": "N/A",
-    "Response": "True"
-  },
+  "44": null,
   "45": {
     "Title": "E.T. the Extra-Terrestrial",
     "Year": "1982",
@@ -1857,46 +1545,7 @@
     "Website": "N/A",
     "Response": "True"
   },
-  "50": {
-    "Title": "The 'Burbs",
-    "Year": "1989",
-    "Rated": "PG",
-    "Released": "17 Feb 1989",
-    "Runtime": "102 min",
-    "Genre": "Comedy, Mystery, Thriller",
-    "Director": "Joe Dante",
-    "Writer": "Dana Olsen",
-    "Actors": "Tom Hanks, Bruce Dern, Carrie Fisher",
-    "Plot": "An overstressed suburbanite and his neighbors are convinced that the new family on the block is part of a murderous Satanic cult.",
-    "Language": "English",
-    "Country": "United States",
-    "Awards": "1 nomination total",
-    "Poster": "https://m.media-amazon.com/images/M/MV5BNzAzYWE2NzYtMTMzNy00MmQzLTllMWItODA3ODk4MDg5MmY0XkEyXkFqcGc@._V1_SX300.jpg",
-    "Ratings": [
-      {
-        "Source": "Internet Movie Database",
-        "Value": "6.8/10"
-      },
-      {
-        "Source": "Rotten Tomatoes",
-        "Value": "56%"
-      },
-      {
-        "Source": "Metacritic",
-        "Value": "45/100"
-      }
-    ],
-    "Metascore": "45",
-    "imdbRating": "6.8",
-    "imdbVotes": "90,793",
-    "imdbID": "tt0096734",
-    "Type": "movie",
-    "DVD": "N/A",
-    "BoxOffice": "$36,601,993",
-    "Production": "N/A",
-    "Website": "N/A",
-    "Response": "True"
-  },
+  "50": null,
   "51": {
     "Title": "Modern Times",
     "Year": "1936",
@@ -2560,46 +2209,7 @@
     "Website": "N/A",
     "Response": "True"
   },
-  "68": {
-    "Title": "Star Trek II: The Wrath of Khan",
-    "Year": "1982",
-    "Rated": "PG",
-    "Released": "04 Jun 1982",
-    "Runtime": "113 min",
-    "Genre": "Action, Adventure, Sci-Fi",
-    "Director": "Nicholas Meyer",
-    "Writer": "Gene Roddenberry, Jack B. Sowards, Harve Bennett",
-    "Actors": "William Shatner, Leonard Nimoy, DeForest Kelley",
-    "Plot": "With the assistance of the Enterprise crew, Admiral Kirk must stop an old nemesis, Khan Noonien Singh, from using the life-generating Genesis Device as the ultimate weapon.",
-    "Language": "English",
-    "Country": "United States",
-    "Awards": "5 wins & 9 nominations total",
-    "Poster": "https://m.media-amazon.com/images/M/MV5BOTFkZDY5NWQtMjY4Yy00OThiLTk3YjQtMDdhYTllMTI4MTdiXkEyXkFqcGc@._V1_SX300.jpg",
-    "Ratings": [
-      {
-        "Source": "Internet Movie Database",
-        "Value": "7.7/10"
-      },
-      {
-        "Source": "Rotten Tomatoes",
-        "Value": "87%"
-      },
-      {
-        "Source": "Metacritic",
-        "Value": "68/100"
-      }
-    ],
-    "Metascore": "68",
-    "imdbRating": "7.7",
-    "imdbVotes": "134,088",
-    "imdbID": "tt0084726",
-    "Type": "movie",
-    "DVD": "N/A",
-    "BoxOffice": "$79,707,906",
-    "Production": "N/A",
-    "Website": "N/A",
-    "Response": "True"
-  },
+  "68": null,
   "69": {
     "Title": "Aliens",
     "Year": "1986",
@@ -2760,46 +2370,7 @@
     "Website": "N/A",
     "Response": "True"
   },
-  "73": {
-    "Title": "Star Trek IV: The Voyage Home",
-    "Year": "1986",
-    "Rated": "PG",
-    "Released": "26 Nov 1986",
-    "Runtime": "119 min",
-    "Genre": "Adventure, Comedy, Sci-Fi",
-    "Director": "Leonard Nimoy",
-    "Writer": "Gene Roddenberry, Leonard Nimoy, Harve Bennett",
-    "Actors": "William Shatner, Leonard Nimoy, DeForest Kelley",
-    "Plot": "To save Earth from an alien probe, Admiral James T. Kirk and his fugitive crew go back in time to San Francisco in 1986 to retrieve the only beings who can communicate with it: humpback whales.",
-    "Language": "English, Finnish",
-    "Country": "United States",
-    "Awards": "Nominated for 4 Oscars. 4 wins & 19 nominations total",
-    "Poster": "https://m.media-amazon.com/images/M/MV5BYmZlYWYwMzUtMjYzMy00MWI1LTg3MDctOTdjYjA2MDkwNGU5XkEyXkFqcGc@._V1_SX300.jpg",
-    "Ratings": [
-      {
-        "Source": "Internet Movie Database",
-        "Value": "7.3/10"
-      },
-      {
-        "Source": "Rotten Tomatoes",
-        "Value": "81%"
-      },
-      {
-        "Source": "Metacritic",
-        "Value": "71/100"
-      }
-    ],
-    "Metascore": "71",
-    "imdbRating": "7.3",
-    "imdbVotes": "96,177",
-    "imdbID": "tt0092007",
-    "Type": "movie",
-    "DVD": "N/A",
-    "BoxOffice": "$109,713,132",
-    "Production": "N/A",
-    "Website": "N/A",
-    "Response": "True"
-  },
+  "73": null,
   "74": {
     "Title": "Batman",
     "Year": "1989",
@@ -2880,33 +2451,7 @@
     "Website": "N/A",
     "Response": "True"
   },
-  "76": {
-    "Title": "Childhood II",
-    "Year": "1973",
-    "Rated": "N/A",
-    "Released": "25 Feb 1973",
-    "Runtime": "85 min",
-    "Genre": "Documentary",
-    "Director": "Martin J. Spinelli",
-    "Writer": "N/A",
-    "Actors": "N/A",
-    "Plot": "N/A",
-    "Language": "English",
-    "Country": "USA",
-    "Awards": "N/A",
-    "Poster": "N/A",
-    "Ratings": [],
-    "Metascore": "N/A",
-    "imdbRating": "N/A",
-    "imdbVotes": "N/A",
-    "imdbID": "tt0212863",
-    "Type": "movie",
-    "DVD": "N/A",
-    "BoxOffice": "N/A",
-    "Production": "N/A",
-    "Website": "N/A",
-    "Response": "True"
-  },
+  "76": null,
   "77": {
     "Title": "Spaceballs",
     "Year": "1987",
@@ -4017,46 +3562,7 @@
     "Response": "True"
   },
   "106": null,
-  "107": {
-    "Title": "Annie Hall",
-    "Year": "1977",
-    "Rated": "PG",
-    "Released": "20 Apr 1977",
-    "Runtime": "93 min",
-    "Genre": "Comedy, Romance",
-    "Director": "Woody Allen",
-    "Writer": "Woody Allen, Marshall Brickman",
-    "Actors": "Woody Allen, Diane Keaton, Tony Roberts",
-    "Plot": "Alvy Singer, a divorced Jewish comedian, reflects on his relationship with ex-lover Annie Hall, an aspiring nightclub singer, which ended abruptly just like his previous marriages.",
-    "Language": "English, German",
-    "Country": "United States",
-    "Awards": "Won 4 Oscars. 32 wins & 9 nominations total",
-    "Poster": "https://m.media-amazon.com/images/M/MV5BNjZlOWE5N2UtMTdhZC00NjU5LTg2MjYtOGU4NDhhNWNlMmRlXkEyXkFqcGc@._V1_SX300.jpg",
-    "Ratings": [
-      {
-        "Source": "Internet Movie Database",
-        "Value": "7.9/10"
-      },
-      {
-        "Source": "Rotten Tomatoes",
-        "Value": "97%"
-      },
-      {
-        "Source": "Metacritic",
-        "Value": "92/100"
-      }
-    ],
-    "Metascore": "92",
-    "imdbRating": "7.9",
-    "imdbVotes": "289,401",
-    "imdbID": "tt0075686",
-    "Type": "movie",
-    "DVD": "N/A",
-    "BoxOffice": "$38,251,425",
-    "Production": "N/A",
-    "Website": "N/A",
-    "Response": "True"
-  },
+  "107": null,
   "108": {
     "Title": "Dr. Strangelove or: How I Learned to Stop Worrying and Love the Bomb",
     "Year": "1964",
@@ -4137,46 +3643,7 @@
     "Website": "N/A",
     "Response": "True"
   },
-  "110": {
-    "Title": "A Few Good Men",
-    "Year": "1992",
-    "Rated": "R",
-    "Released": "11 Dec 1992",
-    "Runtime": "138 min",
-    "Genre": "Drama, Thriller",
-    "Director": "Rob Reiner",
-    "Writer": "Aaron Sorkin",
-    "Actors": "Tom Cruise, Jack Nicholson, Demi Moore",
-    "Plot": "A military lawyer intends to prove that two US Marines charged with murdering a fellow Marine were only following their base commander's orders.",
-    "Language": "English, French",
-    "Country": "United States",
-    "Awards": "Nominated for 4 Oscars. 11 wins & 30 nominations total",
-    "Poster": "https://m.media-amazon.com/images/M/MV5BOGVhMTUwYzEtZGQ1ZC00Nzg1LTk0OGUtMDk0NDM0ZmZlN2E0XkEyXkFqcGc@._V1_SX300.jpg",
-    "Ratings": [
-      {
-        "Source": "Internet Movie Database",
-        "Value": "7.7/10"
-      },
-      {
-        "Source": "Rotten Tomatoes",
-        "Value": "84%"
-      },
-      {
-        "Source": "Metacritic",
-        "Value": "62/100"
-      }
-    ],
-    "Metascore": "62",
-    "imdbRating": "7.7",
-    "imdbVotes": "314,572",
-    "imdbID": "tt0104257",
-    "Type": "movie",
-    "DVD": "N/A",
-    "BoxOffice": "$141,340,178",
-    "Production": "N/A",
-    "Website": "N/A",
-    "Response": "True"
-  },
+  "110": null,
   "111": {
     "Title": "It's a Wonderful Life",
     "Year": "1946",
@@ -5628,46 +5095,7 @@
     "Website": "N/A",
     "Response": "True"
   },
-  "149": {
-    "Title": "Austin Powers: The Spy Who Shagged Me",
-    "Year": "1999",
-    "Rated": "PG-13",
-    "Released": "11 Jun 1999",
-    "Runtime": "95 min",
-    "Genre": "Action, Adventure, Comedy",
-    "Director": "Jay Roach",
-    "Writer": "Mike Myers, Michael McCullers",
-    "Actors": "Mike Myers, Heather Graham, Michael York",
-    "Plot": "Dr. Evil is back and has invented a new time machine that allows him to go back to the 1960s and steal Austin Powers' mojo, inadvertently leaving him \"shagless\".",
-    "Language": "English, German",
-    "Country": "United States",
-    "Awards": "Nominated for 1 Oscar. 18 wins & 31 nominations total",
-    "Poster": "https://m.media-amazon.com/images/M/MV5BY2I3ZTBjOGQtYjQ3My00M2RlLTk3MjgtOTVmMWExNmU3ZjBkXkEyXkFqcGc@._V1_SX300.jpg",
-    "Ratings": [
-      {
-        "Source": "Internet Movie Database",
-        "Value": "6.7/10"
-      },
-      {
-        "Source": "Rotten Tomatoes",
-        "Value": "54%"
-      },
-      {
-        "Source": "Metacritic",
-        "Value": "59/100"
-      }
-    ],
-    "Metascore": "59",
-    "imdbRating": "6.7",
-    "imdbVotes": "261,446",
-    "imdbID": "tt0145660",
-    "Type": "movie",
-    "DVD": "N/A",
-    "BoxOffice": "$206,040,086",
-    "Production": "N/A",
-    "Website": "N/A",
-    "Response": "True"
-  },
+  "149": null,
   "150": {
     "Title": "High Fidelity",
     "Year": "2000",
@@ -5708,46 +5136,7 @@
     "Website": "N/A",
     "Response": "True"
   },
-  "151": {
-    "Title": "Planes, Trains & Automobiles",
-    "Year": "1987",
-    "Rated": "R",
-    "Released": "25 Nov 1987",
-    "Runtime": "93 min",
-    "Genre": "Comedy, Drama",
-    "Director": "John Hughes",
-    "Writer": "John Hughes",
-    "Actors": "Steve Martin, John Candy, Laila Robins",
-    "Plot": "A Chicago advertising man must struggle to travel home from New York for Thanksgiving, with a lovable oaf of a shower-curtain-ring salesman as his only companion.",
-    "Language": "English",
-    "Country": "United States",
-    "Awards": "1 nomination total",
-    "Poster": "https://m.media-amazon.com/images/M/MV5BOWJhY2Y1Y2YtNjA0NC00ZjNkLTg2NWMtMjhhY2JiZDJhYTdmXkEyXkFqcGc@._V1_SX300.jpg",
-    "Ratings": [
-      {
-        "Source": "Internet Movie Database",
-        "Value": "7.6/10"
-      },
-      {
-        "Source": "Rotten Tomatoes",
-        "Value": "93%"
-      },
-      {
-        "Source": "Metacritic",
-        "Value": "72/100"
-      }
-    ],
-    "Metascore": "72",
-    "imdbRating": "7.6",
-    "imdbVotes": "179,686",
-    "imdbID": "tt0093748",
-    "Type": "movie",
-    "DVD": "N/A",
-    "BoxOffice": "$49,530,280",
-    "Production": "N/A",
-    "Website": "N/A",
-    "Response": "True"
-  },
+  "151": null,
   "152": {
     "Title": "Buffalo '66",
     "Year": "1998",
@@ -5948,42 +5337,7 @@
     "Website": "N/A",
     "Response": "True"
   },
-  "157": {
-    "Title": "Sherlock Jr.",
-    "Year": "1924",
-    "Rated": "Passed",
-    "Released": "11 May 1924",
-    "Runtime": "45 min",
-    "Genre": "Action, Comedy, Romance",
-    "Director": "Buster Keaton",
-    "Writer": "Jean C. Havez, Joseph A. Mitchell, Clyde Bruckman",
-    "Actors": "Buster Keaton, Kathryn McGuire, Joe Keaton",
-    "Plot": "A film projectionist longs to be a detective, and puts his meagre skills to work when he is framed by a rival for stealing his girlfriend's father's pocketwatch.",
-    "Language": "None, English",
-    "Country": "United States",
-    "Awards": "2 wins total",
-    "Poster": "https://m.media-amazon.com/images/M/MV5BMjQzM2E2NjYtYmRjMC00ZmVlLTljZTgtNmQ5MGZlNDYyZTc5XkEyXkFqcGc@._V1_SX300.jpg",
-    "Ratings": [
-      {
-        "Source": "Internet Movie Database",
-        "Value": "8.2/10"
-      },
-      {
-        "Source": "Rotten Tomatoes",
-        "Value": "86%"
-      }
-    ],
-    "Metascore": "N/A",
-    "imdbRating": "8.2",
-    "imdbVotes": "64,220",
-    "imdbID": "tt0015324",
-    "Type": "movie",
-    "DVD": "N/A",
-    "BoxOffice": "$977,375",
-    "Production": "N/A",
-    "Website": "N/A",
-    "Response": "True"
-  },
+  "157": null,
   "158": {
     "Title": "Somewhere in Time",
     "Year": "1980",
@@ -6065,46 +5419,7 @@
     "Website": "N/A",
     "Response": "True"
   },
-  "161": {
-    "Title": "The Lord of the Rings: The Return of the King",
-    "Year": "2003",
-    "Rated": "PG-13",
-    "Released": "17 Dec 2003",
-    "Runtime": "201 min",
-    "Genre": "Adventure, Drama, Fantasy",
-    "Director": "Peter Jackson",
-    "Writer": "J.R.R. Tolkien, Fran Walsh, Philippa Boyens",
-    "Actors": "Elijah Wood, Viggo Mortensen, Ian McKellen",
-    "Plot": "Gandalf and Aragorn lead the World of Men against Sauron's army to draw his gaze from Frodo and Sam as they approach Mount Doom with the One Ring.",
-    "Language": "English, Quenya, Old English, Sindarin",
-    "Country": "New Zealand, United States",
-    "Awards": "Won 11 Oscars. 215 wins & 124 nominations total",
-    "Poster": "https://m.media-amazon.com/images/M/MV5BMTZkMjBjNWMtZGI5OC00MGU0LTk4ZTItODg2NWM3NTVmNWQ4XkEyXkFqcGc@._V1_SX300.jpg",
-    "Ratings": [
-      {
-        "Source": "Internet Movie Database",
-        "Value": "9.0/10"
-      },
-      {
-        "Source": "Rotten Tomatoes",
-        "Value": "94%"
-      },
-      {
-        "Source": "Metacritic",
-        "Value": "94/100"
-      }
-    ],
-    "Metascore": "94",
-    "imdbRating": "9.0",
-    "imdbVotes": "2,142,025",
-    "imdbID": "tt0167260",
-    "Type": "movie",
-    "DVD": "N/A",
-    "BoxOffice": "$386,975,644",
-    "Production": "N/A",
-    "Website": "N/A",
-    "Response": "True"
-  },
+  "161": null,
   "162": {
     "Title": "Saving Private Ryan",
     "Year": "1998",
@@ -9098,46 +8413,6 @@
     "Website": "N/A",
     "Response": "True"
   },
-  "241": {
-    "Title": "The Score",
-    "Year": "2001",
-    "Rated": "R",
-    "Released": "13 Jul 2001",
-    "Runtime": "124 min",
-    "Genre": "Crime, Drama, Thriller",
-    "Director": "Frank Oz",
-    "Writer": "Daniel E. Taylor, Kario Salem, Lem Dobbs",
-    "Actors": "Robert De Niro, Edward Norton, Marlon Brando",
-    "Plot": "An aging thief hopes to retire and live off his ill-gotten wealth with his lover when a young kid convinces him into doing one last heist that comes with a large payout.",
-    "Language": "English, French",
-    "Country": "Germany, Canada, United States",
-    "Awards": "1 win & 1 nomination total",
-    "Poster": "https://m.media-amazon.com/images/M/MV5BZmI3Mjk4NGMtYjhmOC00NjYzLThhNWQtYWUwZDc3Y2ZkZTA1XkEyXkFqcGc@._V1_SX300.jpg",
-    "Ratings": [
-      {
-        "Source": "Internet Movie Database",
-        "Value": "6.8/10"
-      },
-      {
-        "Source": "Rotten Tomatoes",
-        "Value": "74%"
-      },
-      {
-        "Source": "Metacritic",
-        "Value": "71/100"
-      }
-    ],
-    "Metascore": "71",
-    "imdbRating": "6.8",
-    "imdbVotes": "142,788",
-    "imdbID": "tt0227445",
-    "Type": "movie",
-    "DVD": "N/A",
-    "BoxOffice": "$71,107,711",
-    "Production": "N/A",
-    "Website": "N/A",
-    "Response": "True"
-  },
   "242": {
     "Title": "Monty Python and the Holy Grail",
     "Year": "1975",
@@ -9218,46 +8493,7 @@
     "Website": "N/A",
     "Response": "True"
   },
-  "244": {
-    "Title": "Breakdown",
-    "Year": "1997",
-    "Rated": "R",
-    "Released": "02 May 1997",
-    "Runtime": "93 min",
-    "Genre": "Action, Crime, Drama",
-    "Director": "Jonathan Mostow",
-    "Writer": "Jonathan Mostow, Sam Montgomery",
-    "Actors": "Kurt Russell, J.T. Walsh, Kathleen Quinlan",
-    "Plot": "A man searches for his missing wife after his car breaks down in the middle of the desert.",
-    "Language": "English",
-    "Country": "United States",
-    "Awards": "1 win & 2 nominations total",
-    "Poster": "https://m.media-amazon.com/images/M/MV5BMjhiODJmOWQtNGYwZi00NjFmLWFiNTMtZjZhNTJiMTJmNjhjXkEyXkFqcGc@._V1_SX300.jpg",
-    "Ratings": [
-      {
-        "Source": "Internet Movie Database",
-        "Value": "7.0/10"
-      },
-      {
-        "Source": "Rotten Tomatoes",
-        "Value": "83%"
-      },
-      {
-        "Source": "Metacritic",
-        "Value": "74/100"
-      }
-    ],
-    "Metascore": "74",
-    "imdbRating": "7.0",
-    "imdbVotes": "68,554",
-    "imdbID": "tt0118771",
-    "Type": "movie",
-    "DVD": "N/A",
-    "BoxOffice": "$50,159,144",
-    "Production": "N/A",
-    "Website": "N/A",
-    "Response": "True"
-  },
+  "244": null,
   "245": {
     "Title": "The Lord of the Rings: The Fellowship of the Ring",
     "Year": "2001",
@@ -10206,46 +9442,7 @@
     "Website": "N/A",
     "Response": "True"
   },
-  "269": {
-    "Title": "X-Men: First Class",
-    "Year": "2011",
-    "Rated": "PG-13",
-    "Released": "03 Jun 2011",
-    "Runtime": "131 min",
-    "Genre": "Action, Sci-Fi",
-    "Director": "Matthew Vaughn",
-    "Writer": "Ashley E. Miller, Zack Stentz, Jane Goldman",
-    "Actors": "James McAvoy, Michael Fassbender, Jennifer Lawrence",
-    "Plot": "In the 1960s, superpowered humans Charles Xavier and Erik Lensherr work together to find others like them, but Erik's vengeful pursuit of an ambitious mutant who ruined his life causes a schism to divide them.",
-    "Language": "English, German, French, Spanish, Russian",
-    "Country": "United States, United Kingdom",
-    "Awards": "22 wins & 40 nominations total",
-    "Poster": "https://m.media-amazon.com/images/M/MV5BMTg5OTMxNzk4Nl5BMl5BanBnXkFtZTcwOTk1MjAwNQ@@._V1_SX300.jpg",
-    "Ratings": [
-      {
-        "Source": "Internet Movie Database",
-        "Value": "7.7/10"
-      },
-      {
-        "Source": "Rotten Tomatoes",
-        "Value": "86%"
-      },
-      {
-        "Source": "Metacritic",
-        "Value": "65/100"
-      }
-    ],
-    "Metascore": "65",
-    "imdbRating": "7.7",
-    "imdbVotes": "759,828",
-    "imdbID": "tt1270798",
-    "Type": "movie",
-    "DVD": "N/A",
-    "BoxOffice": "$146,408,305",
-    "Production": "N/A",
-    "Website": "N/A",
-    "Response": "True"
-  },
+  "269": null,
   "270": {
     "Title": "GoldenEye",
     "Year": "1995",
@@ -10406,86 +9603,8 @@
     "Website": "N/A",
     "Response": "True"
   },
-  "274": {
-    "Title": "3:10 to Yuma",
-    "Year": "2007",
-    "Rated": "R",
-    "Released": "07 Sep 2007",
-    "Runtime": "122 min",
-    "Genre": "Action, Crime, Drama",
-    "Director": "James Mangold",
-    "Writer": "Halsted Welles, Michael Brandt, Derek Haas",
-    "Actors": "Russell Crowe, Christian Bale, Ben Foster",
-    "Plot": "A small-time solely rancher agrees to hold a captured outlaw who's awaiting a train to go to court in Yuma. A battle of wills ensues as the outlaw tries to psych out the rancher.",
-    "Language": "English, Chinese",
-    "Country": "United States",
-    "Awards": "Nominated for 2 Oscars. 3 wins & 32 nominations total",
-    "Poster": "https://m.media-amazon.com/images/M/MV5BODE0NTcxNTQzNF5BMl5BanBnXkFtZTcwMzczOTIzMw@@._V1_SX300.jpg",
-    "Ratings": [
-      {
-        "Source": "Internet Movie Database",
-        "Value": "7.6/10"
-      },
-      {
-        "Source": "Rotten Tomatoes",
-        "Value": "89%"
-      },
-      {
-        "Source": "Metacritic",
-        "Value": "76/100"
-      }
-    ],
-    "Metascore": "76",
-    "imdbRating": "7.6",
-    "imdbVotes": "349,619",
-    "imdbID": "tt0381849",
-    "Type": "movie",
-    "DVD": "N/A",
-    "BoxOffice": "$53,606,916",
-    "Production": "N/A",
-    "Website": "N/A",
-    "Response": "True"
-  },
-  "275": {
-    "Title": "Crocodile Dundee II",
-    "Year": "1988",
-    "Rated": "PG",
-    "Released": "25 May 1988",
-    "Runtime": "111 min",
-    "Genre": "Action, Adventure, Comedy",
-    "Director": "John Cornell",
-    "Writer": "Paul Hogan, Brett Hogan",
-    "Actors": "Paul Hogan, Linda Kozlowski, John Meillon",
-    "Plot": "Australian outback expert protects his New York love from gangsters who've followed her down under.",
-    "Language": "English, Spanish, Japanese",
-    "Country": "Australia, United States",
-    "Awards": "2 wins total",
-    "Poster": "https://m.media-amazon.com/images/M/MV5BZWE0ZDYzZTktOWJiNi00ZjdmLWI5ZTktY2FhMjdkOTNkYzY3XkEyXkFqcGc@._V1_SX300.jpg",
-    "Ratings": [
-      {
-        "Source": "Internet Movie Database",
-        "Value": "5.7/10"
-      },
-      {
-        "Source": "Rotten Tomatoes",
-        "Value": "9%"
-      },
-      {
-        "Source": "Metacritic",
-        "Value": "41/100"
-      }
-    ],
-    "Metascore": "41",
-    "imdbRating": "5.7",
-    "imdbVotes": "64,122",
-    "imdbID": "tt0092493",
-    "Type": "movie",
-    "DVD": "N/A",
-    "BoxOffice": "$109,306,210",
-    "Production": "N/A",
-    "Website": "N/A",
-    "Response": "True"
-  },
+  "274": null,
+  "275": null,
   "276": {
     "Title": "Dr. Strangelove or: How I Learned to Stop Worrying and Love the Bomb",
     "Year": "1964",
@@ -10526,46 +9645,7 @@
     "Website": "N/A",
     "Response": "True"
   },
-  "277": {
-    "Title": "L.A. Confidential",
-    "Year": "1997",
-    "Rated": "R",
-    "Released": "19 Sep 1997",
-    "Runtime": "138 min",
-    "Genre": "Crime, Drama, Mystery",
-    "Director": "Curtis Hanson",
-    "Writer": "James Ellroy, Brian Helgeland, Curtis Hanson",
-    "Actors": "Kevin Spacey, Russell Crowe, Guy Pearce",
-    "Plot": "As corruption grows in 1950s Los Angeles, three policemen - one strait-laced, one brutal, and one sleazy - investigate a series of murders with their own brand of justice.",
-    "Language": "English",
-    "Country": "United States",
-    "Awards": "Won 2 Oscars. 91 wins & 86 nominations total",
-    "Poster": "https://m.media-amazon.com/images/M/MV5BODdiMjY1OGYtNDk0NC00NGQ1LWI4MDItOTJhMTM0YjE1YTAzXkEyXkFqcGc@._V1_SX300.jpg",
-    "Ratings": [
-      {
-        "Source": "Internet Movie Database",
-        "Value": "8.2/10"
-      },
-      {
-        "Source": "Rotten Tomatoes",
-        "Value": "99%"
-      },
-      {
-        "Source": "Metacritic",
-        "Value": "91/100"
-      }
-    ],
-    "Metascore": "91",
-    "imdbRating": "8.2",
-    "imdbVotes": "655,630",
-    "imdbID": "tt0119488",
-    "Type": "movie",
-    "DVD": "N/A",
-    "BoxOffice": "$64,616,940",
-    "Production": "N/A",
-    "Website": "N/A",
-    "Response": "True"
-  },
+  "277": null,
   "278": {
     "Title": "There Will Be Blood",
     "Year": "2007",
@@ -10647,86 +9727,8 @@
     "Website": "N/A",
     "Response": "True"
   },
-  "281": {
-    "Title": "Flight",
-    "Year": "2012",
-    "Rated": "R",
-    "Released": "02 Nov 2012",
-    "Runtime": "138 min",
-    "Genre": "Drama, Thriller",
-    "Director": "Robert Zemeckis",
-    "Writer": "John Gatins",
-    "Actors": "Denzel Washington, Kelly Reilly, Don Cheadle",
-    "Plot": "Troubling questions arise after airline pilot Whip Whitaker makes a miracle landing after a mid-air catastrophe.",
-    "Language": "English",
-    "Country": "United States, United Arab Emirates",
-    "Awards": "Nominated for 2 Oscars. 15 wins & 45 nominations total",
-    "Poster": "https://m.media-amazon.com/images/M/MV5BMTUxMjI1OTMxNl5BMl5BanBnXkFtZTcwNjc3NTY1OA@@._V1_SX300.jpg",
-    "Ratings": [
-      {
-        "Source": "Internet Movie Database",
-        "Value": "7.3/10"
-      },
-      {
-        "Source": "Rotten Tomatoes",
-        "Value": "77%"
-      },
-      {
-        "Source": "Metacritic",
-        "Value": "76/100"
-      }
-    ],
-    "Metascore": "76",
-    "imdbRating": "7.3",
-    "imdbVotes": "394,854",
-    "imdbID": "tt1907668",
-    "Type": "movie",
-    "DVD": "N/A",
-    "BoxOffice": "$93,772,375",
-    "Production": "N/A",
-    "Website": "N/A",
-    "Response": "True"
-  },
-  "282": {
-    "Title": "The Odd Couple",
-    "Year": "1968",
-    "Rated": "G",
-    "Released": "16 May 1968",
-    "Runtime": "105 min",
-    "Genre": "Comedy",
-    "Director": "Gene Saks",
-    "Writer": "Neil Simon",
-    "Actors": "Jack Lemmon, Walter Matthau, John Fiedler",
-    "Plot": "Fussy Felix Unger moves in with his divorced poker buddy, sloppy Oscar Madison.",
-    "Language": "English",
-    "Country": "United States",
-    "Awards": "Nominated for 2 Oscars. 3 wins & 9 nominations total",
-    "Poster": "https://m.media-amazon.com/images/M/MV5BYjgwOTg4NDQtMWQxNy00OTlkLTkzMGQtZjJmYTAxMWY2MGU5XkEyXkFqcGc@._V1_SX300.jpg",
-    "Ratings": [
-      {
-        "Source": "Internet Movie Database",
-        "Value": "7.6/10"
-      },
-      {
-        "Source": "Rotten Tomatoes",
-        "Value": "97%"
-      },
-      {
-        "Source": "Metacritic",
-        "Value": "86/100"
-      }
-    ],
-    "Metascore": "86",
-    "imdbRating": "7.6",
-    "imdbVotes": "39,588",
-    "imdbID": "tt0063374",
-    "Type": "movie",
-    "DVD": "N/A",
-    "BoxOffice": "$44,527,234",
-    "Production": "N/A",
-    "Website": "N/A",
-    "Response": "True"
-  },
+  "281": null,
+  "282": null,
   "283": {
     "Title": "And the Mud Ship Sails Away...",
     "Year": "2013",
@@ -10831,46 +9833,7 @@
     "Website": "N/A",
     "Response": "True"
   },
-  "286": {
-    "Title": "The Sting",
-    "Year": "1973",
-    "Rated": "PG",
-    "Released": "25 Dec 1973",
-    "Runtime": "129 min",
-    "Genre": "Comedy, Crime, Drama",
-    "Director": "George Roy Hill",
-    "Writer": "David S. Ward",
-    "Actors": "Paul Newman, Robert Redford, Robert Shaw",
-    "Plot": "Two grifters team up to pull off the ultimate con.",
-    "Language": "English",
-    "Country": "United States",
-    "Awards": "Won 7 Oscars. 18 wins & 6 nominations total",
-    "Poster": "https://m.media-amazon.com/images/M/MV5BZGI4OTk4MDMtYmQ1Ni00YTUzLTkyYTktZGUwMjMyN2M4NjQ5XkEyXkFqcGc@._V1_SX300.jpg",
-    "Ratings": [
-      {
-        "Source": "Internet Movie Database",
-        "Value": "8.2/10"
-      },
-      {
-        "Source": "Rotten Tomatoes",
-        "Value": "93%"
-      },
-      {
-        "Source": "Metacritic",
-        "Value": "83/100"
-      }
-    ],
-    "Metascore": "83",
-    "imdbRating": "8.2",
-    "imdbVotes": "298,899",
-    "imdbID": "tt0070735",
-    "Type": "movie",
-    "DVD": "N/A",
-    "BoxOffice": "$156,000,000",
-    "Production": "N/A",
-    "Website": "N/A",
-    "Response": "True"
-  },
+  "286": null,
   "287": {
     "Title": "Sunset Boulevard",
     "Year": "1950",
@@ -10911,46 +9874,7 @@
     "Website": "N/A",
     "Response": "True"
   },
-  "288": {
-    "Title": "Charade",
-    "Year": "1963",
-    "Rated": "Approved",
-    "Released": "05 Dec 1963",
-    "Runtime": "113 min",
-    "Genre": "Comedy, Mystery, Romance",
-    "Director": "Stanley Donen",
-    "Writer": "Peter Stone, Marc Behm",
-    "Actors": "Cary Grant, Audrey Hepburn, Walter Matthau",
-    "Plot": "Romance and intrigue ensue in Paris as a woman is pursued by several men who want to get their hands on a fortune her murdered husband had stolen. She soon loses trust in those who claim they want to help her.",
-    "Language": "English, French, German, Italian, Spanish",
-    "Country": "United States",
-    "Awards": "Nominated for 1 Oscar. 4 wins & 9 nominations total",
-    "Poster": "https://m.media-amazon.com/images/M/MV5BM2FiMmFkNWItNzNmOS00MWQ3LWExNTUtZWJkOTBmNzg0ZWRjXkEyXkFqcGc@._V1_SX300.jpg",
-    "Ratings": [
-      {
-        "Source": "Internet Movie Database",
-        "Value": "7.8/10"
-      },
-      {
-        "Source": "Rotten Tomatoes",
-        "Value": "95%"
-      },
-      {
-        "Source": "Metacritic",
-        "Value": "83/100"
-      }
-    ],
-    "Metascore": "83",
-    "imdbRating": "7.8",
-    "imdbVotes": "92,692",
-    "imdbID": "tt0056923",
-    "Type": "movie",
-    "DVD": "N/A",
-    "BoxOffice": "N/A",
-    "Production": "N/A",
-    "Website": "N/A",
-    "Response": "True"
-  },
+  "288": null,
   "289": {
     "Title": "La La Land",
     "Year": "2016",

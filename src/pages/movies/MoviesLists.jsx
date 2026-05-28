@@ -1,40 +1,27 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
+import FilmStill from '../../components/FilmStill'
 
 // ── list definitions ──────────────────────────────────────────────────────────
 
 const LISTS = [
-  { key: 'afi_top100',       label: 'AFI Top 100',       published: '2007',             ranked: true  },
-  { key: 'afi_comedies',     label: 'AFI Comedies',      published: '2000',             ranked: true  },
-  { key: 'imdb_top250',      label: 'IMDB Top 250',      published: 'December 31, 2025',ranked: true  },
-  { key: 'nyt_2000s',        label: 'NYT Best of 2000s', published: 'June 23, 2025',    ranked: true  },
-  { key: 'sight_sound',      label: 'Sight & Sound',     published: '2022',             ranked: true  },
-  { key: 'variety_comedies', label: 'Variety Comedies',  published: '2026',             ranked: true  },
-  { key: 'nfr',              label: 'National Film Registry', published: 'January 29, 2026', ranked: false },
+  { key: 'afi_top100',       label: 'AFI Top 100',            published: '2007',              ranked: true,  hue: 14  },
+  { key: 'afi_comedies',     label: 'AFI Comedies',           published: '2000',              ranked: true,  hue: 44  },
+  { key: 'imdb_top250',      label: 'IMDB Top 250',           published: 'December 31, 2025', ranked: true,  hue: 48  },
+  { key: 'nyt_2000s',        label: 'NYT Best of 2000s',      published: 'June 23, 2025',     ranked: true,  hue: 8   },
+  { key: 'sight_sound',      label: 'Sight & Sound',          published: '2022',              ranked: true,  hue: 220 },
+  { key: 'variety_comedies', label: 'Variety Comedies',       published: '2026',              ranked: true,  hue: 280 },
+  { key: 'nfr',              label: 'National Film Registry', published: 'January 29, 2026',  ranked: false, hue: 200 },
 ]
 
 const EVENTS = [2001, 2007, 2016, 2026]
+const DC = '#5B6CFF'
+const HC = '#E0A22F'
+const CC = '#00E0D9'   // cinema-500 — Combined
 
 // ── sub-components ────────────────────────────────────────────────────────────
 
-function PosterThumb({ url, title }) {
-  const [err, setErr] = useState(false)
-  if (!url || err) {
-    return (
-      <div className="w-9 h-12 flex-shrink-0 rounded flex items-center justify-center
-                      bg-stone-200 dark:bg-night-600 text-gray-400 text-lg">
-        🎬
-      </div>
-    )
-  }
-  return (
-    <img src={url} alt={title} onError={() => setErr(true)}
-      className="w-9 h-12 object-cover rounded flex-shrink-0 shadow-sm" />
-  )
-}
-
-// rankMap is a { year: rank } object for a specific film + list type
 function EventDots({ rankMap = {} }) {
   return (
     <div className="flex gap-1.5 items-center justify-center">
@@ -45,8 +32,8 @@ function EventDots({ rankMap = {} }) {
           <span
             key={yr}
             title={on ? `#${rank} in ${yr}` : `Not on ${yr} list`}
-            className={`w-2 h-2 rounded-full flex-shrink-0 transition-colors ${
-              on ? 'bg-film-500' : 'bg-gray-200 dark:bg-gray-700'
+            className={`w-1.5 h-1.5 rounded-full flex-shrink-0 transition-colors ${
+              on ? 'bg-film-500' : 'bg-night-600'
             }`}
           />
         )
@@ -60,21 +47,19 @@ function EventDots({ rankMap = {} }) {
 export default function MoviesLists() {
   const [searchParams, setSearchParams] = useSearchParams()
   const activeKey = searchParams.get('list') || 'afi_top100'
+  const activeList = LISTS.find(l => l.key === activeKey) || LISTS[0]
 
-  // All-list state (fetched once)
-  const [combMap, setCombMap]         = useState({})
-  const [indivMap, setIndivMap]       = useState({}) // { filmId: { dustin: { yr: rank }, matt: { yr: rank } } }
+  const [combMap,     setCombMap]     = useState({})
+  const [indivMap,    setIndivMap]    = useState({})
   const [combLoading, setCombLoading] = useState(true)
 
-  // Per-tab state (re-fetched on tab change)
-  const [entries, setEntries]       = useState([])
+  const [entries,    setEntries]    = useState([])
   const [tabLoading, setTabLoading] = useState(true)
-  const [error, setError]           = useState(null)
+  const [error,      setError]      = useState(null)
 
-  const [search, setSearch]       = useState('')
-  const [inDbOnly, setInDbOnly]   = useState(false)
+  const [search,   setSearch]   = useState('')
+  const [inDbOnly, setInDbOnly] = useState(false)
 
-  // ── fetch combined + individual rankings once ────────────────────────────
   useEffect(() => {
     async function fetchRankings() {
       const [
@@ -88,10 +73,8 @@ export default function MoviesLists() {
         supabase.from('ranking_events').select('id, year'),
         supabase.from('profiles').select('id, username'),
       ])
-
       const eventYearMap = {}
       eventsData?.forEach(e => { eventYearMap[e.id] = e.year })
-
       const profileMap = {}
       profData?.forEach(p => { profileMap[p.id] = p.username })
 
@@ -100,7 +83,6 @@ export default function MoviesLists() {
         if (!cm[r.film_id]) cm[r.film_id] = {}
         cm[r.film_id][eventYearMap[r.event_id]] = r.combined_rank
       })
-
       const im = {}
       indivData?.forEach(r => {
         const username = profileMap[r.user_id]
@@ -110,19 +92,13 @@ export default function MoviesLists() {
         im[r.film_id][username][eventYearMap[r.event_id]] = r.rank
       })
 
-      setCombMap(cm)
-      setIndivMap(im)
-      setCombLoading(false)
+      setCombMap(cm); setIndivMap(im); setCombLoading(false)
     }
     fetchRankings()
   }, [])
 
-  // ── fetch entries for active tab ─────────────────────────────────────────
   useEffect(() => {
-    setTabLoading(true)
-    setError(null)
-    setEntries([])
-
+    setTabLoading(true); setError(null); setEntries([])
     async function fetchEntries() {
       const listConfig = LISTS.find(l => l.key === activeKey)
       const { data, error: err } = await supabase
@@ -133,23 +109,16 @@ export default function MoviesLists() {
         `)
         .eq('list_name', activeKey)
         .order('rank', { ascending: true, nullsFirst: false })
-
       if (err) { setError(err.message); setTabLoading(false); return }
-
-      // For unranked lists, sort alphabetically by title
       const sorted = listConfig?.ranked
         ? (data || [])
         : (data || []).sort((a, b) =>
-            (a.films?.title || a.title).localeCompare(b.films?.title || b.title)
-          )
-
-      setEntries(sorted)
-      setTabLoading(false)
+            (a.films?.title || a.title).localeCompare(b.films?.title || b.title))
+      setEntries(sorted); setTabLoading(false)
     }
     fetchEntries()
   }, [activeKey])
 
-  // ── search filter ─────────────────────────────────────────────────────────
   const displayEntries = useMemo(() => {
     let result = entries
     if (inDbOnly) result = result.filter(e => e.film_id != null)
@@ -162,236 +131,211 @@ export default function MoviesLists() {
     })
   }, [entries, search, inDbOnly])
 
-  // ── header counts ─────────────────────────────────────────────────────────
   const inDbCount  = useMemo(() => entries.filter(e => e.film_id != null).length, [entries])
   const totalCount = entries.length
-
   const loading = combLoading || tabLoading
 
-  // ── render ────────────────────────────────────────────────────────────────
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-2">
-        <Link to="/movies"
-          className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors text-sm">
-          ← Movies
-        </Link>
-        <span className="text-gray-300 dark:text-gray-700">/</span>
-        <h1 className="page-title text-2xl">External Lists</h1>
-      </div>
-      <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">
-        Browse acclaimed external rankings and see how they overlap with our lists
-      </p>
-
-      {/* Tab bar */}
-      <div className="flex flex-wrap gap-1 mb-6 p-1 bg-stone-100 dark:bg-night-800 rounded-xl w-fit">
-        {LISTS.map(l => (
-          <button
-            key={l.key}
-            onClick={() => { setSearchParams({ list: l.key }); setSearch(''); setInDbOnly(false) }}
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-              l.key === activeKey
-                ? 'bg-white dark:bg-night-600 text-gray-900 dark:text-white shadow-sm'
-                : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
-            }`}
-          >
-            {l.label}
-          </button>
-        ))}
-      </div>
-
-      {/* List header + search */}
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-        <div>
-          <h2 className="section-title text-lg mb-0">
-            {LISTS.find(l => l.key === activeKey)?.label}
-          </h2>
-          <p className="text-xs text-gray-400 dark:text-gray-600 mb-0.5">
-            Published {LISTS.find(l => l.key === activeKey)?.published}
-          </p>
-          {!loading && (
-            <p className="text-sm text-gray-400">
-              {search
-                ? `${displayEntries.length} of ${totalCount} matching "${search}"`
-                : (
-                  <>
-                    {totalCount} film{totalCount !== 1 ? 's' : ''}
-                    <span className="mx-1.5 text-gray-300 dark:text-gray-700">·</span>
-                    <span className="text-film-500 dark:text-film-400">{inDbCount} in our database</span>
-                    {totalCount - inDbCount > 0 && (
-                      <span className="text-gray-400 ml-1">
-                        · {totalCount - inDbCount} not yet added
-                      </span>
-                    )}
-                  </>
-                )
-              }
-            </p>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setInDbOnly(v => !v)}
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-all flex-shrink-0 ${
-              inDbOnly
-                ? 'bg-film-600 text-white border-film-600'
-                : 'border-stone-300 text-gray-500 hover:border-gray-400 dark:border-night-600 dark:text-gray-400 dark:hover:border-gray-500'
-            }`}
-          >
-            In our DB
-          </button>
-          <div className="relative">
-            <input
-              type="text"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="Filter by title or director…"
-              className="input text-sm py-1.5 pl-3 pr-8 w-52"
-            />
-            {search && (
-              <button
-                onClick={() => setSearch('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400
-                           hover:text-gray-600 dark:hover:text-gray-300 text-xs"
-              >
-                ✕
-              </button>
-            )}
+    <div>
+      {/* ── HERO ───────────────────────────────────────────────────────────── */}
+      <FilmStill
+        title={`Hermz and D External List ${activeList.label}`}
+        hue={activeList.hue}
+        mood="cool"
+        className="w-full h-[300px] sm:h-[340px]"
+      >
+        <div className="absolute inset-0 scrim-bottom" />
+        <div className="absolute inset-x-0 bottom-0 px-6 sm:px-10 pb-7 z-10">
+          <div className="flex items-center gap-3 mb-3">
+            <Link to="/movies" className="font-mono text-[11px] tracking-kicker text-film-400 hover:text-film-300 transition-colors">
+              ← FILMS
+            </Link>
+            <span className="text-gray-700">/</span>
+            <span className="font-mono text-[11px] tracking-kicker text-white uppercase">External Lists</span>
           </div>
+          <h1 className="font-display text-5xl sm:text-6xl text-white tracking-wide leading-none">
+            CRITICS' CANONS
+          </h1>
+          <p className="font-serif italic text-base text-gray-400 mt-3">
+            Acclaimed external rankings and how they overlap with ours.
+          </p>
         </div>
-      </div>
+      </FilmStill>
 
-      {/* Dot legend */}
-      <div className="flex items-center gap-2 mb-4 text-xs text-gray-400">
-        <div className="flex gap-1.5">
-          {EVENTS.map(yr => (
-            <span key={yr} className="w-2 h-2 rounded-full bg-film-500 inline-block" />
+      {/* ── BODY ──────────────────────────────────────────────────────────── */}
+      <div className="max-w-7xl mx-auto px-6 sm:px-10 py-8">
+
+        {/* Tab bar */}
+        <div className="flex flex-wrap gap-1.5 mb-6">
+          {LISTS.map(l => (
+            <button
+              key={l.key}
+              onClick={() => { setSearchParams({ list: l.key }); setSearch(''); setInDbOnly(false) }}
+              className={l.key === activeKey ? 'pill-active' : 'pill'}
+            >
+              {l.label}
+            </button>
           ))}
         </div>
-        <span>Each dot = one ranking event: {EVENTS.map(yr => `'${String(yr).slice(2)}`).join(' · ')}</span>
-      </div>
 
-      {/* Loading / error */}
-      {loading && (
-        <div className="py-16 flex items-center justify-center">
-          <span className="text-gray-400 animate-pulse">Loading…</span>
-        </div>
-      )}
-      {error && (
-        <div className="py-8 text-center text-red-400 text-sm">Error: {error}</div>
-      )}
-
-      {/* Table */}
-      {!loading && !error && (
-        <div className="card overflow-hidden p-0">
-          {displayEntries.length === 0 ? (
-            <div className="py-12 text-center text-gray-400 text-sm">
-              {search ? `No films match "${search}".` : 'No entries for this list yet.'}
-            </div>
-          ) : (
-            <table className="w-full">
-              <thead>
-                <tr>
-                  <th className="table-header w-12 text-center">#</th>
-                  <th className="table-header">Film</th>
-                  <th className="table-header text-center w-16">Acclaim</th>
-                  <th className="table-header text-center w-20">Combined</th>
-                  <th className="table-header text-center w-20" style={{ color: '#6170f5' }}>Dust</th>
-                  <th className="table-header text-center w-20" style={{ color: '#d97706' }}>Hermz</th>
-                </tr>
-              </thead>
-              <tbody>
-                {displayEntries.map((entry, i) => {
-                  const film    = entry.films   // null if not in our DB
-                  const inDb    = film != null
-                  const title   = film?.title    || entry.title
-                  const year    = film?.release_year || entry.year
-                  const director = film?.director || null
-
-                  return (
-                    <tr key={entry.id}
-                      className={`table-row-hover ${!inDb ? 'opacity-70' : ''}`}
-                    >
-                      {/* Rank */}
-                      <td className="table-cell text-center">
-                        <span className="font-display font-bold text-gray-400 dark:text-gray-500 tabular-nums">
-                          {entry.rank ?? i + 1}
-                        </span>
-                      </td>
-
-                      {/* Film info */}
-                      <td className="table-cell">
-                        <div className="flex items-center gap-3">
-                          <PosterThumb url={inDb ? film.poster_url : null} title={title} />
-                          <div className="min-w-0">
-                            {inDb ? (
-                              <Link
-                                to={`/movies/${film.id}`}
-                                className="text-sm font-semibold text-gray-900 dark:text-white
-                                           hover:text-film-600 dark:hover:text-film-400
-                                           transition-colors leading-snug block truncate"
-                              >
-                                {title}
-                              </Link>
-                            ) : (
-                              <span className="text-sm font-semibold text-gray-700 dark:text-gray-300 leading-snug block truncate">
-                                {title}
-                              </span>
-                            )}
-                            <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                              <span className="text-xs text-gray-500 dark:text-gray-400">
-                                {year}
-                                {director && (
-                                  <> · {director.split(',')[0].trim()}</>
-                                )}
-                              </span>
-                              {!inDb && (
-                                <span className="text-xs px-1.5 py-0.5 rounded-full
-                                                 bg-stone-200 dark:bg-night-700
-                                                 text-gray-500 dark:text-gray-400
-                                                 border border-stone-300 dark:border-night-600
-                                                 leading-none">
-                                  Not in our database
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* Acclaim */}
-                      <td className="table-cell text-center">
-                        {inDb && film.acclaim_score != null ? (
-                          <span className="font-bold text-gold-600 dark:text-gold-400 tabular-nums">
-                            {film.acclaim_score}
-                          </span>
-                        ) : (
-                          <span className="text-xs text-gray-300 dark:text-gray-700">—</span>
-                        )}
-                      </td>
-
-                      {/* Combined / Dust / Hermz dots */}
-                      <td className="table-cell">
-                        <EventDots rankMap={inDb ? (combMap[film.id] || {}) : {}} />
-                      </td>
-                      <td className="table-cell">
-                        <EventDots rankMap={inDb ? (indivMap[film.id]?.dustin || {}) : {}} />
-                      </td>
-                      <td className="table-cell">
-                        <EventDots rankMap={inDb ? (indivMap[film.id]?.matt || {}) : {}} />
-                      </td>
-
-                    </tr>
+        {/* List header + search */}
+        <div className="flex flex-wrap items-end justify-between gap-3 mb-5">
+          <div>
+            <h2 className="font-display text-3xl text-white tracking-wide leading-none">
+              {activeList.label.toUpperCase()}
+            </h2>
+            <p className="font-mono text-[10px] tracking-kicker text-gray-500 mt-2 uppercase">
+              Published {activeList.published}
+            </p>
+            {!loading && (
+              <p className="font-sans text-sm text-gray-400 mt-1.5">
+                {search
+                  ? `${displayEntries.length} of ${totalCount} matching "${search}"`
+                  : (
+                    <>
+                      {totalCount} film{totalCount !== 1 ? 's' : ''}
+                      <span className="mx-1.5 text-gray-700">·</span>
+                      <span className="text-film-400">{inDbCount} in our database</span>
+                      {totalCount - inDbCount > 0 && (
+                        <span className="text-gray-500 ml-1.5">· {totalCount - inDbCount} not yet added</span>
+                      )}
+                    </>
                   )
-                })}
-              </tbody>
-            </table>
-          )}
+                }
+              </p>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setInDbOnly(v => !v)}
+              className={inDbOnly ? 'pill-film' : 'pill'}
+            >
+              In our DB
+            </button>
+            <div className="relative">
+              <input
+                type="text"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Filter by title or director…"
+                className="input text-sm py-1.5 pl-3 pr-8 w-56"
+              />
+              {search && (
+                <button onClick={() => setSearch('')}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 text-xs">
+                  ✕
+                </button>
+              )}
+            </div>
+          </div>
         </div>
-      )}
 
+        {/* Dot legend */}
+        <div className="flex items-center gap-2 mb-4 font-mono text-[10px] tracking-kicker text-gray-500 uppercase">
+          <span className="flex gap-1.5">
+            {EVENTS.map(yr => <span key={yr} className="w-1.5 h-1.5 rounded-full bg-film-500 inline-block" />)}
+          </span>
+          Each dot = one ranking event · {EVENTS.map(yr => `'${String(yr).slice(2)}`).join(' · ')}
+        </div>
+
+        {/* Loading / error */}
+        {loading && (
+          <div className="py-16 flex items-center justify-center">
+            <span className="font-mono text-[11px] tracking-kicker text-gray-500 animate-pulse">LOADING LIST…</span>
+          </div>
+        )}
+        {error && <div className="py-8 text-center text-red-400 text-sm">Error: {error}</div>}
+
+        {/* Table */}
+        {!loading && !error && (
+          <div className="card p-0 overflow-hidden">
+            {displayEntries.length === 0 ? (
+              <div className="py-12 text-center text-gray-500 text-sm">
+                {search ? `No films match "${search}".` : 'No entries for this list yet.'}
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[480px]">
+                  <thead>
+                    <tr>
+                      <th className="table-header w-12 text-center">#</th>
+                      <th className="table-header">Film</th>
+                      <th className="table-header text-center w-16">Acclaim</th>
+                      <th className="table-header text-center w-20" style={{ color: CC }}>Combined</th>
+                      <th className="table-header text-center w-20" style={{ color: DC }}>Dust</th>
+                      <th className="table-header text-center w-20" style={{ color: HC }}>Hermz</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {displayEntries.map((entry, i) => {
+                      const film    = entry.films
+                      const inDb    = film != null
+                      const title   = film?.title || entry.title
+                      const year    = film?.release_year || entry.year
+                      const director = film?.director || null
+                      return (
+                        <tr key={entry.id} className={`table-row-hover ${!inDb ? 'opacity-60' : ''}`}>
+                          <td className="table-cell text-center">
+                            <span className="font-display text-xl text-gray-500 tracking-wide tabular-nums leading-none">
+                              {entry.rank ?? i + 1}
+                            </span>
+                          </td>
+                          <td className="table-cell">
+                            <div className="flex items-center gap-3">
+                              <FilmStill src={inDb ? film.poster_url : null} title={title}
+                                         className="w-10 h-14 rounded border border-white/10 flex-shrink-0" />
+                              <div className="min-w-0">
+                                {inDb ? (
+                                  <Link to={`/movies/${film.id}`}
+                                    className="text-sm font-semibold text-white hover:text-film-400 transition-colors leading-snug block truncate">
+                                    {title}
+                                  </Link>
+                                ) : (
+                                  <span className="text-sm font-semibold text-gray-300 leading-snug block truncate">{title}</span>
+                                )}
+                                <div className="flex items-center gap-2 mt-1 flex-wrap">
+                                  <span className="font-mono text-[10px] tracking-kicker text-gray-500 uppercase">
+                                    {year}
+                                    {director && <> · {director.split(',')[0].trim()}</>}
+                                  </span>
+                                  {!inDb && (
+                                    <span className="font-mono text-[9px] tracking-cinema px-1.5 py-px rounded
+                                                     bg-night-700 text-gray-400 border border-night-600 uppercase">
+                                      Not in DB
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="table-cell text-center">
+                            {inDb && film.acclaim_score != null ? (
+                              <span className="font-display text-xl text-gold-400 tracking-wide tabular-nums leading-none">
+                                {film.acclaim_score}
+                              </span>
+                            ) : (
+                              <span className="font-mono text-[10px] text-gray-700">—</span>
+                            )}
+                          </td>
+                          <td className="table-cell">
+                            <EventDots rankMap={inDb ? (combMap[film.id] || {}) : {}} />
+                          </td>
+                          <td className="table-cell">
+                            <EventDots rankMap={inDb ? (indivMap[film.id]?.dustin || {}) : {}} />
+                          </td>
+                          <td className="table-cell">
+                            <EventDots rankMap={inDb ? (indivMap[film.id]?.matt || {}) : {}} />
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

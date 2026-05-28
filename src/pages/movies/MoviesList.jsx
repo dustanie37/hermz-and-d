@@ -1,85 +1,75 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Link, useSearchParams, useLocation } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
+import FilmStill from '../../components/FilmStill'
 
-// ── constants ─────────────────────────────────────────────────────────────────
-
-const EVENTS_ORDER = [2001, 2007, 2016, 2026]
-
-const HC = '#d97706'  // gold-600  (Hermz / Matt)
-const DC = '#6170f5'  // film-500  (Dust)
-
-// ── helpers ───────────────────────────────────────────────────────────────────
-
-function PosterThumb({ url, title }) {
-  const [err, setErr] = useState(false)
-  if (!url || err) {
-    return (
-      <div className="w-9 h-12 flex items-center justify-center rounded
-                      bg-stone-200 dark:bg-night-600 text-gray-400
-                      flex-shrink-0 text-lg">
-        🎬
-      </div>
-    )
-  }
+// ── view-mode icons ─────────────────────────────────────────────────────────
+function ListViewIcon() {
   return (
-    <img
-      src={url}
-      alt={title}
-      onError={() => setErr(true)}
-      className="w-9 h-12 object-cover rounded flex-shrink-0 shadow-sm"
-    />
+    <svg viewBox="0 0 18 18" fill="currentColor" className="w-4 h-4">
+      <rect x="2" y="3" width="14" height="2" rx="1" />
+      <rect x="2" y="8" width="14" height="2" rx="1" />
+      <rect x="2" y="13" width="14" height="2" rx="1" />
+    </svg>
+  )
+}
+function GridViewIcon() {
+  return (
+    <svg viewBox="0 0 18 18" fill="currentColor" className="w-4 h-4">
+      <rect x="2" y="2" width="6" height="6" rx="1.5" />
+      <rect x="10" y="2" width="6" height="6" rx="1.5" />
+      <rect x="2" y="10" width="6" height="6" rx="1.5" />
+      <rect x="10" y="10" width="6" height="6" rx="1.5" />
+    </svg>
   )
 }
 
-// One "vs YEAR" cell: shows prior rank + movement arrow
+const EVENTS_ORDER = [2001, 2007, 2016, 2026]
+const HC = '#E0A22F'   // gold-500   — Hermz
+const DC = '#5B6CFF'   // film-500   — Dust
+const CC = '#00E0D9'   // cinema-500 — Combined
+
+// One prior-year cell — shows prior rank + movement
 function PriorYearCell({ currentRank, filmId, priorMap }) {
   if (!priorMap) return <td className="table-cell hidden md:table-cell" />
-
   const prior = priorMap[filmId]
-
   if (prior === undefined || prior === null) {
     return (
       <td className="table-cell text-center hidden md:table-cell">
-        <span className="text-xs text-gray-400 dark:text-gray-600 italic">NR</span>
+        <span className="text-xs text-gray-600 italic">NR</span>
       </td>
     )
   }
-
-  const diff = prior - currentRank  // positive = rank improved (number dropped)
+  const diff = prior - currentRank
   return (
     <td className="table-cell text-center hidden md:table-cell">
-      <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">#{prior}</span>
-      {diff > 0 && <div className="text-xs rank-up">↑{diff}</div>}
-      {diff < 0 && <div className="text-xs rank-down">↓{Math.abs(diff)}</div>}
-      {diff === 0 && <div className="text-xs rank-same">●</div>}
+      <span className="font-mono text-base font-semibold text-white">#{prior}</span>
+      {diff > 0 && <div className="text-sm rank-up font-mono">↑{diff}</div>}
+      {diff < 0 && <div className="text-sm rank-down font-mono">↓{Math.abs(diff)}</div>}
+      {diff === 0 && <div className="text-sm rank-same font-mono">●</div>}
     </td>
   )
 }
 
-// ── main component ────────────────────────────────────────────────────────────
-
+// ── main component ──────────────────────────────────────────────────────────
 export default function MoviesList() {
   const [searchParams, setSearchParams] = useSearchParams()
   const location = useLocation()
 
-  // URL-driven state
   const eventYear = Number(searchParams.get('event')) || 2026
-  const view      = searchParams.get('view') || 'combined'  // 'combined'|'dustin'|'matt'
+  const view      = searchParams.get('view') || 'combined'
 
-  // Data state
-  const [events, setEvents]           = useState([])
-  const [profiles, setProfiles]       = useState({})
-  const [rows, setRows]               = useState([])
-  const [allPriorMaps, setAllPriorMaps] = useState({}) // { year: { film_id: rank } }
-  const [loading, setLoading]         = useState(true)
-  const [error, setError]             = useState(null)
+  const [events,      setEvents]      = useState([])
+  const [profiles,    setProfiles]    = useState({})
+  const [rows,        setRows]        = useState([])
+  const [allPriorMaps, setAllPriorMaps] = useState({})
+  const [loading,     setLoading]     = useState(true)
+  const [error,       setError]       = useState(null)
+  const [sortBy,      setSortBy]      = useState('rank')
+  const [searchTerm,  setSearchTerm]  = useState('')
+  const [displayMode, setDisplayMode] = useState('list')
 
-  // Sort + search state
-  const [sortBy, setSortBy]         = useState('rank')
-  const [searchTerm, setSearchTerm] = useState('')
-
-  // ── fetch ranking events + profiles once ──────────────────────────────────
+  // ── meta load ────────────────────────────────────────────────────────────
   useEffect(() => {
     async function loadMeta() {
       const [{ data: evData }, { data: profData }] = await Promise.all([
@@ -94,30 +84,20 @@ export default function MoviesList() {
     loadMeta()
   }, [])
 
-  // ── fetch list data when event/view/profiles/events changes ───────────────
+  // ── list data load ───────────────────────────────────────────────────────
   useEffect(() => {
     if (Object.keys(profiles).length === 0 || events.length === 0) return
-
     const currentEvent = events.find(e => e.year === eventYear)
     if (!currentEvent) return
-
-    // All events that come before this one (ascending)
     const priorEventYears = EVENTS_ORDER.filter(y => y < eventYear)
-    const priorEvents = priorEventYears
-      .map(py => events.find(e => e.year === py))
-      .filter(Boolean)
+    const priorEvents = priorEventYears.map(py => events.find(e => e.year === py)).filter(Boolean)
 
-    setLoading(true)
-    setError(null)
-    setRows([])
-    setAllPriorMaps({})
+    setLoading(true); setError(null); setRows([]); setAllPriorMaps({})
 
     async function fetchData() {
       try {
         let mainRows = []
-
         if (view === 'combined') {
-          // ── Combined list ──
           const { data, error: err } = await supabase
             .from('combined_rankings')
             .select(`
@@ -128,26 +108,15 @@ export default function MoviesList() {
             `)
             .eq('event_id', currentEvent.id)
             .order('combined_rank')
-
           if (err) throw err
-
           mainRows = (data || []).map(r => ({
-            rank:        r.combined_rank,
-            dustinRank:  r.dustin_rank,
-            mattRank:    r.matt_rank,
-            score:       r.total_score,
-            dustinScore: r.dustin_score,
-            mattScore:   r.matt_score,
-            film:        r.films,
+            rank: r.combined_rank, dustinRank: r.dustin_rank, mattRank: r.matt_rank,
+            score: r.total_score, dustinScore: r.dustin_score, mattScore: r.matt_score, film: r.films,
           }))
-
-          // Fetch all prior combined rank maps in parallel
           const priorResults = await Promise.all(
             priorEvents.map(async pe => {
-              const { data: pd } = await supabase
-                .from('combined_rankings')
-                .select('film_id, combined_rank')
-                .eq('event_id', pe.id)
+              const { data: pd } = await supabase.from('combined_rankings')
+                .select('film_id, combined_rank').eq('event_id', pe.id)
               const pm = {}
               pd?.forEach(r => { pm[r.film_id] = r.combined_rank })
               return { year: pe.year, map: pm }
@@ -156,13 +125,9 @@ export default function MoviesList() {
           const maps = {}
           priorResults.forEach(r => { maps[r.year] = r.map })
           setAllPriorMaps(maps)
-
         } else {
-          // ── Individual list (dustin or matt) ──
-          const username = view
-          const userId   = profiles[username]
-          if (!userId) throw new Error(`Profile not found for ${username}`)
-
+          const userId = profiles[view]
+          if (!userId) throw new Error(`Profile not found for ${view}`)
           const { data, error: err } = await supabase
             .from('individual_rankings')
             .select(`
@@ -172,24 +137,14 @@ export default function MoviesList() {
             .eq('event_id', currentEvent.id)
             .eq('user_id', userId)
             .order('rank')
-
           if (err) throw err
-
           mainRows = (data || []).map(r => ({
-            rank:   r.rank,
-            score:  r.total_score,
-            impact: r.score_personal_impact,
-            film:   r.films,
+            rank: r.rank, score: r.total_score, impact: r.score_personal_impact, film: r.films,
           }))
-
-          // Fetch all prior individual rank maps in parallel
           const priorResults = await Promise.all(
             priorEvents.map(async pe => {
-              const { data: pd } = await supabase
-                .from('individual_rankings')
-                .select('film_id, rank')
-                .eq('event_id', pe.id)
-                .eq('user_id', userId)
+              const { data: pd } = await supabase.from('individual_rankings')
+                .select('film_id, rank').eq('event_id', pe.id).eq('user_id', userId)
               const pm = {}
               pd?.forEach(r => { pm[r.film_id] = r.rank })
               return { year: pe.year, map: pm }
@@ -199,7 +154,6 @@ export default function MoviesList() {
           priorResults.forEach(r => { maps[r.year] = r.map })
           setAllPriorMaps(maps)
         }
-
         setRows(mainRows)
       } catch (e) {
         setError(e.message)
@@ -207,35 +161,22 @@ export default function MoviesList() {
         setLoading(false)
       }
     }
-
     fetchData()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [eventYear, view, profiles, events])
 
-  // ── sort helpers ───────────────────────────────────────────────────────────
-  function sortTitle(t) {
-    return (t || '').replace(/^(the|a|an)\s+/i, '').trim()
-  }
-
-  // ── sorted rows ────────────────────────────────────────────────────────────
+  // ── sort + search derived ───────────────────────────────────────────────
+  function sortTitle(t) { return (t || '').replace(/^(the|a|an)\s+/i, '').trim() }
   const displayRows = useMemo(() => {
-    if (sortBy === 'score') {
-      return [...rows].sort((a, b) => (b.score || 0) - (a.score || 0))
-    } else if (sortBy === 'year') {
-      return [...rows].sort((a, b) => (a.film?.release_year || 0) - (b.film?.release_year || 0))
-    } else if (sortBy === 'year_desc') {
-      return [...rows].sort((a, b) => (b.film?.release_year || 0) - (a.film?.release_year || 0))
-    } else if (sortBy === 'title') {
-      return [...rows].sort((a, b) => sortTitle(a.film?.title).localeCompare(sortTitle(b.film?.title)))
-    } else if (sortBy === 'dustin_rank' && view === 'combined') {
-      return [...rows].sort((a, b) => (a.dustinRank || 999) - (b.dustinRank || 999))
-    } else if (sortBy === 'matt_rank' && view === 'combined') {
-      return [...rows].sort((a, b) => (a.mattRank || 999) - (b.mattRank || 999))
-    }
-    return rows  // default: rank order
+    if (sortBy === 'score')       return [...rows].sort((a,b) => (b.score||0) - (a.score||0))
+    if (sortBy === 'year')        return [...rows].sort((a,b) => (a.film?.release_year||0) - (b.film?.release_year||0))
+    if (sortBy === 'year_desc')   return [...rows].sort((a,b) => (b.film?.release_year||0) - (a.film?.release_year||0))
+    if (sortBy === 'title')       return [...rows].sort((a,b) => sortTitle(a.film?.title).localeCompare(sortTitle(b.film?.title)))
+    if (sortBy === 'dustin_rank' && view === 'combined') return [...rows].sort((a,b) => (a.dustinRank||999) - (b.dustinRank||999))
+    if (sortBy === 'matt_rank'   && view === 'combined') return [...rows].sort((a,b) => (a.mattRank||999) - (b.mattRank||999))
+    return rows
   }, [rows, sortBy, view])
 
-  // ── search filter (applied after sort) ───────────────────────────────────
   const filteredRows = useMemo(() => {
     const term = searchTerm.trim().toLowerCase()
     if (!term) return displayRows
@@ -244,29 +185,18 @@ export default function MoviesList() {
       if (!f) return false
       if (f.title?.toLowerCase().includes(term)) return true
       if (f.director?.toLowerCase().includes(term)) return true
-      // Strip parentheticals from writer string before matching
       if (f.writer?.replace(/\s*\(.*?\)/g, '').toLowerCase().includes(term)) return true
-      for (let i = 1; i <= 5; i++) {
-        if (f[`actor_${i}`]?.toLowerCase().includes(term)) return true
-      }
+      for (let i = 1; i <= 5; i++) if (f[`actor_${i}`]?.toLowerCase().includes(term)) return true
       return false
     })
   }, [displayRows, searchTerm])
 
-  // ── event + view helpers ───────────────────────────────────────────────────
-  function setEvent(year) {
-    setSearchParams({ event: year, view })
-    setSortBy('rank')
-  }
-  function setView(v) {
-    setSearchParams({ event: eventYear, view: v })
-    setSortBy('rank')
-  }
+  function setEvent(year) { setSearchParams({ event: year, view }); setSortBy('rank') }
+  function setView(v)    { setSearchParams({ event: eventYear, view: v }); setSortBy('rank') }
 
-  // Prior event years for this event (ascending = oldest first → shown right-to-left in headers)
   const priorYears = EVENTS_ORDER.filter(y => y < eventYear)
+  const shortYear = y => `'${String(y).slice(2)}`
 
-  // ── sort options ───────────────────────────────────────────────────────────
   const sortOptions = [
     { value: 'rank',      label: view === 'combined' ? 'Combined Rank' : 'Rank' },
     { value: 'year',      label: 'Release Year (Old → New)' },
@@ -278,269 +208,258 @@ export default function MoviesList() {
     ] : []),
   ]
 
-  // Short year label e.g. 2007 → '07
-  function shortYear(y) { return `'${String(y).slice(2)}` }
-
-  // ── render ────────────────────────────────────────────────────────────────
+  // ── render ─────────────────────────────────────────────────────────────
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-
-      {/* ── Page header ── */}
-      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
-        <div className="flex items-center gap-3">
-          <Link to="/movies"
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors text-sm">
-            ← Movies
-          </Link>
-          <span className="text-gray-300 dark:text-gray-700">/</span>
-          <h1 className="page-title text-2xl">Rankings</h1>
+    <div>
+      {/* ── HERO ───────────────────────────────────────────────────────────── */}
+      <FilmStill title={`Hermz and D Films ${eventYear} ${view}`} hue={view === 'combined' ? 220 : view === 'matt' ? 36 : 234}
+                 className="w-full h-[300px] sm:h-[340px]">
+        <div className="absolute inset-0 scrim-bottom" />
+        <div className="absolute inset-x-0 bottom-0 px-6 sm:px-10 pb-7 z-10">
+          <div className="flex items-center gap-3 mb-3">
+            <Link to="/movies" className="font-mono text-[11px] tracking-kicker text-film-400 hover:text-film-300 transition-colors">
+              ← FILMS
+            </Link>
+            <span className="text-gray-600">/</span>
+            <span className="font-mono text-[11px] tracking-kicker text-white uppercase">
+              {eventYear} · {view === 'combined' ? 'Combined' : view === 'matt' ? 'Hermz' : 'Dust'}
+            </span>
+          </div>
+          <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl text-white tracking-wide leading-none">
+            THE RANKINGS
+          </h1>
+          <p className="font-serif italic text-base sm:text-lg text-gray-400 mt-3">
+            {rows.length} films · sortable, searchable, with rank movement.
+          </p>
         </div>
-        <Link to={`/movies/stats?event=${eventYear}&view=${view}`}
-          className="btn-ghost text-sm flex items-center gap-1.5">
-          📊 Stats & Charts
-        </Link>
-      </div>
+      </FilmStill>
 
-      {/* ── Event selector ── */}
-      <div className="flex flex-wrap gap-2 mb-4">
-        {EVENTS_ORDER.map(yr => (
-          <button
-            key={yr}
-            onClick={() => setEvent(yr)}
-            className={`px-5 py-2 rounded-xl font-display font-bold text-sm transition-all ${
-              yr === eventYear
-                ? 'bg-film-600 text-white shadow-md shadow-film-900/20'
-                : 'bg-stone-100 text-gray-500 hover:bg-film-50 hover:text-film-600 dark:bg-night-700 dark:text-gray-400 dark:hover:bg-film-900/40 dark:hover:text-film-400'
-            }`}
-          >
-            {yr}
-          </button>
-        ))}
-      </div>
+      {/* ── BODY ──────────────────────────────────────────────────────────── */}
+      <div className="max-w-7xl mx-auto px-6 sm:px-10 py-8">
 
-      {/* ── View toggle: Combined / Dustin / Matt ── */}
-      <div className="flex gap-1 mb-5 p-1 bg-stone-100 dark:bg-night-800 rounded-xl w-fit">
-        {[
-          { value: 'combined', label: 'Combined' },
-          { value: 'dustin',   label: "Dust's List" },
-          { value: 'matt',     label: "Hermz's List" },
-        ].map(opt => (
-          <button
-            key={opt.value}
-            onClick={() => setView(opt.value)}
-            className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${
-              view === opt.value
-                ? 'bg-white dark:bg-night-600 text-gray-900 dark:text-white shadow-sm'
-                : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
-            }`}
-          >
-            {opt.label}
-          </button>
-        ))}
-      </div>
+        {/* Event + view selectors */}
+        <div className="flex flex-wrap items-center gap-3 mb-4">
+          <div className="flex flex-wrap gap-1.5">
+            {EVENTS_ORDER.map(yr => (
+              <button key={yr} onClick={() => setEvent(yr)}
+                className={yr === eventYear ? 'pill-film' : 'pill'}>
+                {yr}
+              </button>
+            ))}
+          </div>
+          <span className="hidden sm:block w-px h-6 bg-night-700" />
+          <div className="flex gap-1 p-1 bg-night-800/80 rounded-full">
+            {[
+              { value: 'combined', label: 'Combined' },
+              { value: 'dustin',   label: "Dust's List" },
+              { value: 'matt',     label: "Hermz's List" },
+            ].map(opt => (
+              <button key={opt.value} onClick={() => setView(opt.value)}
+                className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
+                  view === opt.value
+                    ? (opt.value === 'matt' ? 'bg-gold-500 text-night-950' :
+                       opt.value === 'dustin' ? 'bg-film-500 text-night-950' :
+                       'bg-cinema-500 text-night-950')
+                    : 'text-gray-400 hover:text-white'
+                }`}>
+                {opt.label}
+              </button>
+            ))}
+          </div>
+          <Link to={`/movies/stats?event=${eventYear}&view=${view}`} className="btn-ghost text-xs ml-auto">
+            📊 Stats &amp; Charts
+          </Link>
+        </div>
 
-      {/* ── Sort + search bar ── */}
-      <div className="flex flex-wrap items-center gap-3 mb-5">
-        <select
-          value={sortBy}
-          onChange={e => setSortBy(e.target.value)}
-          className="select text-sm pr-8"
-        >
-          {sortOptions.map(opt => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
-          ))}
-        </select>
+        {/* Sort + search + display toggle */}
+        <div className="flex flex-wrap items-center gap-3 mb-5">
+          {displayMode === 'list' && (
+            <>
+              <select value={sortBy} onChange={e => setSortBy(e.target.value)} className="select text-sm pr-8">
+                {sortOptions.map(opt => (
+                  <option key={opt.value} value={opt.value} className="bg-night-900">{opt.label}</option>
+                ))}
+              </select>
+              {sortBy !== 'rank' && (
+                <button onClick={() => setSortBy('rank')} className="text-xs text-gray-500 hover:text-gray-300 transition-colors">
+                  ✕ Reset sort
+                </button>
+              )}
+            </>
+          )}
 
-        {sortBy !== 'rank' && (
-          <button
-            onClick={() => setSortBy('rank')}
-            className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-          >
-            ✕ Reset sort
-          </button>
+          <div className={`relative ${displayMode === 'list' ? 'ml-auto' : ''}`}>
+            <input type="text" value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
+                   placeholder="Search title, director, actor…"
+                   className="input text-sm py-1.5 pl-3 pr-8 w-64" />
+            {searchTerm && (
+              <button onClick={() => setSearchTerm('')}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 text-xs">
+                ✕
+              </button>
+            )}
+          </div>
+
+          <span className="font-mono text-[10px] tracking-kicker text-gray-500 flex-shrink-0">
+            {searchTerm
+              ? `${filteredRows.length} OF ${displayRows.length}`
+              : `${displayRows.length} FILM${displayRows.length !== 1 ? 'S' : ''}`}
+          </span>
+
+          <div className={`flex gap-0.5 p-0.5 bg-night-800/80 rounded-lg ${displayMode === 'list' ? '' : 'ml-auto'}`}>
+            <button onClick={() => setDisplayMode('list')} title="List view"
+              className={`p-1.5 rounded-md transition-all ${
+                displayMode === 'list' ? 'bg-white text-night-950' : 'text-gray-400 hover:text-gray-200'
+              }`}>
+              <ListViewIcon />
+            </button>
+            <button onClick={() => setDisplayMode('grid')} title="Grid view"
+              className={`p-1.5 rounded-md transition-all ${
+                displayMode === 'grid' ? 'bg-white text-night-950' : 'text-gray-400 hover:text-gray-200'
+              }`}>
+              <GridViewIcon />
+            </button>
+          </div>
+        </div>
+
+        {loading && (
+          <div className="py-16 flex items-center justify-center">
+            <span className="font-mono text-[11px] tracking-kicker text-gray-500 animate-pulse">
+              LOADING {eventYear} RANKINGS…
+            </span>
+          </div>
+        )}
+        {error && <div className="py-8 text-center text-red-400 text-sm">Error: {error}</div>}
+
+        {!loading && !error && displayRows.length > 0 && filteredRows.length === 0 && (
+          <div className="py-16 text-center text-gray-500 text-sm">
+            No films match <span className="font-semibold text-gray-300">"{searchTerm}"</span>
+            <button onClick={() => setSearchTerm('')} className="ml-2 underline hover:text-gray-300">Clear</button>
+          </div>
         )}
 
-        <div className="relative ml-auto">
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-            placeholder="Search title, director, actor, writer…"
-            className="input text-sm py-1.5 pl-3 pr-8 w-64"
-          />
-          {searchTerm && (
-            <button
-              onClick={() => setSearchTerm('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400
-                         hover:text-gray-600 dark:hover:text-gray-300 text-xs"
-            >
-              ✕
-            </button>
-          )}
-        </div>
-
-        <span className="text-xs text-gray-400 dark:text-gray-600 flex-shrink-0">
-          {searchTerm
-            ? `${filteredRows.length} of ${displayRows.length}`
-            : `${displayRows.length} film${displayRows.length !== 1 ? 's' : ''}`
-          }
-        </span>
-      </div>
-
-      {/* ── Loading / error ── */}
-      {loading && (
-        <div className="py-16 flex items-center justify-center">
-          <span className="text-gray-400 animate-pulse">Loading {eventYear} rankings…</span>
-        </div>
-      )}
-      {error && (
-        <div className="py-8 text-center text-red-400 text-sm">Error: {error}</div>
-      )}
-
-      {/* ── No search results ── */}
-      {!loading && !error && displayRows.length > 0 && filteredRows.length === 0 && (
-        <div className="py-16 text-center text-gray-400 text-sm">
-          No films match <span className="font-semibold text-gray-600 dark:text-gray-300">"{searchTerm}"</span>
-          <button onClick={() => setSearchTerm('')} className="ml-2 underline hover:text-gray-600 dark:hover:text-gray-300">
-            Clear
-          </button>
-        </div>
-      )}
-
-      {/* ── List table ── */}
-      {!loading && !error && filteredRows.length > 0 && (
-        <div className="card overflow-hidden p-0">
-          <table className="w-full">
-            <thead>
-              <tr>
-                {/* Rank */}
-                <th className="table-header w-14 text-center">#</th>
-
-                {/* Film */}
-                <th className="table-header">Film</th>
-
-                {/* Score columns — combined */}
-                {view === 'combined' ? (
-                  <>
-                    <th className="table-header text-center hidden lg:table-cell" style={{ color: DC }}>
-                      Dust
-                    </th>
-                    <th className="table-header text-center hidden lg:table-cell" style={{ color: HC }}>
-                      Hermz
-                    </th>
-                    <th className="table-header text-center">Score</th>
-                  </>
-                ) : (
-                  <th className="table-header text-center">Score</th>
-                )}
-
-                {/* Prior year rank columns (most recent → oldest) */}
-                {[...priorYears].reverse().map(py => (
-                  <th key={py}
-                    className="table-header text-center hidden md:table-cell w-20 text-gray-400 dark:text-gray-600">
-                    vs {shortYear(py)}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-
-            <tbody>
-              {filteredRows.map(row => {
-                const film = row.film
-                if (!film) return null
-
-                return (
-                  <tr key={film.id} className="table-row-hover">
-
-                    {/* Rank — bigger font */}
-                    <td className="table-cell text-center">
-                      <span className="font-display font-bold text-gray-900 dark:text-white text-xl">
+        {/* GRID VIEW */}
+        {!loading && !error && filteredRows.length > 0 && displayMode === 'grid' && (
+          <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))' }}>
+            {filteredRows.map(row => {
+              const f = row.film
+              if (!f) return null
+              return (
+                <Link key={f.id} to={`/movies/${f.id}`} state={{ from: location.pathname + location.search }}
+                      className="group block">
+                  <FilmStill src={f.poster_url} title={f.title}
+                             className="aspect-[2/3] rounded-lg border border-white/10 shadow-still
+                                        group-hover:border-gold-500/60 group-hover:scale-[1.03] transition-all">
+                    {/* Rank badge */}
+                    <div className="absolute top-2 left-2 z-10">
+                      <span className="inline-flex items-center justify-center w-8 h-8 rounded-full
+                                       bg-night-950/80 backdrop-blur-sm text-white
+                                       font-display text-lg leading-none tracking-wide">
                         {row.rank}
                       </span>
-                    </td>
+                    </div>
+                  </FilmStill>
+                </Link>
+              )
+            })}
+          </div>
+        )}
 
-                    {/* Film info — larger title */}
-                    <td className="table-cell">
-                      <div className="flex items-center gap-3">
-                        <PosterThumb url={film.poster_url} title={film.title} />
-                        <div className="min-w-0">
-                          <Link
-                            to={`/movies/${film.id}`}
-                            state={{ from: location.pathname + location.search }}
-                            className="text-base font-semibold text-gray-900 dark:text-white
-                                       hover:text-film-600 dark:hover:text-film-400
-                                       transition-colors leading-snug block truncate"
-                          >
-                            {film.title}
-                          </Link>
-                          <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5
-                                          flex items-center gap-2 flex-wrap">
-                            {film.release_year && <span>{film.release_year}</span>}
-                            {film.director && (
-                              <>
-                                <span className="text-gray-300 dark:text-gray-700">·</span>
-                                <span className="truncate">{film.director.split(',')[0].trim()}</span>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-
-                    {/* Score columns */}
+        {/* LIST VIEW */}
+        {!loading && !error && filteredRows.length > 0 && displayMode === 'list' && (
+          <div className="card p-0 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[600px]">
+                <thead>
+                  <tr>
+                    <th className="table-header w-14 text-center">#</th>
+                    <th className="table-header">Film</th>
                     {view === 'combined' ? (
                       <>
-                        <td className="table-cell text-center hidden lg:table-cell">
-                          <div className="flex flex-col items-center">
-                            <span className="font-semibold text-sm" style={{ color: DC }}>
-                              {row.dustinRank ?? '—'}
-                            </span>
-                            <span className="text-xs text-gray-400">{row.dustinScore ?? '—'} pts</span>
-                          </div>
-                        </td>
-                        <td className="table-cell text-center hidden lg:table-cell">
-                          <div className="flex flex-col items-center">
-                            <span className="font-semibold text-sm" style={{ color: HC }}>
-                              {row.mattRank ?? '—'}
-                            </span>
-                            <span className="text-xs text-gray-400">{row.mattScore ?? '—'} pts</span>
-                          </div>
-                        </td>
-                        <td className="table-cell text-center">
-                          <span className="font-bold text-gray-900 dark:text-white">
-                            {row.score ?? '—'}
-                          </span>
-                        </td>
+                        <th className="table-header text-center hidden lg:table-cell" style={{ color: DC }}>Dust</th>
+                        <th className="table-header text-center hidden lg:table-cell" style={{ color: HC }}>Hermz</th>
+                        <th className="table-header text-center">Score</th>
                       </>
                     ) : (
-                      <td className="table-cell text-center">
-                        <span className="font-bold text-gray-900 dark:text-white">{row.score ?? '—'}</span>
-                        {row.impact != null && (
-                          <div className="text-xs text-gold-600 dark:text-gold-400 mt-0.5">
-                            PI: {row.impact}
-                          </div>
-                        )}
-                      </td>
+                      <th className="table-header text-center">Score</th>
                     )}
-
-                    {/* Prior year rank cells (most recent → oldest) */}
                     {[...priorYears].reverse().map(py => (
-                      <PriorYearCell
-                        key={py}
-                        currentRank={row.rank}
-                        filmId={film.id}
-                        priorMap={allPriorMaps[py]}
-                      />
+                      <th key={py} className="table-header text-center hidden md:table-cell w-20">
+                        vs {shortYear(py)}
+                      </th>
                     ))}
-
                   </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
-
+                </thead>
+                <tbody>
+                  {filteredRows.map(row => {
+                    const f = row.film
+                    if (!f) return null
+                    return (
+                      <tr key={f.id} className="table-row-hover">
+                        <td className="table-cell text-center">
+                          <span className="font-display text-3xl leading-none tracking-wide"
+                                style={{ color: view === 'combined' ? CC : 'white' }}>{row.rank}</span>
+                        </td>
+                        <td className="table-cell">
+                          <div className="flex items-center gap-3">
+                            <FilmStill src={f.poster_url} title={f.title}
+                                       className="w-14 h-20 rounded border border-white/10 flex-shrink-0" />
+                            <div className="min-w-0">
+                              <Link to={`/movies/${f.id}`} state={{ from: location.pathname + location.search }}
+                                    className="text-lg font-semibold text-white hover:text-film-400 transition-colors leading-snug block truncate">
+                                {f.title}
+                              </Link>
+                              <div className="font-mono text-xs tracking-kicker text-gray-500 mt-1 flex items-center gap-2 flex-wrap uppercase">
+                                {f.release_year && <span>{f.release_year}</span>}
+                                {f.director && (
+                                  <>
+                                    <span className="text-gray-700">·</span>
+                                    <span className="truncate">{f.director.split(',')[0].trim()}</span>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        {view === 'combined' ? (
+                          <>
+                            <td className="table-cell text-center hidden lg:table-cell">
+                              <div className="flex flex-col items-center">
+                                <span className="font-mono text-base font-semibold" style={{ color: DC }}>
+                                  #{row.dustinRank ?? '—'}
+                                </span>
+                                <span className="text-sm text-gray-500">{row.dustinScore ?? '—'} pts</span>
+                              </div>
+                            </td>
+                            <td className="table-cell text-center hidden lg:table-cell">
+                              <div className="flex flex-col items-center">
+                                <span className="font-mono text-base font-semibold" style={{ color: HC }}>
+                                  #{row.mattRank ?? '—'}
+                                </span>
+                                <span className="text-sm text-gray-500">{row.mattScore ?? '—'} pts</span>
+                              </div>
+                            </td>
+                            <td className="table-cell text-center">
+                              <span className="font-display text-2xl text-white tracking-wide">{row.score ?? '—'}</span>
+                            </td>
+                          </>
+                        ) : (
+                          <td className="table-cell text-center">
+                            <span className="font-display text-xl text-white tracking-wide">{row.score ?? '—'}</span>
+                          </td>
+                        )}
+                        {[...priorYears].reverse().map(py => (
+                          <PriorYearCell key={py} currentRank={row.rank} filmId={f.id} priorMap={allPriorMaps[py]} />
+                        ))}
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

@@ -3,10 +3,11 @@ import { createContext, useContext, useEffect, useState } from 'react'
 const ThemeContext = createContext()
 
 export function ThemeProvider({ children }) {
-  // Default to light mode
+  // Projector Room is dark-first. Default = dark unless the user explicitly
+  // toggled to light previously.
   const [isDark, setIsDark] = useState(() => {
     const saved = localStorage.getItem('theme')
-    return saved === 'dark'
+    return saved === 'light' ? false : true
   })
 
   useEffect(() => {

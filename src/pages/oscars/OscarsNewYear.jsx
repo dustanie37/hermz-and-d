@@ -2,9 +2,156 @@ import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import OscarIcon from '../../components/OscarIcon'
+import FilmStill from '../../components/FilmStill'
 
-// ── helpers ───────────────────────────────────────────────────────────────────
+// ── Wikidata nominee fetch (mirrors oscar_noms_fetch.py CATEGORY_NORM + QID_OVERRIDE) ──
 
+const WIKIDATA_URL = 'https://query.wikidata.org/sparql'
+
+const QID_OVERRIDE = {
+  'Q19024':   'Best Sound Mixing',
+  'Q869717':  'Best Sound Editing',
+  'Q1047215': 'Best Sound',
+  'Q1148280': 'Best Sound',
+}
+
+const CATEGORY_NORM = {
+  'best picture': 'Best Picture', 'outstanding picture': 'Best Picture', 'outstanding production': 'Best Picture',
+  'best director': 'Best Director', 'directing': 'Best Director', 'best directing': 'Best Director',
+  'best actor in a leading role': 'Best Actor', 'best actor': 'Best Actor',
+  'best performance by an actor in a leading role': 'Best Actor',
+  'best actress in a leading role': 'Best Actress', 'best actress': 'Best Actress',
+  'best performance by an actress in a leading role': 'Best Actress',
+  'best actor in a supporting role': 'Best Supporting Actor', 'best supporting actor': 'Best Supporting Actor',
+  'best performance by an actor in a supporting role': 'Best Supporting Actor',
+  'best actress in a supporting role': 'Best Supporting Actress', 'best supporting actress': 'Best Supporting Actress',
+  'best performance by an actress in a supporting role': 'Best Supporting Actress',
+  'best original screenplay': 'Best Original Screenplay',
+  'best writing, original screenplay': 'Best Original Screenplay',
+  'best writing, screenplay written directly for the screen': 'Best Original Screenplay',
+  'best writing, story and screenplay written directly for the screen': 'Best Original Screenplay',
+  'best writing, motion picture story': 'Best Original Screenplay',
+  'best original story': 'Best Original Screenplay',
+  'best writing, story and screenplay': 'Best Original Screenplay',
+  'best adapted screenplay': 'Best Adapted Screenplay',
+  'best writing, adapted screenplay': 'Best Adapted Screenplay',
+  'best writing, screenplay based on material previously produced or published': 'Best Adapted Screenplay',
+  'best writing, screenplay adapted from other material': 'Best Adapted Screenplay',
+  'best writing, adaptation': 'Best Adapted Screenplay',
+  'best cinematography': 'Best Cinematography',
+  'best cinematography (color)': 'Best Cinematography', 'best cinematography (black-and-white)': 'Best Cinematography',
+  'best cinematography, color': 'Best Cinematography', 'best cinematography, black-and-white': 'Best Cinematography',
+  'best film editing': 'Best Film Editing', 'best editing': 'Best Film Editing',
+  'best production design': 'Best Production Design', 'best art direction': 'Best Production Design',
+  'best art direction-set decoration': 'Best Production Design',
+  'best art direction-set decoration (color)': 'Best Production Design',
+  'best art direction-set decoration (black-and-white)': 'Best Production Design',
+  'best art direction, color': 'Best Production Design', 'best art direction, black and white': 'Best Production Design',
+  'best costume design': 'Best Costume Design',
+  'best costume design (color)': 'Best Costume Design', 'best costume design (black-and-white)': 'Best Costume Design',
+  'best costume design, black-and-white': 'Best Costume Design',
+  'best makeup and hairstyling': 'Best Makeup and Hairstyling', 'best makeup': 'Best Makeup and Hairstyling',
+  'best original score': 'Best Original Score', 'best original dramatic score': 'Best Original Score',
+  'best original dramatic or comedy score': 'Best Original Score',
+  'best original musical or comedy score': 'Best Original Score',
+  'best original score, no musical': 'Best Original Score', 'best score': 'Best Original Score',
+  'best score, adaptation or treatment': 'Best Original Score',
+  'best scoring: substantially original': 'Best Original Score', 'best scoring: adaptation or treatment': 'Best Original Score',
+  'best original song': 'Best Original Song',
+  'best original song score': 'Best Original Song Score',
+  'best original song score or adaptation score': 'Best Original Song Score',
+  'best sound': 'Best Sound', 'best sound editing': 'Best Sound Editing',
+  'best sound mixing': 'Best Sound Mixing', 'best sound effects editing': 'Best Sound Editing',
+  'best visual effects': 'Best Visual Effects', 'best special effects': 'Best Visual Effects',
+  'best special visual effects': 'Best Visual Effects',
+  'best animated feature film': 'Best Animated Feature', 'best animated feature': 'Best Animated Feature',
+  'best animated short film': 'Best Animated Short', 'best animated short': 'Best Animated Short',
+  'best documentary feature': 'Best Documentary Feature', 'best documentary feature film': 'Best Documentary Feature',
+  'best feature documentary': 'Best Documentary Feature',
+  'best documentary short film': 'Best Documentary Short', 'best documentary short subject': 'Best Documentary Short',
+  'best documentary short': 'Best Documentary Short', 'best documentary': 'Best Documentary Feature',
+  'best live action short film': 'Best Live Action Short', 'best live action short': 'Best Live Action Short',
+  'best short film, live action': 'Best Live Action Short', 'best short subject, live action': 'Best Live Action Short',
+  'best international feature film': 'Best International Feature Film',
+  'best international feature': 'Best International Feature Film',
+  'best foreign language film': 'Best International Feature Film',
+}
+
+function extractQid(uri) {
+  if (!uri) return ''
+  const m = uri.match(/(Q\d+)$/)
+  return m ? m[1] : ''
+}
+
+function normalizeCategory(rawLabel, awardUri = '') {
+  const qid = extractQid(awardUri)
+  if (qid && QID_OVERRIDE[qid]) return QID_OVERRIDE[qid]
+  const s = rawLabel.trim()
+  if (CATEGORY_NORM[s.toLowerCase()]) return CATEGORY_NORM[s.toLowerCase()]
+  let trimmed = s
+  for (const prefix of ['Academy Award for Best ', 'Academy Award for ']) {
+    if (s.toLowerCase().startsWith(prefix.toLowerCase())) { trimmed = s.slice(prefix.length); break }
+  }
+  const key = trimmed.toLowerCase()
+  if (CATEGORY_NORM[key]) return CATEGORY_NORM[key]
+  if (CATEGORY_NORM['best ' + key]) return CATEGORY_NORM['best ' + key]
+  return null
+}
+
+async function fetchWikidataNominees(ceremonyYear) {
+  const sparql = `
+SELECT ?entityLabel ?awardUri ?awardLabel WHERE {
+  ?ceremony wdt:P31 wd:Q4688419 .
+  ?ceremony wdt:P585 ?date .
+  FILTER(YEAR(?date) = ${ceremonyYear})
+
+  {
+    ?entity p:P166 ?stmt .
+    ?stmt ps:P166 ?award .
+    ?stmt pq:P805 ?ceremony .
+  } UNION {
+    ?entity p:P1411 ?stmt .
+    ?stmt ps:P1411 ?award .
+    ?stmt pq:P805 ?ceremony .
+  }
+
+  ?award wdt:P31 wd:Q19020 .
+  BIND(str(?award) AS ?awardUri)
+
+  SERVICE wikibase:label {
+    bd:serviceParam wikibase:language "en" .
+    ?award rdfs:label ?awardLabel .
+    ?entity rdfs:label ?entityLabel .
+  }
+}
+ORDER BY ?awardLabel ?entityLabel
+`
+  const url  = `${WIKIDATA_URL}?query=${encodeURIComponent(sparql)}&format=json`
+  const resp = await fetch(url, {
+    headers: {
+      'Accept':     'application/sparql-results+json',
+      'User-Agent': 'HermzAndDMoviesApp/2.0 (film ranking app; contact: bard37@gmail.com)',
+    },
+  })
+  if (!resp.ok) throw new Error(`Wikidata ${resp.status}: ${resp.statusText}`)
+  const data = await resp.json()
+  const results = {}
+  for (const b of (data?.results?.bindings || [])) {
+    const entityLabel = b.entityLabel?.value || ''
+    const awardLabel  = b.awardLabel?.value  || ''
+    const awardUri    = b.awardUri?.value    || ''
+    if (!entityLabel || entityLabel.startsWith('Q')) continue
+    const canon = normalizeCategory(awardLabel, awardUri)
+    if (!canon) continue
+    if (!results[canon]) results[canon] = new Set()
+    results[canon].add(entityLabel)
+  }
+  return Object.fromEntries(
+    Object.entries(results).map(([cat, names]) => [cat, [...names].sort()])
+  )
+}
+
+// ── step indicator ──────────────────────────────────────────────────────────
 const STEP_LABELS = ['Ceremony Setup', 'Nominees', 'Guesses']
 
 function StepIndicator({ step }) {
@@ -12,24 +159,23 @@ function StepIndicator({ step }) {
     <div className="flex items-center gap-2 mb-8">
       {STEP_LABELS.map((label, i) => {
         const n = i + 1
-        const done    = n < step
+        const done = n < step
         const current = n === step
         return (
           <div key={n} className="flex items-center gap-2">
-            <div className={`flex items-center gap-2 ${current ? 'opacity-100' : done ? 'opacity-70' : 'opacity-30'}`}>
-              <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border-2 flex-shrink-0
-                ${current ? 'bg-gold-600 border-gold-400 text-white dark:bg-gold-700 dark:border-gold-500'
-                : done    ? 'bg-emerald-600 border-emerald-400 text-white'
-                          : 'bg-stone-200 border-stone-300 text-gray-500 dark:bg-night-700 dark:border-night-600 dark:text-gray-400'}`}>
+            <div className={`flex items-center gap-2 ${current ? 'opacity-100' : done ? 'opacity-80' : 'opacity-30'}`}>
+              <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border-2 flex-shrink-0 ${
+                current ? 'bg-gold-500 border-gold-400 text-night-950' :
+                done    ? 'bg-emerald-500 border-emerald-400 text-night-950' :
+                          'bg-night-700 border-night-600 text-gray-500'
+              }`}>
                 {done ? '✓' : n}
               </div>
-              <span className={`text-sm font-medium hidden sm:block ${current ? 'text-gray-800 dark:text-white' : 'text-gray-400 dark:text-gray-600'}`}>
+              <span className={`font-mono text-[11px] tracking-kicker uppercase hidden sm:block ${current ? 'text-white' : 'text-gray-500'}`}>
                 {label}
               </span>
             </div>
-            {i < STEP_LABELS.length - 1 && (
-              <div className="w-8 h-px bg-stone-300 dark:bg-night-600 mx-1" />
-            )}
+            {i < STEP_LABELS.length - 1 && <div className="w-8 h-px bg-night-600 mx-1" />}
           </div>
         )
       })}
@@ -37,24 +183,26 @@ function StepIndicator({ step }) {
   )
 }
 
-// ── main component ────────────────────────────────────────────────────────────
-
+// ── main component ──────────────────────────────────────────────────────────
 export default function OscarsNewYear() {
   const navigate = useNavigate()
 
-  const [step,          setStep]          = useState(1)
-  const [yearNum,       setYearNum]       = useState('')
-  const [ceremonyName,  setCeremonyName]  = useState('')
-  const [ceremonyDate,  setCeremonyDate]  = useState('')
-  const [yearId,        setYearId]        = useState(null)
-  const [categories,    setCategories]    = useState([]) // active cats for chosen year
-  const [nominees,      setNominees]      = useState({}) // { catId: ['name1', ...] }
-  const [guesses,       setGuesses]       = useState({}) // { catId: { matt: '', dustin: '' } }
-  const [profiles,      setProfiles]      = useState({}) // { matt: uuid, dustin: uuid }
-  const [saving,        setSaving]        = useState(false)
-  const [error,         setError]         = useState(null)
+  const [step,         setStep]         = useState(1)
+  const [yearNum,      setYearNum]      = useState('')
+  const [ceremonyName, setCeremonyName] = useState('')
+  const [ceremonyDate, setCeremonyDate] = useState('')
+  const [yearId,       setYearId]       = useState(null)
+  const [categories,   setCategories]   = useState([])
+  const [nominees,     setNominees]     = useState({})
+  const [guesses,      setGuesses]      = useState({})
+  const [profiles,     setProfiles]     = useState({})
+  const [saving,       setSaving]       = useState(false)
+  const [error,        setError]        = useState(null)
 
-  // Fetch profiles once
+  const [wdFetching, setWdFetching] = useState(false)
+  const [wdResult,   setWdResult]   = useState(null)
+  const [wdMessage,  setWdMessage]  = useState('')
+
   useEffect(() => {
     supabase.from('profiles').select('id, username').then(({ data }) => {
       const map = {}
@@ -62,8 +210,6 @@ export default function OscarsNewYear() {
       setProfiles(map)
     })
   }, [])
-
-  // ── Step 1: Create year ───────────────────────────────────────────────────
 
   async function handleCreateYear(e) {
     e.preventDefault()
@@ -74,53 +220,43 @@ export default function OscarsNewYear() {
 
     setSaving(true)
     try {
-      // Check for duplicate
       const { data: existing } = await supabase
         .from('oscar_years').select('id').eq('year', yr).maybeSingle()
-      if (existing) {
-        setError(`${yr} already exists. Edit it at /oscars/${yr}.`)
-        setSaving(false)
-        return
-      }
+      if (existing) { setError(`${yr} already exists. Edit it at /oscars/${yr}.`); setSaving(false); return }
 
-      // Insert oscar_years row
       const { data: newYear, error: insErr } = await supabase
         .from('oscar_years')
         .insert({
-          year: yr,
-          ceremony_name: ceremonyName.trim(),
+          year: yr, ceremony_name: ceremonyName.trim(),
           ceremony_date: ceremonyDate || null,
-          winner: 'pending',
-          tiebreaker_used: false,
-          status: 'upcoming',
+          winner: 'pending', tiebreaker_used: false, status: 'upcoming',
         })
         .select().single()
       if (insErr) throw insErr
       setYearId(newYear.id)
 
-      // Fetch all categories, filter for this year
       const { data: allCats, error: catErr } = await supabase
         .from('oscar_categories').select('*').order('display_order')
       if (catErr) throw catErr
 
       const activeCats = allCats.filter(c => {
-        const from  = c.active_from  ?? 0
+        const from = c.active_from ?? 0
         const until = c.active_until ?? 9999
         return yr >= from && yr <= until
       })
       setCategories(activeCats)
 
-      // Init nominees: 8 slots for Best Picture, 5 for everything else
       const initNoms = {}
       const initGuesses = {}
       activeCats.forEach(c => {
         const slots = c.name === 'Best Picture' ? 10 : 5
-        initNoms[c.id]    = Array(slots).fill('')
+        initNoms[c.id] = Array(slots).fill('')
         initGuesses[c.id] = { matt: '', dustin: '' }
       })
       setNominees(initNoms)
       setGuesses(initGuesses)
       setStep(2)
+      setWdResult(null)
     } catch (err) {
       setError(err.message)
     } finally {
@@ -128,64 +264,67 @@ export default function OscarsNewYear() {
     }
   }
 
-  // ── Step 2: Save nominees ─────────────────────────────────────────────────
-
-  function updateNominee(catId, idx, value) {
-    setNominees(prev => ({
-      ...prev,
-      [catId]: prev[catId].map((v, i) => i === idx ? value : v),
-    }))
+  async function handleFetchFromWikidata() {
+    setWdFetching(true); setWdResult(null); setWdMessage('')
+    const yr = parseInt(yearNum, 10)
+    try {
+      const nomsByCategory = await fetchWikidataNominees(yr)
+      const categoryNames = Object.keys(nomsByCategory)
+      if (categoryNames.length === 0) {
+        setWdResult('empty')
+        setWdMessage(`No nominee data found on Wikidata for the ${yr} ceremony yet. Enter nominees manually below.`)
+        setWdFetching(false)
+        return
+      }
+      let filled = 0
+      const newNominees = { ...nominees }
+      for (const cat of categories) {
+        const wdNoms = nomsByCategory[cat.name] || []
+        if (wdNoms.length === 0) continue
+        const maxSlots = cat.name === 'Best Picture' ? 10 : 8
+        const padded = [...wdNoms]
+        while (padded.length < (cat.name === 'Best Picture' ? 10 : 5)) padded.push('')
+        newNominees[cat.id] = padded.slice(0, maxSlots)
+        filled++
+      }
+      setNominees(newNominees)
+      setWdResult('ok')
+      setWdMessage(`Pre-filled ${filled} of ${categories.length} categories from Wikidata. Review below.`)
+    } catch (err) {
+      setWdResult('error')
+      setWdMessage(`Wikidata fetch failed: ${err.message}. Enter nominees manually below.`)
+    } finally {
+      setWdFetching(false)
+    }
   }
 
+  function updateNominee(catId, idx, value) {
+    setNominees(prev => ({ ...prev, [catId]: prev[catId].map((v, i) => i === idx ? value : v) }))
+  }
   function addNomineeSlot(catId) {
     setNominees(prev => ({ ...prev, [catId]: [...prev[catId], ''] }))
   }
-
   function removeNomineeSlot(catId, idx) {
-    setNominees(prev => ({
-      ...prev,
-      [catId]: prev[catId].filter((_, i) => i !== idx),
-    }))
+    setNominees(prev => ({ ...prev, [catId]: prev[catId].filter((_, i) => i !== idx) }))
   }
 
   async function handleSaveNominees(e) {
     e.preventDefault()
-    setError(null)
-    setSaving(true)
+    setError(null); setSaving(true)
     try {
       const rows = []
       categories.forEach(cat => {
-        const catNoms = nominees[cat.id] || []
-        catNoms.forEach((name, idx) => {
-          if (name.trim()) {
-            rows.push({
-              year_id:      yearId,
-              category_id:  cat.id,
-              nominee_name: name.trim(),
-              is_winner:    false,
-              display_order: idx,
-            })
-          }
+        (nominees[cat.id] || []).forEach((name, idx) => {
+          if (name.trim()) rows.push({ year_id: yearId, category_id: cat.id, nominee_name: name.trim(), is_winner: false, display_order: idx })
         })
       })
-
-      if (rows.length === 0) {
-        setError('Enter at least one nominee before continuing.')
-        setSaving(false)
-        return
-      }
-
+      if (rows.length === 0) { setError('Enter at least one nominee before continuing.'); setSaving(false); return }
       const { error: insErr } = await supabase.from('oscar_nominees').insert(rows)
       if (insErr) throw insErr
-
-      // Pre-populate guess dropdowns with first nominee per category
       const updatedGuesses = {}
       categories.forEach(cat => {
         const filled = (nominees[cat.id] || []).filter(n => n.trim())
-        updatedGuesses[cat.id] = {
-          matt:   filled[0] || '',
-          dustin: filled[0] || '',
-        }
+        updatedGuesses[cat.id] = { matt: filled[0] || '', dustin: filled[0] || '' }
       })
       setGuesses(updatedGuesses)
       setStep(3)
@@ -196,54 +335,26 @@ export default function OscarsNewYear() {
     }
   }
 
-  // ── Step 3: Save guesses ──────────────────────────────────────────────────
-
   function updateGuess(catId, player, value) {
-    setGuesses(prev => ({
-      ...prev,
-      [catId]: { ...prev[catId], [player]: value },
-    }))
+    setGuesses(prev => ({ ...prev, [catId]: { ...prev[catId], [player]: value } }))
   }
 
   async function handleSaveGuesses(e) {
     e.preventDefault()
     setError(null)
-    if (!profiles.matt || !profiles.dustin) {
-      setError('Could not load player profiles. Refresh and try again.')
-      return
-    }
+    if (!profiles.matt || !profiles.dustin) { setError('Could not load player profiles. Refresh and try again.'); return }
     setSaving(true)
     try {
       const rows = []
       categories.forEach(cat => {
         const g = guesses[cat.id] || {}
-        if (g.matt) {
-          rows.push({
-            year_id:     yearId,
-            category_id: cat.id,
-            user_id:     profiles.matt,
-            guess:       g.matt,
-            is_correct:  null,
-            locked:      false,
-          })
-        }
-        if (g.dustin) {
-          rows.push({
-            year_id:     yearId,
-            category_id: cat.id,
-            user_id:     profiles.dustin,
-            guess:       g.dustin,
-            is_correct:  null,
-            locked:      false,
-          })
-        }
+        if (g.matt)   rows.push({ year_id: yearId, category_id: cat.id, user_id: profiles.matt,   guess: g.matt,   is_correct: null, locked: false })
+        if (g.dustin) rows.push({ year_id: yearId, category_id: cat.id, user_id: profiles.dustin, guess: g.dustin, is_correct: null, locked: false })
       })
-
       if (rows.length > 0) {
         const { error: insErr } = await supabase.from('oscar_guesses').insert(rows)
         if (insErr) throw insErr
       }
-
       navigate(`/oscars/${yearNum}`)
     } catch (err) {
       setError(err.message)
@@ -252,242 +363,231 @@ export default function OscarsNewYear() {
     }
   }
 
-  // ── render ────────────────────────────────────────────────────────────────
-
+  // ── render ─────────────────────────────────────────────────────────────
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6">
-
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm mb-6">
-        <Link to="/oscars" className="text-gray-400 hover:text-gold-600 dark:hover:text-gold-400 transition-colors flex items-center gap-1">
-          <OscarIcon size={14} /> Oscars
-        </Link>
-        <span className="text-gray-300 dark:text-gray-700">/</span>
-        <span className="text-gray-800 font-medium dark:text-white">New Year</span>
-      </div>
-
-      <h1 className="page-title flex items-center gap-3 mb-2">
-        <OscarIcon size={28} className="text-gold-600 dark:text-gold-400" />
-        Add New Year
-      </h1>
-      <p className="text-gray-500 text-sm mb-8 dark:text-gray-400">
-        Set up a new Oscar ceremony — nominees, guesses, and post-ceremony results.
-      </p>
-
-      <StepIndicator step={step} />
-
-      {error && (
-        <div className="mb-4 px-4 py-3 rounded-xl border border-red-300 bg-red-50 text-red-700
-                        dark:border-red-700/40 dark:bg-red-900/10 dark:text-red-400 text-sm">
-          {error}
+    <div>
+      {/* Compact hero */}
+      <FilmStill title="Hermz and D New Year Setup" hue={36} mood="cool"
+                 className="w-full h-[180px] sm:h-[220px]">
+        <div className="absolute inset-0 scrim-bottom" />
+        <div className="absolute inset-x-0 bottom-0 px-6 sm:px-10 pb-7 z-10">
+          <div className="flex items-center gap-3 mb-3">
+            <Link to="/oscars" className="font-mono text-[11px] tracking-kicker text-gold-500
+                                          hover:text-gold-400 transition-colors flex items-center gap-2">
+              <OscarIcon size={12} /> OSCARS
+            </Link>
+            <span className="text-gray-600">/</span>
+            <span className="font-mono text-[11px] tracking-kicker text-white">NEW YEAR</span>
+          </div>
+          <h1 className="font-display text-4xl sm:text-5xl text-white tracking-wide leading-none">
+            ADD NEW CEREMONY
+          </h1>
+          <p className="font-serif italic text-gray-400 mt-2 text-base">
+            Set up nominees and guesses for an upcoming Academy Awards.
+          </p>
         </div>
-      )}
+      </FilmStill>
 
-      {/* ── Step 1: Ceremony Setup ── */}
-      {step === 1 && (
-        <form onSubmit={handleCreateYear} className="card max-w-lg">
-          <h2 className="text-base font-semibold text-gray-800 dark:text-white mb-5">Ceremony Details</h2>
+      <div className="max-w-4xl mx-auto px-6 sm:px-10 py-8">
+        <StepIndicator step={step} />
 
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1.5">
-                Oscar Year <span className="text-red-400">*</span>
-              </label>
-              <input
-                type="number"
-                value={yearNum}
-                onChange={e => setYearNum(e.target.value)}
-                placeholder="e.g. 2027"
-                min="2000" max="2100"
-                className="input w-full"
-                required
-              />
-              <p className="text-xs text-gray-400 mt-1 dark:text-gray-500">The calendar year the films were released (not the ceremony date)</p>
+        {error && (
+          <div className="mb-4 px-4 py-3 rounded-xl border border-red-500/40 bg-red-500/10 text-red-400 text-sm">
+            {error}
+          </div>
+        )}
+
+        {/* Step 1 */}
+        {step === 1 && (
+          <form onSubmit={handleCreateYear} className="card max-w-lg">
+            <h2 className="font-display text-xl text-white tracking-wide mb-5">CEREMONY DETAILS</h2>
+            <div className="space-y-4">
+              <Field label="Oscar Year" required>
+                <input type="number" value={yearNum} onChange={e => setYearNum(e.target.value)}
+                       placeholder="e.g. 2027" min="2000" max="2100" className="input w-full" required />
+                <p className="font-mono text-[10px] tracking-kicker text-gray-500 mt-1">
+                  CEREMONY HELD YEAR · USED TO FETCH NOMINEES FROM WIKIDATA
+                </p>
+              </Field>
+              <Field label="Ceremony Name" required>
+                <input type="text" value={ceremonyName} onChange={e => setCeremonyName(e.target.value)}
+                       placeholder="e.g. The 99th Academy Awards - March 2, 2027"
+                       className="input w-full" required />
+              </Field>
+              <Field label="Ceremony Date" optional>
+                <input type="date" value={ceremonyDate} onChange={e => setCeremonyDate(e.target.value)} className="input w-full" />
+              </Field>
+            </div>
+            <div className="mt-6 flex items-center justify-between">
+              <Link to="/oscars" className="btn-ghost text-sm">Cancel</Link>
+              <button type="submit" disabled={saving} className="btn-gold text-sm px-5">
+                {saving ? 'Creating…' : 'Create Year →'}
+              </button>
+            </div>
+          </form>
+        )}
+
+        {/* Step 2 */}
+        {step === 2 && (
+          <form onSubmit={handleSaveNominees}>
+            <div className="mb-5 flex items-start justify-between flex-wrap gap-3">
+              <p className="text-sm text-gray-400 max-w-lg">
+                Enter nominees for each category, or fetch them automatically from Wikidata.
+                Wikidata data is typically available 1–2 weeks after nominations are announced.
+              </p>
+              <button type="submit" disabled={saving} className="btn-gold text-sm px-5">
+                {saving ? 'Saving…' : 'Save Nominees →'}
+              </button>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1.5">
-                Ceremony Name <span className="text-red-400">*</span>
-              </label>
-              <input
-                type="text"
-                value={ceremonyName}
-                onChange={e => setCeremonyName(e.target.value)}
-                placeholder="e.g. The 99th Academy Awards - March 2, 2027"
-                className="input w-full"
-                required
-              />
+            <div className="card mb-5">
+              <div className="flex items-start justify-between gap-4 flex-wrap">
+                <div>
+                  <p className="font-display text-lg text-white tracking-wide mb-1">AUTO-IMPORT FROM WIKIDATA</p>
+                  <p className="text-xs text-gray-400">
+                    Fetches all nominees for the {yearNum} ceremony and pre-fills the inputs below.
+                  </p>
+                </div>
+                <button type="button" onClick={handleFetchFromWikidata} disabled={wdFetching}
+                        className="btn-cinema text-sm flex items-center gap-2 shrink-0">
+                  {wdFetching ? (
+                    <>
+                      <span className="inline-block w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                      Fetching…
+                    </>
+                  ) : (<>🌐 Fetch from Wikidata</>)}
+                </button>
+              </div>
+
+              {wdResult && (
+                <div className={`mt-3 px-3 py-2.5 rounded-lg text-sm border ${
+                  wdResult === 'ok'    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/40' :
+                  wdResult === 'empty' ? 'bg-cinema-500/10 text-cinema-400 border-cinema-500/40' :
+                                         'bg-red-500/10 text-red-400 border-red-500/40'
+                }`}>
+                  {wdResult === 'ok' && <span className="font-semibold">✓ </span>}
+                  {wdMessage}
+                </div>
+              )}
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1.5">
-                Ceremony Date <span className="text-gray-400 font-normal">(optional)</span>
-              </label>
-              <input
-                type="date"
-                value={ceremonyDate}
-                onChange={e => setCeremonyDate(e.target.value)}
-                className="input w-full"
-              />
+            <div className="space-y-3">
+              {categories.map(cat => (
+                <CategoryNomineesCard
+                  key={cat.id} category={cat} nominees={nominees[cat.id] || []}
+                  onUpdate={(idx, val) => updateNominee(cat.id, idx, val)}
+                  onAdd={() => addNomineeSlot(cat.id)}
+                  onRemove={idx => removeNomineeSlot(cat.id, idx)}
+                />
+              ))}
             </div>
-          </div>
 
-          <div className="mt-6 flex items-center justify-between">
-            <Link to="/oscars" className="btn-ghost text-sm">Cancel</Link>
-            <button
-              type="submit"
-              disabled={saving}
-              className="btn-primary text-sm px-5"
-            >
-              {saving ? 'Creating…' : 'Create Year →'}
-            </button>
-          </div>
-        </form>
-      )}
+            <div className="mt-6 flex justify-between">
+              <button type="button" onClick={() => setStep(1)} className="btn-ghost text-sm">← Back</button>
+              <button type="submit" disabled={saving} className="btn-gold text-sm px-5">
+                {saving ? 'Saving…' : 'Save Nominees →'}
+              </button>
+            </div>
+          </form>
+        )}
 
-      {/* ── Step 2: Nominees ── */}
-      {step === 2 && (
-        <form onSubmit={handleSaveNominees}>
-          <div className="mb-4 flex items-center justify-between flex-wrap gap-3">
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Enter nominees for each category. Leave blank slots empty — they'll be skipped.
-            </p>
-            <button
-              type="submit"
-              disabled={saving}
-              className="btn-primary text-sm px-5"
-            >
-              {saving ? 'Saving…' : 'Save Nominees →'}
-            </button>
-          </div>
+        {/* Step 3 */}
+        {step === 3 && (
+          <form onSubmit={handleSaveGuesses}>
+            <div className="mb-4 flex items-center justify-between flex-wrap gap-3">
+              <p className="text-sm text-gray-400">
+                Record each player's prediction. Select "No guess" to skip a category.
+              </p>
+              <button type="submit" disabled={saving} className="btn-gold text-sm px-5">
+                {saving ? 'Saving…' : '🏆 Finish & View Year'}
+              </button>
+            </div>
 
-          <div className="space-y-3">
-            {categories.map(cat => (
-              <CategoryNomineesCard
-                key={cat.id}
-                category={cat}
-                nominees={nominees[cat.id] || []}
-                onUpdate={(idx, val) => updateNominee(cat.id, idx, val)}
-                onAdd={() => addNomineeSlot(cat.id)}
-                onRemove={idx => removeNomineeSlot(cat.id, idx)}
-              />
-            ))}
-          </div>
+            <div className="card p-0 overflow-hidden overflow-x-auto">
+              <table className="w-full min-w-[480px]">
+                <thead>
+                  <tr>
+                    <th className="table-header text-left">Category</th>
+                    <th className="table-header text-gold-500 w-52">Hermz</th>
+                    <th className="table-header text-film-500 w-52">Dust</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {categories.map((cat, idx) => {
+                    const catNoms = (nominees[cat.id] || []).filter(n => n.trim())
+                    const g = guesses[cat.id] || { matt: '', dustin: '' }
+                    const stripe = idx % 2 === 0 ? 'bg-night-800/40' : 'bg-night-900/40'
+                    return (
+                      <tr key={cat.id} className={`${stripe} table-row-hover`}>
+                        <td className="table-cell py-3 px-5 text-sm font-medium text-gray-200">{cat.name}</td>
+                        <td className="table-cell py-3 px-5 w-52">
+                          <GuessSelect value={g.matt} nominees={catNoms} onChange={v => updateGuess(cat.id, 'matt', v)} color="gold" />
+                        </td>
+                        <td className="table-cell py-3 px-5 w-52">
+                          <GuessSelect value={g.dustin} nominees={catNoms} onChange={v => updateGuess(cat.id, 'dustin', v)} color="film" />
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
 
-          <div className="mt-6 flex justify-between">
-            <button type="button" onClick={() => setStep(1)} className="btn-ghost text-sm">← Back</button>
-            <button type="submit" disabled={saving} className="btn-primary text-sm px-5">
-              {saving ? 'Saving…' : 'Save Nominees →'}
-            </button>
-          </div>
-        </form>
-      )}
-
-      {/* ── Step 3: Guesses ── */}
-      {step === 3 && (
-        <form onSubmit={handleSaveGuesses}>
-          <div className="mb-4 flex items-center justify-between flex-wrap gap-3">
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Record each player's prediction. Select "No guess" to skip a category.
-            </p>
-            <button type="submit" disabled={saving} className="btn-primary text-sm px-5">
-              {saving ? 'Saving…' : '🏆 Finish & View Year'}
-            </button>
-          </div>
-
-          <div className="card p-0 overflow-hidden">
-            <table className="w-full">
-              <thead>
-                <tr>
-                  <th className="table-header text-left">Category</th>
-                  <th className="table-header text-gold-600/80 dark:text-gold-500/80 w-52">Hermz</th>
-                  <th className="table-header text-film-600/80 dark:text-film-400/80 w-52">Dust</th>
-                </tr>
-              </thead>
-              <tbody>
-                {categories.map((cat, idx) => {
-                  const catNoms = (nominees[cat.id] || []).filter(n => n.trim())
-                  const g = guesses[cat.id] || { matt: '', dustin: '' }
-                  const stripe = idx % 2 === 0 ? 'bg-white dark:bg-night-800' : 'bg-stone-50/70 dark:bg-night-800/50'
-                  return (
-                    <tr key={cat.id} className={`${stripe} table-row-hover`}>
-                      <td className="table-cell py-3 px-5 text-sm font-medium text-gray-700 dark:text-gray-200">
-                        {cat.name}
-                      </td>
-                      <td className="table-cell py-3 px-5 w-52">
-                        <GuessSelect
-                          value={g.matt}
-                          nominees={catNoms}
-                          onChange={v => updateGuess(cat.id, 'matt', v)}
-                          color="gold"
-                        />
-                      </td>
-                      <td className="table-cell py-3 px-5 w-52">
-                        <GuessSelect
-                          value={g.dustin}
-                          nominees={catNoms}
-                          onChange={v => updateGuess(cat.id, 'dustin', v)}
-                          color="film"
-                        />
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="mt-6 flex justify-between">
-            <button type="button" onClick={() => setStep(2)} className="btn-ghost text-sm">← Back</button>
-            <button type="submit" disabled={saving} className="btn-primary text-sm px-5">
-              {saving ? 'Saving…' : '🏆 Finish & View Year'}
-            </button>
-          </div>
-        </form>
-      )}
-
+            <div className="mt-6 flex justify-between">
+              <button type="button" onClick={() => setStep(2)} className="btn-ghost text-sm">← Back</button>
+              <button type="submit" disabled={saving} className="btn-gold text-sm px-5">
+                {saving ? 'Saving…' : '🏆 Finish & View Year'}
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
     </div>
   )
 }
 
-// ── CategoryNomineesCard ───────────────────────────────────────────────────────
+// ──────────────────────────────────────────────────────────────────────────────
+function Field({ label, required, optional, children }) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-300 mb-1.5">
+        {label}
+        {required && <span className="text-red-400 ml-1">*</span>}
+        {optional && <span className="text-gray-500 font-normal ml-1">(optional)</span>}
+      </label>
+      {children}
+    </div>
+  )
+}
 
 function CategoryNomineesCard({ category, nominees, onUpdate, onAdd, onRemove }) {
   const [open, setOpen] = useState(true)
   const filled = nominees.filter(n => n.trim()).length
-
   return (
     <div className="card p-0 overflow-hidden">
-      <button
-        type="button"
-        onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-stone-50 dark:hover:bg-night-700/50 transition-colors"
-      >
-        <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">{category.name}</span>
+      <button type="button" onClick={() => setOpen(o => !o)}
+              className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-night-700/40 transition-colors">
         <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-400 dark:text-gray-500">{filled} entered</span>
-          <span className="text-gray-400 dark:text-gray-600 text-xs">{open ? '▲' : '▼'}</span>
+          <span className="font-mono text-[11px] tracking-kicker text-white uppercase">{category.name}</span>
+          {filled > 0 && (
+            <span className="font-mono text-[10px] bg-emerald-500/15 text-emerald-400 px-1.5 py-0.5 rounded-full">
+              {filled}
+            </span>
+          )}
         </div>
+        <span className="text-gray-500 text-xs">{open ? '▲' : '▼'}</span>
       </button>
       {open && (
-        <div className="px-4 pb-4 pt-1 border-t border-stone-100 dark:border-night-700">
+        <div className="px-4 pb-4 pt-1 border-t border-night-700">
           <div className="space-y-2">
             {nominees.map((nom, idx) => (
               <div key={idx} className="flex items-center gap-2">
-                <span className="text-xs text-gray-400 w-5 text-right flex-shrink-0">{idx + 1}.</span>
-                <input
-                  type="text"
-                  value={nom}
-                  onChange={e => onUpdate(idx, e.target.value)}
-                  placeholder={`Nominee ${idx + 1}`}
-                  className="input text-sm py-1.5 flex-1"
-                />
+                <span className="font-mono text-[10px] text-gray-500 w-5 text-right flex-shrink-0">{idx + 1}.</span>
+                <input type="text" value={nom} onChange={e => onUpdate(idx, e.target.value)}
+                       placeholder={`Nominee ${idx + 1}`} className="input text-sm py-1.5 flex-1" />
                 {nominees.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => onRemove(idx)}
-                    className="text-gray-300 hover:text-red-400 dark:text-gray-600 dark:hover:text-red-500 transition-colors text-sm flex-shrink-0"
-                  >
+                  <button type="button" onClick={() => onRemove(idx)}
+                          className="text-gray-500 hover:text-red-400 transition-colors text-sm flex-shrink-0">
                     ✕
                   </button>
                 )}
@@ -495,11 +595,8 @@ function CategoryNomineesCard({ category, nominees, onUpdate, onAdd, onRemove })
             ))}
           </div>
           {nominees.length < (category.name === 'Best Picture' ? 10 : 8) && (
-            <button
-              type="button"
-              onClick={onAdd}
-              className="mt-2 text-xs text-gold-600 dark:text-gold-400 hover:text-gold-700 dark:hover:text-gold-300 transition-colors"
-            >
+            <button type="button" onClick={onAdd}
+                    className="mt-2 text-xs text-gold-400 hover:text-gold-300 transition-colors">
               + Add nominee
             </button>
           )}
@@ -509,21 +606,13 @@ function CategoryNomineesCard({ category, nominees, onUpdate, onAdd, onRemove })
   )
 }
 
-// ── GuessSelect ───────────────────────────────────────────────────────────────
-
 function GuessSelect({ value, nominees, onChange, color }) {
-  const colorClass = color === 'gold'
-    ? 'border-gold-300 dark:border-gold-700/40'
-    : 'border-film-300 dark:border-film-700/40'
-
+  const colorClass = color === 'gold' ? 'border-gold-500/40' : 'border-film-500/40'
   return (
-    <select
-      value={value}
-      onChange={e => onChange(e.target.value)}
-      className={`select text-xs py-1.5 w-full border ${colorClass}`}
-    >
-      <option value="">— No guess —</option>
-      {nominees.map(n => <option key={n} value={n}>{n}</option>)}
+    <select value={value} onChange={e => onChange(e.target.value)}
+            className={`select text-xs py-1.5 w-full ${colorClass}`}>
+      <option value="" className="bg-night-900">— No guess —</option>
+      {nominees.map(n => <option key={n} value={n} className="bg-night-900">{n}</option>)}
     </select>
   )
 }

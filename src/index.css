@@ -1,136 +1,179 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@300;400;500;600&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ═══════════════════════════════════════════════════════════════════════════
+ * PROJECTOR ROOM — Hermz & D visual system
+ * Dark-first cinematic theme.
+ * ═══════════════════════════════════════════════════════════════════════════
+ */
+
 @layer base {
   html, body {
-    @apply bg-stone-50 text-gray-900 m-0 p-0;
-    font-family: 'Inter', system-ui, sans-serif;
+    @apply bg-night-950 text-gray-100 m-0 p-0;
+    font-family: 'Geist', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Dark mode base */
-  html.dark body {
-    background-color: #0a0a0f;
-    color: #f3f4f6;
+  html:not(.dark) body {
+    background-color: #FBF7EE;
+    color: #15141E;
   }
 
-  h1, h2, h3 {
-    font-family: 'Georgia', serif;
+  h1, h2 {
+    font-family: 'Bebas Neue', system-ui, sans-serif;
+    letter-spacing: 0.01em;
+    line-height: 0.95;
+  }
+  h3 {
+    font-family: 'Instrument Serif', Georgia, serif;
+    font-style: italic;
+    letter-spacing: 0.005em;
   }
 
   ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { @apply bg-stone-200 dark:bg-night-900; }
-  ::-webkit-scrollbar-thumb { @apply bg-stone-400 dark:bg-night-600 rounded-full; }
-  ::-webkit-scrollbar-thumb:hover { @apply bg-gold-600; }
+  ::-webkit-scrollbar-track { @apply bg-night-900; }
+  ::-webkit-scrollbar-thumb { @apply bg-night-600 rounded-full; }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-gold-500; }
 }
 
 @layer components {
-  /* ── Cards ── */
+  /* ── Cards ─────────────────────────────────────────────────────────────── */
   .card {
-    @apply bg-white border border-stone-200 rounded-xl p-6
-           shadow-sm
-           dark:bg-night-800 dark:border-night-600 dark:shadow-none;
+    @apply bg-night-800 border border-night-600/60 rounded-2xl p-6;
   }
   .card-hover {
     @apply card transition-all duration-200
-           hover:border-gold-400/60 hover:shadow-md hover:shadow-gold-100/40 cursor-pointer
-           dark:hover:border-gold-600/60 dark:hover:shadow-lg dark:hover:shadow-gold-900/20;
+           hover:border-gold-500/60 hover:-translate-y-0.5 cursor-pointer;
+  }
+  .card-panel {
+    @apply bg-night-800/80 backdrop-blur-md border border-white/[0.08] rounded-xl;
   }
 
-  /* ── Buttons ── */
+  /* ── Buttons ──────────────────────────────────────────────────────────── */
   .btn-gold {
-    @apply bg-gold-500 hover:bg-gold-400 text-white font-semibold
-           px-4 py-2 rounded-lg transition-colors duration-150 disabled:opacity-50
-           dark:text-night-950;
+    @apply bg-gold-500 hover:bg-gold-400 text-night-950 font-medium
+           px-4 py-2 rounded-full transition-colors duration-150
+           disabled:opacity-50;
   }
   .btn-ghost {
-    @apply border border-stone-300 hover:border-gold-500 text-gray-600
-           hover:text-gold-600 px-4 py-2 rounded-lg transition-colors duration-150
-           dark:border-night-600 dark:hover:border-gold-500 dark:text-gray-300
-           dark:hover:text-gold-400;
+    @apply border border-night-600 hover:border-gold-500 text-gray-300
+           hover:text-gold-400 px-4 py-2 rounded-full transition-colors
+           duration-150 bg-night-800/50;
   }
   .btn-film {
-    @apply bg-film-700 hover:bg-film-600 text-white font-semibold
-           px-4 py-2 rounded-lg transition-colors duration-150;
+    @apply bg-film-500 hover:bg-film-400 text-night-950 font-medium
+           px-4 py-2 rounded-full transition-colors duration-150;
+  }
+  .btn-cinema {
+    @apply border border-cinema-500/40 text-cinema-400
+           hover:bg-cinema-500/10 hover:border-cinema-500
+           px-4 py-2 rounded-full transition-colors duration-150;
+  }
+  .btn-theme-toggle {
+    @apply w-9 h-9 flex items-center justify-center rounded-lg
+           text-gray-400 hover:text-gray-200 hover:bg-night-700
+           transition-colors duration-150;
   }
 
-  /* ── Badges ── */
+  /* ── Badges ───────────────────────────────────────────────────────────── */
   .badge-correct {
-    @apply bg-emerald-100 text-emerald-700 border border-emerald-300
-           text-xs px-2 py-0.5 rounded-full font-medium
-           dark:bg-emerald-900/50 dark:text-emerald-400 dark:border-emerald-700/50;
+    @apply bg-emerald-500/15 text-emerald-400 border border-emerald-500/30
+           text-xs px-2 py-0.5 rounded-full font-medium;
   }
   .badge-incorrect {
-    @apply bg-red-100 text-red-700 border border-red-300
-           text-xs px-2 py-0.5 rounded-full font-medium
-           dark:bg-red-900/50 dark:text-red-400 dark:border-red-700/50;
+    @apply bg-red-500/15 text-red-400 border border-red-500/30
+           text-xs px-2 py-0.5 rounded-full font-medium;
   }
   .badge-gold {
-    @apply bg-gold-100 text-gold-700 border border-gold-300
-           text-xs px-2 py-0.5 rounded-full font-medium
-           dark:bg-gold-900/40 dark:text-gold-400 dark:border-gold-700/50;
+    @apply bg-gold-500/15 text-gold-400 border border-gold-500/30
+           text-xs px-2 py-0.5 rounded-full font-medium;
   }
   .badge-tiebreaker {
-    @apply bg-amber-100 text-amber-700 border border-amber-300
-           text-xs px-2 py-0.5 rounded-full font-medium
-           dark:bg-amber-900/60 dark:text-amber-300 dark:border-amber-600/50;
+    @apply bg-cinema-500/10 text-cinema-400 border border-cinema-500/30
+           text-xs px-2 py-0.5 rounded-full font-medium;
   }
 
-  /* ── Typography ── */
-  .section-title    { @apply font-display text-2xl font-bold text-gray-900 mb-1 dark:text-white; }
-  .section-subtitle { @apply text-gray-500 text-sm mb-6 dark:text-gray-400; }
-  .stat-label       { @apply text-xs text-gray-500 uppercase tracking-wider dark:text-gray-500; }
-  .stat-value       { @apply text-2xl font-bold text-gray-900 dark:text-white; }
-  .page-title       { @apply font-display text-3xl md:text-4xl font-bold text-gray-900 dark:text-white; }
+  /* ── Typography ──────────────────────────────────────────────────────── */
+  .kicker {
+    @apply font-mono text-[11px] uppercase tracking-kicker text-gold-500;
+  }
+  .kicker-dim {
+    @apply font-mono text-[11px] uppercase tracking-kicker text-gray-400;
+  }
+  .kicker-cinema {
+    @apply font-mono text-[11px] uppercase tracking-kicker text-cinema-400;
+  }
 
-  /* ── Tables ── */
+  .page-title {
+    @apply font-display text-5xl md:text-6xl text-white font-normal leading-[0.92];
+  }
+  .section-title {
+    @apply font-display text-3xl text-white font-normal leading-tight mb-2;
+  }
+  .section-subtitle {
+    @apply font-serif italic text-gray-400 text-base mb-6;
+  }
+  .stat-label {
+    @apply font-mono text-[10px] text-gray-400 uppercase tracking-kicker;
+  }
+  .stat-value {
+    @apply font-display text-3xl text-white font-normal;
+  }
+
+  /* ── Tables ──────────────────────────────────────────────────────────── */
   .table-header {
-    @apply text-xs font-semibold text-gray-500 uppercase tracking-wider
-           px-4 py-3 text-left bg-stone-100 border-b border-stone-200
-           dark:text-gray-500 dark:bg-night-900/50 dark:border-night-700/50;
+    @apply font-mono text-[10px] text-gray-500 uppercase tracking-kicker
+           px-4 py-3 text-left bg-night-900/60 border-b border-night-600/60;
   }
   .table-cell {
-    @apply px-4 py-3 text-sm text-gray-700 border-t border-stone-100
-           dark:text-gray-300 dark:border-night-700/50;
+    @apply px-4 py-3 text-sm text-gray-300 border-t border-night-700/60;
   }
   .table-row-hover {
-    @apply hover:bg-stone-50 transition-colors duration-100
-           dark:hover:bg-night-700/40;
+    @apply hover:bg-night-700/40 transition-colors duration-100;
   }
-  /* Category header row inside Oscar tables */
   .table-category-header {
-    @apply bg-amber-100 border-t-2 border-amber-200
-           dark:bg-night-900/60 dark:border-night-600/80;
+    @apply bg-night-900/80 border-t-2 border-gold-500/30;
   }
 
-  /* ── Movement indicators ── */
-  .rank-up   { @apply text-emerald-600 dark:text-emerald-400; }
-  .rank-down { @apply text-red-500 dark:text-red-400; }
-  .rank-same { @apply text-gray-400 dark:text-gray-500; }
-  .rank-new  { @apply text-gold-600 dark:text-gold-400; }
-  .rank-off  { @apply text-gray-400 italic dark:text-gray-600; }
+  /* ── Movement indicators ─────────────────────────────────────────────── */
+  .rank-up   { @apply text-emerald-400; }
+  .rank-down { @apply text-red-400; }
+  .rank-same { @apply text-gray-500; }
+  .rank-new  { @apply text-cinema-400; }
+  .rank-off  { @apply text-gray-600 italic; }
 
-  /* ── Section dividers ── */
-  .divider { @apply border-t border-stone-200 my-6 dark:border-night-700; }
-
-  /* ── Inputs ── */
+  /* ── Inputs ──────────────────────────────────────────────────────────── */
   .input {
-    @apply bg-white border border-stone-300 text-gray-900 rounded-lg
+    @apply bg-night-800 border border-night-600 text-gray-100 rounded-lg
            px-3 py-2 text-sm focus:outline-none focus:border-gold-500
-           focus:ring-1 focus:ring-gold-500/30 transition-colors
-           dark:bg-night-700 dark:border-night-600 dark:text-gray-100
-           dark:focus:border-gold-500;
+           focus:ring-1 focus:ring-gold-500/30 transition-colors;
   }
   .select {
     @apply input appearance-none cursor-pointer;
   }
 
-  /* ── Theme toggle button ── */
-  .btn-theme-toggle {
-    @apply w-9 h-9 flex items-center justify-center rounded-lg
-           text-gray-500 hover:text-gray-700 hover:bg-stone-100
-           transition-colors duration-150
-           dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-night-700;
+  /* ── Divider ─────────────────────────────────────────────────────────── */
+  .divider { @apply border-t border-night-700 my-6; }
+
+  /* ── Pill nav ────────────────────────────────────────────────────────── */
+  .pill {
+    @apply px-3 py-1.5 rounded-full font-medium text-xs text-gray-400
+           bg-night-800/60 border border-night-600/60
+           hover:text-gray-200 hover:border-night-600 transition-colors;
+  }
+  .pill-active {
+    @apply px-3 py-1.5 rounded-full font-medium text-xs
+           bg-white text-night-950 border border-white;
+  }
+  .pill-gold { @apply px-3 py-1.5 rounded-full font-medium text-xs bg-gold-500 text-night-950 border-0; }
+  .pill-film { @apply px-3 py-1.5 rounded-full font-medium text-xs bg-film-500 text-night-950 border-0; }
+
+  /* ── Bottom-up scrim used over hero film stills ──────────────────────── */
+  .scrim-bottom {
+    background: linear-gradient(180deg, rgba(7,6,8,0.45) 0%, transparent 30%, rgba(7,6,8,0.95) 100%);
   }
 }

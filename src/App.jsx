@@ -4,9 +4,10 @@ import { ThemeProvider } from './context/ThemeContext'
 import Layout from './components/layout/Layout'
 
 // Pages
-import Home     from './pages/Home'
-import Login    from './pages/Login'
-import Settings from './pages/Settings'
+import Home        from './pages/Home'
+import Login       from './pages/Login'
+import Settings    from './pages/Settings'
+import SiteUpdates from './pages/SiteUpdates'
 
 // Oscar pages
 import OscarsHome    from './pages/oscars/OscarsHome'
@@ -22,7 +23,9 @@ import MovieDetail   from './pages/movies/MovieDetail'
 import MoviesStats   from './pages/movies/MoviesStats'
 import MoviesAcclaim  from './pages/movies/MoviesAcclaim'
 import MoviesLists    from './pages/movies/MoviesLists'
-import MoviesBackfill from './pages/movies/MoviesBackfill'
+import MoviesBackfill      from './pages/movies/MoviesBackfill'
+import MoviesOscarBackfill from './pages/movies/MoviesOscarBackfill'
+import MoviesWatchlist     from './pages/movies/MoviesWatchlist'
 
 /** Redirect to /login if not authenticated */
 function Protected({ children }) {
@@ -45,6 +48,7 @@ function AppRoutes() {
       <Route element={<Layout />}>
         <Route path="/"         element={<Protected><Home /></Protected>} />
         <Route path="/settings" element={<Protected><Settings /></Protected>} />
+        <Route path="/updates"  element={<Protected><SiteUpdates /></Protected>} />
 
         {/* Oscars */}
         <Route path="/oscars"        element={<Protected><OscarsHome /></Protected>} />
@@ -59,7 +63,9 @@ function AppRoutes() {
         <Route path="/movies/stats"    element={<Protected><MoviesStats /></Protected>} />
         <Route path="/movies/acclaim"   element={<Protected><MoviesAcclaim /></Protected>} />
         <Route path="/movies/lists"     element={<Protected><MoviesLists /></Protected>} />
-        <Route path="/movies/backfill"  element={<Protected><MoviesBackfill /></Protected>} />
+        <Route path="/movies/watchlist"       element={<Protected><MoviesWatchlist /></Protected>} />
+        <Route path="/movies/backfill"        element={<Protected><MoviesBackfill /></Protected>} />
+        <Route path="/movies/oscar-backfill"  element={<Protected><MoviesOscarBackfill /></Protected>} />
         <Route path="/movies/:filmId"   element={<Protected><MovieDetail /></Protected>} />
 
         {/* Fallback */}

@@ -27,6 +27,24 @@ export async function searchFilmByTitle(title, year) {
 }
 
 /**
+ * Search OMDB by query string — returns up to 10 results (posters + years)
+ * Uses the OMDB search endpoint (?s=) for multi-result picker UIs
+ * @param {string} query
+ * @returns {Promise<Array<{ imdbId, title, year, posterUrl }>>}
+ */
+export async function searchFilmsByQuery(query) {
+  const res  = await fetch(`${OMDB_BASE}/?s=${encodeURIComponent(query)}&type=movie&apikey=${OMDB_API_KEY}`)
+  const data = await res.json()
+  if (data.Response === 'False') return []   // no results — don't throw
+  return (data.Search || []).map(item => ({
+    imdbId:    item.imdbID,
+    title:     item.Title,
+    year:      item.Year,
+    posterUrl: item.Poster !== 'N/A' ? item.Poster : null,
+  }))
+}
+
+/**
  * Normalise a raw OMDB response into our app's shape
  */
 function normalise(data) {
