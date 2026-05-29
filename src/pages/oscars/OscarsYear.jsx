@@ -410,9 +410,9 @@ export default function OscarsYear() {
           {groups.map(group => (
             <div key={group.name}>
               <div className="flex items-center gap-3 pb-2 mb-4 border-b border-night-700/60">
-                <span className="font-mono text-xs tracking-cinema text-gold-500 uppercase">{GROUP_META[group.name] || group.name}</span>
+                <span className="font-mono text-sm tracking-cinema text-gold-500 uppercase">{GROUP_META[group.name] || group.name}</span>
                 <span className="flex-1 h-px bg-night-700/60" />
-                <span className="font-mono text-xs tracking-kicker text-gray-500">{group.cats.length} {group.cats.length === 1 ? 'category' : 'categories'}</span>
+                <span className="font-mono text-sm tracking-kicker text-gray-500">{group.cats.length} {group.cats.length === 1 ? 'category' : 'categories'}</span>
               </div>
               <div className="space-y-3">
                 {group.cats.map(({ c, idx }) => (
@@ -440,12 +440,12 @@ function HeroYearScore({ who, score, total, winner, tb }) {
   return (
     <div className="text-center px-1.5 relative">
       {winner && (
-        <div className={`absolute -top-3 left-1/2 -translate-x-1/2 font-mono text-[8px]
+        <div className={`absolute -top-3 left-1/2 -translate-x-1/2 font-mono text-[10px]
                          tracking-cinema ${c} px-1.5 py-px rounded bg-night-950/80 whitespace-nowrap`}>
           ● WINNER{tb && ' · TIEBREAKER'}
         </div>
       )}
-      <div className={`font-mono text-[9px] tracking-cinema ${c} mb-1`}>{name}</div>
+      <div className={`font-mono text-xs tracking-cinema ${c} mb-1`}>{name}</div>
       <div className="flex items-baseline justify-center gap-1.5">
         <span className="font-display text-4xl text-white leading-none tracking-wide">{score}</span>
         <span className="font-mono text-xs text-gray-500 tracking-kicker">/{total}</span>
@@ -481,9 +481,9 @@ function CategoryCard({ cat, idx, yearNum, editMode, posterMap, onToggleNominee,
       {/* category header */}
       <div className="px-4 pt-3 pb-2.5 flex items-center justify-center gap-2 flex-wrap
                       border-b border-night-700/50 bg-night-900/30">
-        <span className="font-mono text-sm tracking-cinema text-gold-500 uppercase">{label}</span>
-        {isNew && <span className="text-xs bg-emerald-500/15 text-emerald-400 border border-emerald-500/40 px-2 py-0.5 rounded font-mono tracking-cinema">NEW</span>}
-        {isRetired && <span className="text-xs bg-gray-700 text-gray-400 border border-gray-600 px-2 py-0.5 rounded font-mono tracking-cinema">FINAL YEAR</span>}
+        <span className="font-mono text-base tracking-cinema text-gold-500 uppercase">{label}</span>
+        {isNew && <span className="text-sm bg-emerald-500/15 text-emerald-400 border border-emerald-500/40 px-2 py-0.5 rounded font-mono tracking-cinema">NEW</span>}
+        {isRetired && <span className="text-sm bg-gray-700 text-gray-400 border border-gray-600 px-2 py-0.5 rounded font-mono tracking-cinema">FINAL YEAR</span>}
       </div>
 
       {/* three picks */}
@@ -503,10 +503,10 @@ function CategoryCard({ cat, idx, yearNum, editMode, posterMap, onToggleNominee,
       ) : (
         nominees.length > 0 && (
           <div className="px-4 pb-4 pt-1 border-t border-night-700/40">
-            <div className="font-mono text-xs tracking-cinema text-gray-500 uppercase mb-2">The Field</div>
+            <div className="font-mono text-sm tracking-cinema text-gray-500 uppercase mb-2">The Field</div>
             <div className="flex flex-wrap gap-x-3 gap-y-1.5">
               {nominees.map((n, i) => (
-                <span key={i} className={`text-sm leading-snug ${
+                <span key={i} className={`text-base leading-snug ${
                   n.is_winner ? 'text-gold-400 font-semibold' : 'text-gray-400'
                 }`}>
                   {n.is_winner && <span className="mr-0.5">★</span>}{n.name}
@@ -531,12 +531,12 @@ function PickTile({ who, name, correct, posterMap }) {
 
   return (
     <div className="min-w-0">
-      <div className={`font-mono text-xs tracking-cinema uppercase mb-1 flex items-center gap-1.5 ${labelColor}`}>
+      <div className={`font-mono text-sm tracking-cinema uppercase mb-1 flex items-center gap-1.5 ${labelColor}`}>
         <span>{labelText}</span>
         {correct === true  && <span className="text-emerald-400">✓</span>}
         {correct === false && <span className="text-red-400">✗</span>}
       </div>
-      <div className={`font-display text-base leading-tight tracking-wide line-clamp-2 ${nameColor}`}>
+      <div className={`font-display text-lg leading-tight tracking-wide line-clamp-2 ${nameColor}`}>
         {(name || 'TBD').toUpperCase()}
       </div>
     </div>
@@ -550,11 +550,11 @@ function EditField({ nominees, winner, mattGuess, dustinGuess, onToggleNominee, 
   return (
     <div className="px-4 pb-4 pt-2 space-y-3 border-t border-night-700/50">
       <div>
-        <div className="font-mono text-xs tracking-cinema text-cinema-400 uppercase mb-2">Set Winner</div>
+        <div className="font-mono text-sm tracking-cinema text-cinema-400 uppercase mb-2">Set Winner</div>
         <div className="flex flex-wrap gap-2">
           {nominees.map((n, i) => (
             <button key={i} onClick={() => onToggleNominee(i)}
-              className={`text-sm px-3 py-1.5 rounded transition-colors ${
+              className={`text-base px-3 py-1.5 rounded transition-colors ${
                 n.is_winner
                   ? 'text-gold-400 font-semibold bg-gold-500/10 ring-1 ring-gold-500/40'
                   : 'text-gray-400 bg-night-700/50 hover:bg-night-700 hover:text-gray-200'
@@ -566,14 +566,14 @@ function EditField({ nominees, winner, mattGuess, dustinGuess, onToggleNominee, 
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <div className="font-mono text-xs tracking-cinema text-gold-500 uppercase mb-1.5">Hermz pick</div>
-          <select value={mattGuess || ''} onChange={e => onChangeMatt(e.target.value)} className="select text-sm py-1.5 px-2 w-full">
+          <div className="font-mono text-sm tracking-cinema text-gold-500 uppercase mb-1.5">Hermz pick</div>
+          <select value={mattGuess || ''} onChange={e => onChangeMatt(e.target.value)} className="select text-base py-1.5 px-2 w-full">
             {opts(mattGuess).map(n => <option key={n} value={n} className="bg-night-900">{n}</option>)}
           </select>
         </div>
         <div>
-          <div className="font-mono text-xs tracking-cinema text-film-500 uppercase mb-1.5">Dust pick</div>
-          <select value={dustinGuess || ''} onChange={e => onChangeDustin(e.target.value)} className="select text-sm py-1.5 px-2 w-full">
+          <div className="font-mono text-sm tracking-cinema text-film-500 uppercase mb-1.5">Dust pick</div>
+          <select value={dustinGuess || ''} onChange={e => onChangeDustin(e.target.value)} className="select text-base py-1.5 px-2 w-full">
             {opts(dustinGuess).map(n => <option key={n} value={n} className="bg-night-900">{n}</option>)}
           </select>
         </div>
