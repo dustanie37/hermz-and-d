@@ -5,6 +5,16 @@ const UPDATES = [
     date: 'May 29, 2026',
     entries: [
       {
+        tag: 'Films',
+        color: 'film',
+        text: 'Future Consideration — "Seen It" tab renamed to "First Watch" across the tab bar, move button, and Add Film modal.',
+      },
+      {
+        tag: 'Films',
+        color: 'film',
+        text: 'Future Consideration — Want to Watch cards now show two move buttons on hover: "→ First Watch" (blue) and "→ Rewatch" (teal), so a film can be moved to either list in one tap.',
+      },
+      {
         tag: 'Podcast',
         color: 'cinema',
         text: 'Cinematrix launched — new top-level section at /podcast. Landing page lists Episode 0 (origin story) followed by all 2026 combined films ordered from last-ranked to #1 (each becomes a numbered episode). Individual episode pages pull full film data: ranking history across all editions, narrative talking points from ranking data, Oscar story, external list appearances, score breakdown by category, and a show notes scaffold. Prev/next navigation between episodes. "Cinematrix" added to desktop nav and mobile menu.',
