@@ -7,7 +7,7 @@ const UPDATES = [
       {
         tag: 'Oscars',
         color: 'gold',
-        text: 'Oscar Year page — Phase 5 poster-tile redesign. Categories now grouped (Majors, Performance, Writing, Foreign+Animated+Doc, Craft, Music, Sound, Shorts, Casting) in a two-column layout. Each category shows Winner / Hermz / Dust as mini film-still tiles with ✓/✗, real posters where the DB has them. Full nominee field kept underneath. All edit-mode functionality preserved.',
+        text: 'Oscar Year page — Phase 5 redesign. Categories grouped identically to the Stats page (Major Awards, Acting, Writing, Craft, Music & Sound, Short Films, Discontinued) in a single column. Winner / Hermz / Dust shown as text tiles with ✓/✗ — no more tiny gradient squares. All fonts bumped up. Full nominee field and edit mode fully preserved.',
       },
       {
         tag: 'Oscars',
