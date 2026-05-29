@@ -52,6 +52,18 @@ const TOOLTIP = { background: '#15141E', border: '1px solid #2A2734', borderRadi
 const AXIS = '#9298A6'
 const GRID = '#2A2734'
 
+// ── PANEL HEADER ─────────────────────────────────────────────────────────────
+function PanelHeader({ title, subtitle }) {
+  return (
+    <div className="mb-4">
+      <div className="font-display text-xl text-white tracking-wide leading-none">{title}</div>
+      {subtitle && (
+        <div className="font-mono text-[11px] tracking-kicker text-gray-500 uppercase mt-1.5">{subtitle}</div>
+      )}
+    </div>
+  )
+}
+
 // ── LEADERBOARD BAR — replaces all horizontal Recharts bar charts ─────────────
 function LeaderboardBar({ data, color = DC }) {
   const max = Math.max(...data.map(d => d.count), 1)
@@ -300,12 +312,12 @@ function TasteComparisonSection({ allH2HFilms, loading }) {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="card">
-            <span className="kicker">Decade Face-Off · {selectedYear}</span>
+            <PanelHeader title="Decade Face-Off" subtitle={String(selectedYear)} />
             <p className="font-serif italic text-base text-gray-400 mt-1 mb-4">How their era preferences compare</p>
             <H2HBar data={decadeH2H} />
           </div>
           <div className="card">
-            <span className="kicker">Genre Face-Off · {selectedYear}</span>
+            <PanelHeader title="Genre Face-Off" subtitle={String(selectedYear)} />
             <p className="font-serif italic text-base text-gray-400 mt-1 mb-4">Who gravitates toward which genres</p>
             <H2HBar data={genreH2H} />
           </div>
@@ -457,12 +469,12 @@ function RankMovementsSection({ allTimeData }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
       <div className="card">
-        <span className="kicker">Biggest Risers</span>
+        <PanelHeader title="Biggest Risers" />
         <p className="font-serif italic text-base text-gray-400 mt-1 mb-4">Largest rank improvements between consecutive events</p>
         <MovementCard items={topRisers} type="riser" />
       </div>
       <div className="card">
-        <span className="kicker">Biggest Fallers</span>
+        <PanelHeader title="Biggest Fallers" />
         <p className="font-serif italic text-base text-gray-400 mt-1 mb-4">Largest rank drops between consecutive events</p>
         <MovementCard items={topFallers} type="faller" />
       </div>
@@ -490,12 +502,12 @@ function AllTimeArcSection({ allTimeData }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
       <div className="card">
-        <span className="kicker">All-Time Climbers</span>
+        <PanelHeader title="All-Time Climbers" />
         <p className="font-serif italic text-base text-gray-400 mt-1 mb-4">Biggest rank improvements from first to last appearance</p>
         <MovementCard items={topRisers} type="riser" />
       </div>
       <div className="card">
-        <span className="kicker">All-Time Drops</span>
+        <PanelHeader title="All-Time Drops" />
         <p className="font-serif italic text-base text-gray-400 mt-1 mb-4">Biggest rank declines from first to last appearance</p>
         <MovementCard items={topFallers} type="faller" />
       </div>
@@ -515,7 +527,7 @@ function AlwaysPresentSection({ allTimeData }) {
     .sort((a, b) => a.avgRank - b.avgRank), [filmMap, byFilm])
   return (
     <div className="card">
-      <span className="kicker">On Every Combined List</span>
+      <PanelHeader title="On Every Combined List" />
       <p className="font-serif italic text-base text-gray-400 mt-1 mb-4">
         {list.length} film{list.length !== 1 ? 's' : ''} appeared on all 4 combined lists (2001, 2007, 2016, 2026)
       </p>
@@ -531,7 +543,7 @@ function AlwaysPresentSection({ allTimeData }) {
               <div className="flex gap-3 flex-shrink-0">
                 {EVENTS_ORDER.map(y => (
                   <div key={y} className="text-center min-w-[34px]">
-                    <div className="font-mono text-[10px] text-gray-500 leading-none uppercase">{shortYear(y)}</div>
+                    <div className="font-mono text-[11px] text-gray-500 leading-none uppercase">{shortYear(y)}</div>
                     <div className="font-mono text-sm font-semibold text-gray-200 leading-snug tabular-nums">#{f.ranks[y]}</div>
                   </div>
                 ))}
@@ -560,7 +572,7 @@ function InAndOutSection({ allTimeData }) {
     .sort((a, b) => sortTitle(a.title).localeCompare(sortTitle(b.title))), [filmMap, byFilm])
   return (
     <div className="card">
-      <span className="kicker-cinema">Appeared, Disappeared &amp; Returned</span>
+      <PanelHeader title="Appeared, Disappeared & Returned" />
       <p className="font-serif italic text-base text-gray-400 mt-1 mb-4">
         {list.length} film{list.length !== 1 ? 's' : ''} were absent from at least one event before returning
       </p>
@@ -576,7 +588,7 @@ function InAndOutSection({ allTimeData }) {
               <div className="flex gap-3 flex-shrink-0">
                 {EVENTS_ORDER.map(y => (
                   <div key={y} className="text-center min-w-[34px]">
-                    <div className="font-mono text-[10px] text-gray-500 leading-none uppercase">{shortYear(y)}</div>
+                    <div className="font-mono text-[11px] text-gray-500 leading-none uppercase">{shortYear(y)}</div>
                     {f.ranks[y] != null
                       ? <div className="font-mono text-sm font-semibold text-gray-200 leading-snug tabular-nums">#{f.ranks[y]}</div>
                       : <div className="font-mono text-xs text-gray-600 leading-snug">NR</div>
@@ -747,7 +759,7 @@ function RivalryTab({ rivalryData, allH2HFilms, allH2HLoading }) {
           <div className="card">
             <div className="flex items-center gap-2 mb-1">
               <span className="w-2 h-2 rounded-full" style={{ background: DC }} />
-              <span className="kicker">Dust Favors</span>
+              <PanelHeader title="Dust Favors" />
             </div>
             <p className="font-serif italic text-base text-gray-400 mb-4">Films Dust ranked much higher than Hermz</p>
             {dustFavors.length === 0
@@ -758,7 +770,7 @@ function RivalryTab({ rivalryData, allH2HFilms, allH2HLoading }) {
           <div className="card">
             <div className="flex items-center gap-2 mb-1">
               <span className="w-2 h-2 rounded-full" style={{ background: HC }} />
-              <span className="kicker">Hermz Favors</span>
+              <PanelHeader title="Hermz Favors" />
             </div>
             <p className="font-serif italic text-base text-gray-400 mb-4">Films Hermz ranked much higher than Dust</p>
             {hermzFavors.length === 0
@@ -772,7 +784,7 @@ function RivalryTab({ rivalryData, allH2HFilms, allH2HLoading }) {
       {/* Polarizing vs Agreed */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <div className="card">
-          <span className="kicker-cinema">Most Polarizing</span>
+          <PanelHeader title="Most Polarizing" />
           <p className="font-serif italic text-base text-gray-400 mt-1 mb-4">Consistently largest average gap across shared events</p>
           <div className="space-y-0.5">
             {mostPolarizing.map(f => (
@@ -794,7 +806,7 @@ function RivalryTab({ rivalryData, allH2HFilms, allH2HLoading }) {
           </div>
         </div>
         <div className="card">
-          <span className="kicker">Most Agreed-Upon</span>
+          <PanelHeader title="Most Agreed-Upon" />
           <p className="font-serif italic text-base text-gray-400 mt-1 mb-4">Films they consistently ranked closest together</p>
           <div className="space-y-0.5">
             {mostAgreed.map(f => (
@@ -820,7 +832,7 @@ function RivalryTab({ rivalryData, allH2HFilms, allH2HLoading }) {
       {/* The Flip */}
       {theFlip.length > 0 && (
         <div className="card">
-          <span className="kicker-cinema">The Flip</span>
+          <PanelHeader title="The Flip" />
           <p className="font-serif italic text-base text-gray-400 mt-1 mb-4">
             {theFlip.length} film{theFlip.length !== 1 ? 's' : ''} where allegiance switched direction between events
           </p>
@@ -860,7 +872,7 @@ function RivalryTab({ rivalryData, allH2HFilms, allH2HLoading }) {
           <div className="card">
             <div className="flex items-center gap-2 mb-1">
               <span className="w-2 h-2 rounded-full" style={{ background: DC }} />
-              <span className="kicker">Dust's Exclusives</span>
+              <PanelHeader title="Dust's Exclusives" />
             </div>
             <p className="font-serif italic text-base text-gray-400 mb-4">{dustOnly.length} films Dust ranked that Hermz never did</p>
             <div className="space-y-0.5 max-h-96 overflow-y-auto">
@@ -875,7 +887,7 @@ function RivalryTab({ rivalryData, allH2HFilms, allH2HLoading }) {
           <div className="card">
             <div className="flex items-center gap-2 mb-1">
               <span className="w-2 h-2 rounded-full" style={{ background: HC }} />
-              <span className="kicker">Hermz's Exclusives</span>
+              <PanelHeader title="Hermz's Exclusives" />
             </div>
             <p className="font-serif italic text-base text-gray-400 mb-4">{mattOnly.length} films Hermz ranked that Dust never did</p>
             <div className="space-y-0.5 max-h-96 overflow-y-auto">
@@ -998,7 +1010,7 @@ function ScoreAnalysisTab({ scoresData, profiles, events }) {
 
           {/* ── Average scores — dumbbell chart ─────────────────────────────── */}
           <div className="card">
-            <span className="kicker">Average Scores by Category · {selectedEvent}</span>
+            <PanelHeader title="Average Scores by Category" subtitle={String(selectedEvent)} />
             <p className="font-serif italic text-base text-gray-400 mt-1 mb-4">
               Average score per film across all {selectedEvent} ranked films. Personal Impact normalized to /10.
             </p>
@@ -1040,7 +1052,7 @@ function ScoreAnalysisTab({ scoresData, profiles, events }) {
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0 w-[168px] justify-end">
                       <span className="font-mono text-sm tabular-nums font-semibold" style={{ color: DC }}>{row.Dust?.toFixed(2) ?? '—'}</span>
-                      <span className="font-mono text-[10px] text-gray-700">·</span>
+                      <span className="font-mono text-[11px] text-gray-700">·</span>
                       <span className="font-mono text-sm tabular-nums font-semibold" style={{ color: HC }}>{row.Hermz?.toFixed(2) ?? '—'}</span>
                       <span className="font-mono text-sm tracking-kicker uppercase w-[60px] text-right font-semibold" style={{ color: diffColor }}>{diffLabel}</span>
                     </div>
@@ -1053,7 +1065,7 @@ function ScoreAnalysisTab({ scoresData, profiles, events }) {
           {/* ── Perfect scores — interactive card grid ───────────────────────── */}
           {tensData.length > 0 && (
             <div className="card">
-              <span className="kicker">Perfect Scores · {selectedEvent}</span>
+              <PanelHeader title="Perfect Scores" subtitle={String(selectedEvent)} />
               <p className="font-serif italic text-base text-gray-400 mt-1 mb-4">
                 Count of 10s per category (20 for Personal Impact) — click a card to see the films
               </p>
@@ -1084,7 +1096,7 @@ function ScoreAnalysisTab({ scoresData, profiles, events }) {
                           : 'border-night-600 bg-night-900/60 hover:border-night-500 hover:bg-night-800/50'
                       }`}
                     >
-                      <div className="font-mono text-[10px] tracking-kicker text-white uppercase leading-tight mb-2">{row.category}</div>
+                      <div className="font-mono text-[11px] tracking-kicker text-white uppercase leading-tight mb-2">{row.category}</div>
                       <div className="flex items-baseline gap-1.5 justify-end">
                         <span className="font-display text-2xl tracking-wide leading-none" style={{ color: DC }}>{row.Dust}</span>
                         <span className="font-mono text-sm text-gray-700">/</span>
@@ -1210,7 +1222,7 @@ function PodcastPrepTab({ allTimeData }) {
     <div>
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3 print:hidden">
         <div>
-          <span className="kicker">2026 Combined List · Podcast Prep</span>
+          <PanelHeader title="2026 Combined List" subtitle="Podcast Prep" />
           <p className="font-serif italic text-base text-gray-400 mt-1">
             {totalFilms} films · Top decade: {topDecade ? `${decadeLabel(Number(topDecade[0]))} (${topDecade[1]})` : '—'} · Top genre: {topGenre?.[0] ?? '—'}
           </p>
@@ -1219,7 +1231,7 @@ function PodcastPrepTab({ allTimeData }) {
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <div className="card lg:col-span-2">
-          <span className="kicker">Top 10</span>
+          <PanelHeader title="Top 10" />
           <p className="font-serif italic text-base text-gray-400 mt-1 mb-4">2026 combined list — the cream of the crop</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {top10.map(f => (
@@ -1231,14 +1243,14 @@ function PodcastPrepTab({ allTimeData }) {
           </div>
         </div>
         <div className="card">
-          <span className="kicker-cinema">New Additions</span>
+          <PanelHeader title="New Additions" />
           <p className="font-serif italic text-base text-gray-400 mt-1 mb-4">{newFilms.length} films appearing on a combined list for the first time</p>
           <div className="space-y-1.5 max-h-80 overflow-y-auto">
             {newFilms.map(f => <FilmPill key={f.filmId} filmId={f.filmId} rank={f.rank} title={f.film?.title ?? '?'} sub={f.film?.release_year ?? ''} />)}
           </div>
         </div>
         <div className="card">
-          <span className="kicker">Biggest Risers vs '16</span>
+          <PanelHeader title="Biggest Risers vs '16" />
           <p className="font-serif italic text-base text-gray-400 mt-1 mb-4">Films that climbed most since the 2016 combined list</p>
           <div className="space-y-1.5">
             {biggestRisers2026.length === 0
@@ -1250,7 +1262,7 @@ function PodcastPrepTab({ allTimeData }) {
           </div>
         </div>
         <div className="card lg:col-span-2">
-          <span className="kicker">On All 4 Lists</span>
+          <PanelHeader title="On All 4 Lists" />
           <p className="font-serif italic text-base text-gray-400 mt-1 mb-4">{alwaysPresent.length} films that made every combined list since 2001</p>
           {alwaysPresent.length === 0 ? (
             <p className="text-gray-500 text-sm text-center py-4 italic">None.</p>
@@ -1318,7 +1330,7 @@ function CrossoverTab({ data }) {
         <div className="mb-5">
           <div className="flex items-start justify-between flex-wrap gap-3 mb-4">
             <div>
-              <span className="kicker">Oscar × Our Rankings</span>
+              <PanelHeader title="Oscar × Our Rankings" />
               <p className="font-serif italic text-base text-gray-400 mt-1">Films on our combined lists with Oscar recognition</p>
             </div>
             <div className="flex gap-1 p-1 bg-night-900/60 rounded-full flex-shrink-0">
@@ -1387,7 +1399,7 @@ function CrossoverTab({ data }) {
                       <td className="table-cell text-center">
                         {f.oscarWins > 0
                           ? <span className="font-display text-xl text-emerald-400 tracking-wide leading-none">{f.oscarWins}</span>
-                          : <span className="font-mono text-[10px] text-gray-700">—</span>}
+                          : <span className="font-mono text-[11px] text-gray-700">—</span>}
                       </td>
                       <td className="table-cell text-center">
                         <span className="font-mono text-sm text-gray-400 tabular-nums">{f.oscarNoms}</span>
@@ -1407,7 +1419,7 @@ function CrossoverTab({ data }) {
                             return (
                               <div key={yr} className="text-center">
                                 <div className="font-mono text-sm tracking-kicker text-gray-600 leading-none">{EVENTS_LABEL[yr]}</div>
-                                <div className={`font-mono text-[10px] leading-tight mt-0.5 tabular-nums ${r ? (r <= 5 ? 'text-gold-400' : r <= 15 ? 'text-film-400' : 'text-gray-400') : 'text-gray-700'}`}>
+                                <div className={`font-mono text-[11px] leading-tight mt-0.5 tabular-nums ${r ? (r <= 5 ? 'text-gold-400' : r <= 15 ? 'text-film-400' : 'text-gray-400') : 'text-gray-700'}`}>
                                   {r ? `#${r}` : '–'}
                                 </div>
                               </div>
@@ -1422,7 +1434,7 @@ function CrossoverTab({ data }) {
                         <td colSpan={5} className="px-4 py-3">
                           {f.winCategories.length > 0 && (
                             <div className="mb-2">
-                              <span className="font-mono text-[10px] tracking-cinema text-emerald-400 uppercase mr-2">WON</span>
+                              <span className="font-mono text-[11px] tracking-cinema text-emerald-400 uppercase mr-2">WON</span>
                               <div className="flex flex-wrap gap-1.5 mt-1.5">
                                 {f.winCategories.map(c => (
                                   <span key={c} className="text-xs bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full">{c}</span>
@@ -1432,7 +1444,7 @@ function CrossoverTab({ data }) {
                           )}
                           {f.nomCategories.length > 0 && (
                             <div>
-                              <span className="font-mono text-[10px] tracking-cinema text-gray-400 uppercase mr-2">NOMINATED</span>
+                              <span className="font-mono text-[11px] tracking-cinema text-gray-400 uppercase mr-2">NOMINATED</span>
                               <div className="flex flex-wrap gap-1.5 mt-1.5">
                                 {f.nomCategories.map(c => (
                                   <span key={c} className="text-xs bg-night-700 text-gray-400 border border-night-600 px-2 py-0.5 rounded-full">{c}</span>
@@ -1892,12 +1904,12 @@ export default function MoviesStats() {
                 {/* Decade + Genre */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
                   <div className="card">
-                    <span className="kicker">By Decade</span>
+                    <PanelHeader title="By Decade" />
                     <p className="font-serif italic text-base text-gray-400 mt-1 mb-4">Films grouped by release decade</p>
                     <DecadeChart films={chartsFilms} color={chartColor} />
                   </div>
                   <div className="card">
-                    <span className="kicker">By Genre</span>
+                    <PanelHeader title="By Genre" />
                     <p className="font-serif italic text-base text-gray-400 mt-1 mb-4">Primary genre — top 12</p>
                     <GenreChart films={chartsFilms} color={chartColor} />
                   </div>
@@ -1906,12 +1918,12 @@ export default function MoviesStats() {
                 {/* Directors + Actors */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
                   <div className="card">
-                    <span className="kicker">Top Directors</span>
+                    <PanelHeader title="Top Directors" />
                     <p className="font-serif italic text-base text-gray-400 mt-1 mb-4">Directors with 2+ films on this list</p>
                     <PersonChart films={chartsFilms} type="director" color={chartColor} />
                   </div>
                   <div className="card">
-                    <span className="kicker">Top Actors</span>
+                    <PanelHeader title="Top Actors" />
                     <p className="font-serif italic text-base text-gray-400 mt-1 mb-4">Top-billed cast (leads only) with 2+ films on this list</p>
                     <PersonChart films={chartsFilms} type="actor" color={chartColor} />
                   </div>
@@ -1920,7 +1932,7 @@ export default function MoviesStats() {
                 {/* Screenwriters */}
                 <div className="mb-5">
                   <div className="card">
-                    <span className="kicker">Top Screenwriters</span>
+                    <PanelHeader title="Top Screenwriters" />
                     <p className="font-serif italic text-base text-gray-400 mt-1 mb-4">Writers with 2+ films on this list</p>
                     <PersonChart films={chartsFilms} type="writer" color={chartColor} />
                   </div>
@@ -1941,7 +1953,7 @@ export default function MoviesStats() {
           ) : (
             <div className="space-y-7">
               <div className="card">
-                <span className="kicker">Bump Chart · Combined Rankings</span>
+                <PanelHeader title="Bump Chart" subtitle="Combined Rankings" />
                 <p className="font-serif italic text-base text-gray-400 mt-1 mb-4">
                   Rank trajectory across all 4 events. Rank 1 at top. Gaps = not on that event's combined list.
                 </p>

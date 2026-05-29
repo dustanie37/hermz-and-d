@@ -5,6 +5,11 @@ const UPDATES = [
     date: 'May 29, 2026',
     entries: [
       {
+        tag: 'Design',
+        color: 'cinema',
+        text: 'Phase 6 visual overhaul — Films pages canvas alignment and readability pass. Rankings page: new mono kicker + volume headline in the hero ("X FILMS, RANKED."), grid view upgraded to full poster cards with title/score/rank-movement overlays. Film Detail: scorecard now has a 3-way toggle — Bars (default, side-by-side dual bars per category), Radar, and Table. Future Consideration: "Added · MON YYYY" caption added to each Want to Watch card. Stats panels: all headers converted to display-title + mono subtitle format. Global readability pass across all four pages — no text smaller than 11px.',
+      },
+      {
         tag: 'Oscars',
         color: 'gold',
         text: 'Oscar Stats — all-time correct percentage now shown to the hundredths place (e.g. 73.24%) in the hero panel and the All-Time Correct Guesses card. Win-by-year percentages unchanged.',

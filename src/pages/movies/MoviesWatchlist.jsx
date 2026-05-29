@@ -21,6 +21,13 @@ function sortTitle(title = '') {
   return title.replace(/^(a |an |the )/i, '').trim().toLowerCase()
 }
 
+function addedLabel(ts) {
+  if (!ts) return null
+  const d = new Date(ts)
+  if (isNaN(d)) return null
+  return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }).toUpperCase()
+}
+
 // ── Notes area (shared by first_time + rewatch cards) ────────────────────────
 
 function NotesArea({ item, onSave }) {
@@ -64,13 +71,13 @@ function NotesArea({ item, onSave }) {
           <button
             onClick={save}
             disabled={saving}
-            className="btn-cinema text-[10px] px-3 py-1 disabled:opacity-50"
+            className="btn-cinema text-[11px] px-3 py-1 disabled:opacity-50"
           >
             {saving ? '…' : 'Save'}
           </button>
           <button
             onClick={cancel}
-            className="font-mono text-[10px] tracking-kicker text-gray-500 hover:text-gray-300 transition-colors px-2"
+            className="font-mono text-[11px] tracking-kicker text-gray-500 hover:text-gray-300 transition-colors px-2"
           >
             Cancel
           </button>
@@ -132,6 +139,11 @@ function UnseenCard({ item, onRemove, onMoveTab }) {
               {item.title?.toUpperCase()}
             </p>
           )}
+          {addedLabel(item.added_at) && (
+            <p className="font-mono text-[10.5px] tracking-kicker text-white/45 uppercase mt-1.5">
+              Added · {addedLabel(item.added_at)}
+            </p>
+          )}
         </div>
 
         {/* Controls — appear on hover */}
@@ -151,7 +163,7 @@ function UnseenCard({ item, onRemove, onMoveTab }) {
           <div className="flex gap-1">
             <button
               onClick={() => onMoveTab(item.id, 'first_time')}
-              className="flex-1 font-mono text-[8px] tracking-kicker uppercase py-1
+              className="flex-1 font-mono text-[11px] tracking-kicker uppercase py-1
                          bg-film-600/80 text-white rounded hover:bg-film-500 transition-colors"
               title="Move to Seen It"
             >→ Seen It</button>
@@ -220,7 +232,7 @@ function NotesCard({ item, onRemove, onSaveNotes, onMoveTab, tab }) {
 
         {/* Notes — grows to fill space */}
         <div className="border-t border-white/5 pt-3 flex-1">
-          <p className="font-mono text-[10px] tracking-kicker text-gray-500 uppercase mb-2">Ranking Notes</p>
+          <p className="font-mono text-[11px] tracking-kicker text-gray-500 uppercase mb-2">Ranking Notes</p>
           <NotesArea item={item} onSave={onSaveNotes} />
         </div>
 
@@ -324,7 +336,7 @@ function AddFilmModal({ onClose, onAdd, existingImdbIds, defaultTab }) {
 
         {/* List type selector */}
         <div className="p-5 border-b border-night-700/60">
-          <p className="font-mono text-[10px] tracking-kicker text-gray-500 uppercase mb-3">Add to</p>
+          <p className="font-mono text-[11px] tracking-kicker text-gray-500 uppercase mb-3">Add to</p>
           <div className="grid grid-cols-3 gap-2">
             {TYPE_OPTIONS.map(opt => (
               <button
@@ -341,7 +353,7 @@ function AddFilmModal({ onClose, onAdd, existingImdbIds, defaultTab }) {
                   }`}
               >
                 <p className="font-display text-xs tracking-wide leading-none">{opt.label.toUpperCase()}</p>
-                <p className="font-mono text-[9px] tracking-kicker text-current/70 mt-1 leading-tight">{opt.desc}</p>
+                <p className="font-mono text-[11px] tracking-kicker text-current/70 mt-1 leading-tight">{opt.desc}</p>
               </button>
             ))}
           </div>
@@ -386,14 +398,14 @@ function AddFilmModal({ onClose, onAdd, existingImdbIds, defaultTab }) {
                            className="w-10 h-14 rounded border border-white/10 flex-shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-white truncate">{item.title}</p>
-                  <p className="font-mono text-[10px] tracking-kicker text-gray-500 mt-0.5 uppercase">{item.year}</p>
+                  <p className="font-mono text-[11px] tracking-kicker text-gray-500 mt-0.5 uppercase">{item.year}</p>
                 </div>
                 {onList ? (
-                  <span className="font-mono text-[10px] tracking-kicker text-film-400 uppercase whitespace-nowrap">
+                  <span className="font-mono text-[11px] tracking-kicker text-film-400 uppercase whitespace-nowrap">
                     On list
                   </span>
                 ) : isAdded ? (
-                  <span className="font-mono text-[10px] tracking-kicker text-emerald-400 uppercase whitespace-nowrap">
+                  <span className="font-mono text-[11px] tracking-kicker text-emerald-400 uppercase whitespace-nowrap">
                     ✓ Added
                   </span>
                 ) : (
@@ -531,11 +543,11 @@ export default function MoviesWatchlist() {
         <div className="absolute top-6 right-6 sm:right-10 flex items-center gap-2 z-10">
           <div className="flex gap-1 p-1 bg-night-950/60 backdrop-blur-md border border-white/10 rounded-full">
             <button onClick={() => setSort('alpha')}
-              className={`px-3 py-1 rounded-full font-mono text-[10px] tracking-kicker uppercase transition-all ${
+              className={`px-3 py-1 rounded-full font-mono text-[11px] tracking-kicker uppercase transition-all ${
                 sort === 'alpha' ? 'bg-white text-night-950' : 'text-gray-400 hover:text-white'
               }`}>A–Z</button>
             <button onClick={() => setSort('chrono')}
-              className={`px-3 py-1 rounded-full font-mono text-[10px] tracking-kicker uppercase transition-all ${
+              className={`px-3 py-1 rounded-full font-mono text-[11px] tracking-kicker uppercase transition-all ${
                 sort === 'chrono' ? 'bg-white text-night-950' : 'text-gray-400 hover:text-white'
               }`}>Recent</button>
           </div>
@@ -584,7 +596,7 @@ export default function MoviesWatchlist() {
               >
                 {tab.label.toUpperCase()}
                 {count > 0 && (
-                  <span className={`ml-2 font-mono text-[10px] px-1.5 py-0.5 rounded-full
+                  <span className={`ml-2 font-mono text-[11px] px-1.5 py-0.5 rounded-full
                     ${isActive
                       ? tab.id === 'unseen' ? 'bg-gold-500/20 text-gold-400'
                         : tab.id === 'first_time' ? 'bg-film-500/20 text-film-400'

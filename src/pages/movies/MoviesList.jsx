@@ -208,6 +208,9 @@ export default function MoviesList() {
     ] : []),
   ]
 
+  const VOL = ['I', 'II', 'III', 'IV', 'V', 'VI']
+  const volume = VOL[EVENTS_ORDER.indexOf(eventYear)] || ''
+
   // ── render ─────────────────────────────────────────────────────────────
   return (
     <div>
@@ -225,11 +228,16 @@ export default function MoviesList() {
               {eventYear} · {view === 'combined' ? 'Combined' : view === 'matt' ? 'Hermz' : 'Dust'}
             </span>
           </div>
-          <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl text-white tracking-wide leading-none">
-            THE RANKINGS
+          <div className="flex items-center gap-2.5 mb-2.5 font-mono text-[12px] tracking-cinema uppercase text-gold-500">
+            <span className="w-7 h-px bg-gold-500" />
+            The Canon{volume && ` · Volume ${volume}`} · {eventYear}
+          </div>
+          <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl text-white tracking-wide leading-[0.92]">
+            {rows.length} FILMS, RANKED.
           </h1>
           <p className="font-serif italic text-base sm:text-lg text-gray-400 mt-3">
-            {rows.length} films · sortable, searchable, with rank movement.
+            {view === 'combined' ? 'Combined' : view === 'matt' ? "Hermz's" : "Dust's"} list ·
+            sortable, searchable, with rank movement.
           </p>
         </div>
       </FilmStill>
@@ -300,7 +308,7 @@ export default function MoviesList() {
             )}
           </div>
 
-          <span className="font-mono text-[10px] tracking-kicker text-gray-500 flex-shrink-0">
+          <span className="font-mono text-[11px] tracking-kicker text-gray-500 flex-shrink-0">
             {searchTerm
               ? `${filteredRows.length} OF ${displayRows.length}`
               : `${displayRows.length} FILM${displayRows.length !== 1 ? 'S' : ''}`}
@@ -340,23 +348,49 @@ export default function MoviesList() {
 
         {/* GRID VIEW */}
         {!loading && !error && filteredRows.length > 0 && displayMode === 'grid' && (
-          <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))' }}>
+          <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))' }}>
             {filteredRows.map(row => {
               const f = row.film
               if (!f) return null
+              const latestPrior = priorYears[priorYears.length - 1]
+              const priorRank   = latestPrior ? allPriorMaps[latestPrior]?.[f.id] : undefined
+              const move        = (priorRank == null) ? null : priorRank - row.rank
               return (
                 <Link key={f.id} to={`/movies/${f.id}`} state={{ from: location.pathname + location.search }}
                       className="group block">
                   <FilmStill src={f.poster_url} title={f.title}
                              className="aspect-[2/3] rounded-lg border border-white/10 shadow-still
-                                        group-hover:border-gold-500/60 group-hover:scale-[1.03] transition-all">
+                                        group-hover:border-gold-500/60 group-hover:scale-[1.02] transition-all">
                     {/* Rank badge */}
-                    <div className="absolute top-2 left-2 z-10">
-                      <span className="inline-flex items-center justify-center w-8 h-8 rounded-full
-                                       bg-night-950/80 backdrop-blur-sm text-white
-                                       font-display text-lg leading-none tracking-wide">
+                    <div className="absolute top-2.5 left-2.5 z-10">
+                      <span className="inline-flex items-center justify-center min-w-[34px] h-[34px] px-1.5 rounded-full
+                                       bg-night-950/85 backdrop-blur-sm font-display text-xl leading-none tracking-wide"
+                            style={{ color: view === 'combined' ? '#00E0D9' : 'white' }}>
                         {row.rank}
                       </span>
+                    </div>
+                    {/* Movement badge */}
+                    {move != null && move !== 0 && (
+                      <div className="absolute top-2.5 right-2.5 z-10 font-mono text-[12px] font-semibold px-1.5 py-0.5
+                                      rounded bg-night-950/80 backdrop-blur-sm"
+                           style={{ color: move > 0 ? '#5fd66b' : '#f87171' }}>
+                        {move > 0 ? `↑${move}` : `↓${Math.abs(move)}`}
+                      </div>
+                    )}
+                    {/* Title + score overlay */}
+                    <div className="absolute inset-x-0 bottom-0 p-3 pointer-events-none"
+                         style={{ background: 'linear-gradient(180deg, transparent 35%, rgba(0,0,0,0.92) 100%)' }}>
+                      <div className="font-display text-[17px] text-white tracking-wide leading-tight line-clamp-2">
+                        {f.title?.toUpperCase()}
+                      </div>
+                      <div className="flex items-center gap-2 mt-1.5">
+                        {f.release_year && (
+                          <span className="font-mono text-[11px] tracking-kicker text-white/55">{f.release_year}</span>
+                        )}
+                        {row.score != null && (
+                          <span className="font-mono text-[12px] tracking-kicker text-gold-400 ml-auto">{row.score} PTS</span>
+                        )}
+                      </div>
                     </div>
                   </FilmStill>
                 </Link>

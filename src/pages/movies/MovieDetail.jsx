@@ -73,7 +73,7 @@ function RankTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null
   return (
     <div className="card-panel px-3 py-2 text-xs">
-      <div className="font-mono text-[10px] tracking-kicker text-white mb-1">{label}</div>
+      <div className="font-mono text-[11px] tracking-kicker text-white mb-1">{label}</div>
       {payload.map(p => (
         <div key={p.dataKey} className="flex items-center gap-2">
           <span style={{ color: p.color }}>●</span>
@@ -479,7 +479,7 @@ export default function MovieDetail() {
             {genres.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mt-4">
                 {genres.map(g => (
-                  <span key={g} className="font-mono text-[10px] tracking-kicker uppercase
+                  <span key={g} className="font-mono text-[11px] tracking-kicker uppercase
                                            px-2.5 py-1 rounded-full bg-white/[0.08] border border-white/[0.12] text-gray-200">
                     {g}
                   </span>
@@ -774,25 +774,25 @@ function PeerStrip({ kicker, title, films }) {
                 className="flex flex-col px-3 py-2.5 rounded-lg bg-night-800/60 border border-night-600
                            hover:border-night-500 hover:bg-night-700/60 transition-all group min-w-[140px]">
             <div className="text-sm font-medium text-gray-200 group-hover:text-white transition-colors mb-0.5">{f.title}</div>
-            <div className="font-mono text-[10px] text-gray-500 mb-2">{f.release_year}</div>
+            <div className="font-mono text-[11px] text-gray-500 mb-2">{f.release_year}</div>
             <div className="flex gap-3">
               <div className="text-center">
                 <div className="font-mono text-xs font-semibold" style={{ color: DC }}>
                   {f.dustRank != null ? `#${f.dustRank}` : <span className="text-gray-700">NR</span>}
                 </div>
-                <div className="font-mono text-[9px] text-gray-600 mt-0.5">DUST</div>
+                <div className="font-mono text-[11px] text-gray-600 mt-0.5">DUST</div>
               </div>
               <div className="text-center">
                 <div className="font-mono text-xs font-semibold" style={{ color: HC }}>
                   {f.hermzRank != null ? `#${f.hermzRank}` : <span className="text-gray-700">NR</span>}
                 </div>
-                <div className="font-mono text-[9px] text-gray-600 mt-0.5">HERMZ</div>
+                <div className="font-mono text-[11px] text-gray-600 mt-0.5">HERMZ</div>
               </div>
               <div className="text-center">
                 <div className="font-mono text-xs font-semibold text-gray-300">
                   {f.latestRank != null ? `#${f.latestRank}` : <span className="text-gray-700">NR</span>}
                 </div>
-                <div className="font-mono text-[9px] text-gray-600 mt-0.5">CMB</div>
+                <div className="font-mono text-[11px] text-gray-600 mt-0.5">CMB</div>
               </div>
             </div>
           </Link>
@@ -815,19 +815,19 @@ function PeerTile({ f }) {
           <div className="font-mono text-sm font-semibold" style={{ color: DC }}>
             {f.dustRank != null ? `#${f.dustRank}` : <span className="text-gray-700">NR</span>}
           </div>
-          <div className="font-mono text-[10px] text-gray-600 mt-0.5">DUST</div>
+          <div className="font-mono text-[11px] text-gray-600 mt-0.5">DUST</div>
         </div>
         <div className="text-center">
           <div className="font-mono text-sm font-semibold" style={{ color: HC }}>
             {f.hermzRank != null ? `#${f.hermzRank}` : <span className="text-gray-700">NR</span>}
           </div>
-          <div className="font-mono text-[10px] text-gray-600 mt-0.5">HERMZ</div>
+          <div className="font-mono text-[11px] text-gray-600 mt-0.5">HERMZ</div>
         </div>
         <div className="text-center">
           <div className="font-mono text-sm font-semibold text-gray-300">
             {f.latestRank != null ? `#${f.latestRank}` : <span className="text-gray-700">NR</span>}
           </div>
-          <div className="font-mono text-[10px] text-gray-600 mt-0.5">CMB</div>
+          <div className="font-mono text-[11px] text-gray-600 mt-0.5">CMB</div>
         </div>
       </div>
     </Link>
@@ -1135,7 +1135,7 @@ function FunFacts({ film, dustinRows, mattRows, combined, oscarNoms }) {
             <div className="text-center px-5 border-x border-night-700 flex-shrink-0">
               <div className="font-display text-4xl text-white leading-none">{gap}</div>
               <div className="kicker-dim mt-1">APART</div>
-              <div className="font-mono text-[10px] mt-2 tracking-kicker" style={{ color: gap === 0 ? '#9298A6' : faveColor }}>
+              <div className="font-mono text-[11px] mt-2 tracking-kicker" style={{ color: gap === 0 ? '#9298A6' : faveColor }}>
                 {faveLabel}
               </div>
             </div>
@@ -1163,10 +1163,10 @@ function FunFacts({ film, dustinRows, mattRows, combined, oscarNoms }) {
                 ))}
               </div>
               <div className="flex gap-5 mt-3">
-                <span className="flex items-center gap-1.5 font-mono text-[10px] text-gray-500">
+                <span className="flex items-center gap-1.5 font-mono text-[11px] text-gray-500">
                   <span className="w-2.5 h-2.5 rounded-sm inline-block flex-shrink-0" style={{ background: DC }} />Dust favors
                 </span>
-                <span className="flex items-center gap-1.5 font-mono text-[10px] text-gray-500">
+                <span className="flex items-center gap-1.5 font-mono text-[11px] text-gray-500">
                   <span className="w-2.5 h-2.5 rounded-sm inline-block flex-shrink-0" style={{ background: HC }} />Hermz favors
                 </span>
               </div>
@@ -1249,7 +1249,7 @@ function HeadToHeadCard({ dustinRows, mattRows }) {
         <div className="text-center px-5 border-x border-night-700 flex-shrink-0">
           <div className="font-display text-4xl text-white leading-none">{gap}</div>
           <div className="kicker-dim mt-1">APART</div>
-          <div className="font-mono text-[10px] mt-2 tracking-kicker" style={{ color: gap === 0 ? '#9298A6' : faveColor }}>
+          <div className="font-mono text-[11px] mt-2 tracking-kicker" style={{ color: gap === 0 ? '#9298A6' : faveColor }}>
             {gap === 0 ? 'TIED' : faveLabel}
           </div>
         </div>
@@ -1271,9 +1271,9 @@ function HeadToHeadCard({ dustinRows, mattRows }) {
               const df  = d < m
               return (
                 <div key={yr} className="flex-1 text-center">
-                  <div className="font-mono text-[10px] text-gray-500 mb-1">{yr}</div>
+                  <div className="font-mono text-[11px] text-gray-500 mb-1">{yr}</div>
                   <div className="font-display text-2xl leading-none" style={{ color: g === 0 ? '#9298A6' : df ? DC : HC }}>{g}</div>
-                  <div className="font-mono text-[9px] mt-1 tracking-wider" style={{ color: g === 0 ? '#9298A6' : df ? DC : HC }}>
+                  <div className="font-mono text-[11px] mt-1 tracking-wider" style={{ color: g === 0 ? '#9298A6' : df ? DC : HC }}>
                     {g === 0 ? '—' : df ? 'D' : 'H'}
                   </div>
                 </div>
@@ -1300,12 +1300,12 @@ const RADAR_SHORT = {
 }
 
 function ScoreSection({ dustinRows, mattRows, activeCats }) {
-  const [view,      setView]      = useState('chart')
+  const [view,      setView]      = useState('bars')   // bars is the default now
   const [chartYear, setChartYear] = useState(null)
 
-  const eventsWithData  = EVENTS.filter(yr => dustinRows[yr] || mattRows[yr])
-  const effectiveYear   = chartYear || (eventsWithData.length > 0 ? eventsWithData[eventsWithData.length - 1] : null)
-  const normalize       = (key, val) => val == null ? null : key === 'score_personal_impact' ? val / 2 : val
+  const eventsWithData = EVENTS.filter(yr => dustinRows[yr] || mattRows[yr])
+  const effectiveYear  = chartYear || (eventsWithData.length > 0 ? eventsWithData[eventsWithData.length - 1] : null)
+  const normalize      = (key, val) => val == null ? null : key === 'score_personal_impact' ? val / 2 : val
 
   const radarData = activeCats.map(cat => ({
     subject: RADAR_SHORT[cat.key] || cat.label,
@@ -1314,29 +1314,71 @@ function ScoreSection({ dustinRows, mattRows, activeCats }) {
     fullMark: 10,
   }))
 
+  const dRow = effectiveYear ? dustinRows[effectiveYear] : null
+  const mRow = effectiveYear ? mattRows[effectiveYear]   : null
+
   return (
     <div className="card p-0 overflow-hidden">
-      <div className="px-6 pt-5 pb-3 border-b border-night-700 flex items-center justify-between">
+      <div className="px-6 pt-5 pb-3 border-b border-night-700 flex items-center justify-between flex-wrap gap-3">
         <div>
           <h2 className="font-display text-2xl text-white tracking-wide leading-none mb-1">SCORE HISTORY</h2>
           <p className="text-sm text-gray-500">All scores out of 10 except Personal Impact (out of 20).</p>
         </div>
         <div className="flex gap-2">
-          <button onClick={() => setView('chart')} className={view === 'chart' ? 'pill pill-active' : 'pill'}>Chart</button>
+          <button onClick={() => setView('bars')}  className={view === 'bars'  ? 'pill pill-active' : 'pill'}>Bars</button>
+          <button onClick={() => setView('chart')} className={view === 'chart' ? 'pill pill-active' : 'pill'}>Radar</button>
           <button onClick={() => setView('table')} className={view === 'table' ? 'pill pill-active' : 'pill'}>Table</button>
         </div>
       </div>
 
-      {view === 'chart' ? (
-        <div className="px-6 pt-5 pb-6">
-          {eventsWithData.length > 1 && (
-            <div className="flex gap-2 mb-5">
-              {eventsWithData.map(yr => (
-                <button key={yr} onClick={() => setChartYear(yr)}
-                        className={effectiveYear === yr ? 'pill pill-active' : 'pill'}>{yr}</button>
-              ))}
-            </div>
-          )}
+      {/* shared year selector for bars + radar */}
+      {(view === 'bars' || view === 'chart') && eventsWithData.length > 1 && (
+        <div className="flex gap-2 px-6 pt-4">
+          {eventsWithData.map(yr => (
+            <button key={yr} onClick={() => setChartYear(yr)}
+                    className={effectiveYear === yr ? 'pill pill-active' : 'pill'}>{yr}</button>
+          ))}
+        </div>
+      )}
+
+      {view === 'bars' && (
+        <div className="px-6 pt-4 pb-6">
+          <div className="flex items-center gap-5 mb-3">
+            <span className="flex items-center gap-2 font-mono text-xs text-gray-400">
+              <span className="w-6 h-1 inline-block rounded" style={{ background: HC }} />Hermz
+            </span>
+            <span className="flex items-center gap-2 font-mono text-xs text-gray-400">
+              <span className="w-6 h-1 inline-block rounded" style={{ background: DC }} />Dust
+            </span>
+          </div>
+          {activeCats.map(cat => {
+            const m = mRow?.[cat.key], d = dRow?.[cat.key]
+            return (
+              <div key={cat.key}
+                   className="grid items-center gap-3 py-2.5 border-b border-night-700/60 last:border-0"
+                   style={{ gridTemplateColumns: '150px 1fr 34px 34px' }}>
+                <span className="text-[13.5px] text-gray-200">{cat.label}</span>
+                <div className="flex h-2.5 bg-night-700 rounded-sm overflow-hidden">
+                  <div style={{ width: `${m != null ? (m / cat.max) * 50 : 0}%`, background: HC }} />
+                  <div style={{ width: `${d != null ? (d / cat.max) * 50 : 0}%`, background: DC }} />
+                </div>
+                <span className="font-mono text-[14px] font-semibold text-center" style={{ color: HC }}>{m ?? '—'}</span>
+                <span className="font-mono text-[14px] font-semibold text-center" style={{ color: DC }}>{d ?? '—'}</span>
+              </div>
+            )
+          })}
+          <div className="grid items-center gap-3 pt-4 mt-1 border-t-2 border-night-600"
+               style={{ gridTemplateColumns: '150px 1fr 34px 34px' }}>
+            <span className="font-display text-lg text-white tracking-wide">TOTAL · /100</span>
+            <span />
+            <span className="font-display text-xl text-center" style={{ color: HC }}>{mRow?.total_score ?? '—'}</span>
+            <span className="font-display text-xl text-center" style={{ color: DC }}>{dRow?.total_score ?? '—'}</span>
+          </div>
+        </div>
+      )}
+
+      {view === 'chart' && (
+        <div className="px-6 pt-3 pb-6">
           <div className="flex items-center gap-5 mb-1">
             <span className="flex items-center gap-2 font-mono text-xs text-gray-400">
               <span className="w-6 h-0.5 inline-block rounded" style={{ background: DC }} />Dust
@@ -1344,31 +1386,25 @@ function ScoreSection({ dustinRows, mattRows, activeCats }) {
             <span className="flex items-center gap-2 font-mono text-xs text-gray-400">
               <span className="w-6 h-0.5 inline-block rounded" style={{ background: HC }} />Hermz
             </span>
-            <span className="ml-auto font-mono text-[10px] text-gray-600">Pers. Impact ÷2 for display</span>
+            <span className="ml-auto font-mono text-[11px] text-gray-600">Pers. Impact ÷2 for display</span>
           </div>
           <ResponsiveContainer width="100%" height={380}>
             <RadarChart data={radarData} margin={{ top: 10, right: 40, bottom: 10, left: 40 }}>
               <PolarGrid stroke="rgba(255,255,255,0.07)" />
-              <PolarAngleAxis dataKey="subject"
-                tick={{ fill: '#9298A6', fontSize: 11, fontFamily: 'monospace' }} />
-              <PolarRadiusAxis domain={[0, 10]} tickCount={4} axisLine={false}
-                tick={{ fill: '#9298A6', fontSize: 9 }} />
-              <Radar name="Dust" dataKey="Dust"
-                stroke={DC} fill={DC} fillOpacity={0.12} strokeWidth={2}
-                dot={{ r: 3, fill: DC }} />
-              <Radar name="Hermz" dataKey="Hermz"
-                stroke={HC} fill={HC} fillOpacity={0.08} strokeWidth={2} strokeDasharray="5 3"
-                dot={{ r: 3, fill: HC }} />
-              <Tooltip
-                contentStyle={{ background: '#15141E', border: '1px solid #2A2734', borderRadius: 8 }}
+              <PolarAngleAxis dataKey="subject" tick={{ fill: '#9298A6', fontSize: 11, fontFamily: 'monospace' }} />
+              <PolarRadiusAxis domain={[0, 10]} tickCount={4} axisLine={false} tick={{ fill: '#9298A6', fontSize: 9 }} />
+              <Radar name="Dust"  dataKey="Dust"  stroke={DC} fill={DC} fillOpacity={0.12} strokeWidth={2} dot={{ r: 3, fill: DC }} />
+              <Radar name="Hermz" dataKey="Hermz" stroke={HC} fill={HC} fillOpacity={0.08} strokeWidth={2} strokeDasharray="5 3" dot={{ r: 3, fill: HC }} />
+              <Tooltip contentStyle={{ background: '#15141E', border: '1px solid #2A2734', borderRadius: 8 }}
                 labelStyle={{ color: '#9298A6', fontSize: 11, fontFamily: 'monospace' }}
                 itemStyle={{ color: '#F4F0E8', fontSize: 13 }}
-                formatter={(value, name) => [value != null ? value : '—', name]}
-              />
+                formatter={(value, name) => [value != null ? value : '—', name]} />
             </RadarChart>
           </ResponsiveContainer>
         </div>
-      ) : (
+      )}
+
+      {view === 'table' && (
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
@@ -1438,7 +1474,7 @@ function RankBig({ who, rank }) {
   const name = who === 'matt' ? 'HERMZ' : who === 'dustin' ? 'DUST' : 'COMBINED'
   return (
     <div className="text-center px-2">
-      <div className={`font-mono text-[9px] tracking-cinema ${c} mb-1`}>{name}</div>
+      <div className={`font-mono text-[11px] tracking-cinema ${c} mb-1`}>{name}</div>
       <div className="font-display text-5xl text-white leading-none tracking-wide">
         {rank ? `#${rank}` : 'NR'}
       </div>
