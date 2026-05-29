@@ -567,7 +567,7 @@ export default function MoviesWatchlist() {
             FUTURE CONSIDERATION
           </h1>
           <p className="font-serif italic text-base text-gray-400 mt-3">
-            Films to watch, first-time views to consider, and rewatch notes for the next ranking event
+            Films to watch, first-time views to consider, and rewatch notes for the next edition
             {!loading && items.length > 0 && (
               <span className="text-gray-500 ml-2">· {items.length} total</span>
             )}

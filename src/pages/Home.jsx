@@ -128,7 +128,7 @@ export default function Home() {
         <div className="bg-night-950 border-t border-white/[0.06] px-6 sm:px-10 py-6
                         grid grid-cols-[auto_1fr] gap-8 items-center">
           <div>
-            <div className="kicker-dim">The Canon · {moviesData?.latestEvent?.year ?? '—'}</div>
+            <div className="kicker-dim">The Canon · {moviesData?.latestEvent?.year ?? '—'} Edition</div>
             <div className="font-display text-4xl text-white tracking-wide mt-1">
               TOP <span className="text-gold-500">SIX</span>
             </div>
@@ -262,7 +262,7 @@ export default function Home() {
             ))}
           </div>
           <div className="mt-4 font-sans text-xs text-gray-500">
-            {moviesData?.events.length ?? '—'} events · 2001 → {moviesData?.latestEvent?.year ?? '—'}
+            {moviesData?.events.length ?? '—'} editions · 2001 → {moviesData?.latestEvent?.year ?? '—'}
           </div>
         </Link>
       </section>

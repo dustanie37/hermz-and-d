@@ -208,9 +208,6 @@ export default function MoviesList() {
     ] : []),
   ]
 
-  const VOL = ['I', 'II', 'III', 'IV', 'V', 'VI']
-  const volume = VOL[EVENTS_ORDER.indexOf(eventYear)] || ''
-
   // ── render ─────────────────────────────────────────────────────────────
   return (
     <div>
@@ -230,7 +227,7 @@ export default function MoviesList() {
           </div>
           <div className="flex items-center gap-2.5 mb-2.5 font-mono text-[12px] tracking-cinema uppercase text-gold-500">
             <span className="w-7 h-px bg-gold-500" />
-            The Canon{volume && ` · Volume ${volume}`} · {eventYear}
+            The Canon · {eventYear} Edition
           </div>
           <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl text-white tracking-wide leading-[0.92]">
             {rows.length} FILMS, RANKED.

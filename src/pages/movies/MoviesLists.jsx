@@ -235,7 +235,7 @@ export default function MoviesLists() {
           <span className="flex gap-1.5">
             {EVENTS.map(yr => <span key={yr} className="w-1.5 h-1.5 rounded-full bg-film-500 inline-block" />)}
           </span>
-          Each dot = one ranking event · {EVENTS.map(yr => `'${String(yr).slice(2)}`).join(' · ')}
+          Each dot = one edition · {EVENTS.map(yr => `'${String(yr).slice(2)}`).join(' · ')}
         </div>
 
         {/* Loading / error */}

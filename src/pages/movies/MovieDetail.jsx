@@ -647,7 +647,7 @@ export default function MovieDetail() {
           <div className="card p-0 overflow-hidden">
             <div className="px-6 pt-5 pb-3 border-b border-night-700">
               <h2 className="font-display text-2xl text-white tracking-wide leading-none mb-1">RANK HISTORY</h2>
-              <p className="text-sm text-gray-500">Ranking across all four events — NR if not on that list.</p>
+              <p className="text-sm text-gray-500">Ranking across all four editions — NR if not on that list.</p>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full">
@@ -722,7 +722,7 @@ export default function MovieDetail() {
         {appearsIn.length > 1 && (
           <div className="card">
             <h2 className="font-display text-2xl text-white tracking-wide leading-none mb-1">RANK MOVEMENT</h2>
-            <p className="text-sm text-gray-500 mb-5">Personal and combined rank across events (lower = better).</p>
+            <p className="text-sm text-gray-500 mb-5">Personal and combined rank across editions (lower = better).</p>
             <ResponsiveContainer width="100%" height={240}>
               <LineChart data={chartData} margin={{ top: 8, right: 24, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
@@ -902,7 +902,7 @@ function generateInsights(film, dustinRows, mattRows, combined, oscarNoms) {
   if (dustAll || mattAll) {
     const evtList = eligibleEvents.length === 1 ? String(eligibleEvents[0])
       : `${eligibleEvents.slice(0, -1).join(', ')}, and ${eligibleEvents[eligibleEvents.length - 1]}`
-    const span = eligibleEvents.length === 4 ? '25 years' : eligibleEvents.length === 3 ? 'three events' : 'both events'
+    const span = eligibleEvents.length === 4 ? '25 years' : eligibleEvents.length === 3 ? 'three editions' : 'both editions'
     if (dustAll && mattAll) {
       insights.push({ p: 8, text: `On both Dust's and Hermz's lists in every eligible event — ${evtList}. Very few films survive ${span} of re-evaluation and make both personal lists every time.` })
     } else if (dustAll) {
@@ -944,13 +944,13 @@ function generateInsights(film, dustinRows, mattRows, combined, oscarNoms) {
   if (dustYears.length > 1 && dCurrent != null && dustYears.includes(LATEST)) {
     const prevBest = Math.min(...dustYears.filter(yr => yr !== LATEST).map(yr => dustinRows[yr].rank))
     if (dCurrent < prevBest && prevBest - dCurrent >= 15) {
-      insights.push({ p: 7, text: `Dust's highest-ever placement for this film — #${dCurrent} in ${LATEST}, up from a previous best of #${prevBest}. Reaching a new personal peak after multiple events is a meaningful statement.` })
+      insights.push({ p: 7, text: `Dust's highest-ever placement for this film — #${dCurrent} in ${LATEST}, up from a previous best of #${prevBest}. Reaching a new personal peak after multiple editions is a meaningful statement.` })
     }
   }
   if (mattYears.length > 1 && mCurrent != null && mattYears.includes(LATEST)) {
     const prevBest = Math.min(...mattYears.filter(yr => yr !== LATEST).map(yr => mattRows[yr].rank))
     if (mCurrent < prevBest && prevBest - mCurrent >= 15) {
-      insights.push({ p: 7, text: `Hermz's highest-ever placement for this film — #${mCurrent} in ${LATEST}, up from a previous best of #${prevBest}. Reaching a new personal peak after multiple events is a meaningful statement.` })
+      insights.push({ p: 7, text: `Hermz's highest-ever placement for this film — #${mCurrent} in ${LATEST}, up from a previous best of #${prevBest}. Reaching a new personal peak after multiple editions is a meaningful statement.` })
     }
   }
 
@@ -1027,7 +1027,7 @@ function generateInsights(film, dustinRows, mattRows, combined, oscarNoms) {
     }
     if (mDiff !== null && Math.abs(mDiff) >= 20) {
       const dir = mDiff > 0 ? 'climbed' : 'dropped'
-      insights.push({ p: 5, text: `Hermz's ranking has moved ${Math.abs(mDiff)} spots overall — from #${mattRows[first].rank} in ${first} to #${mattRows[last].rank} in ${last}. ${mDiff > 0 ? 'Few films sustain that kind of upward movement across multiple events.' : "A shift that size usually signals a film that revealed itself differently over time."}` })
+      insights.push({ p: 5, text: `Hermz's ranking has moved ${Math.abs(mDiff)} spots overall — from #${mattRows[first].rank} in ${first} to #${mattRows[last].rank} in ${last}. ${mDiff > 0 ? 'Few films sustain that kind of upward movement across multiple editions.' : "A shift that size usually signals a film that revealed itself differently over time."}` })
     }
   }
 
@@ -1038,7 +1038,7 @@ function generateInsights(film, dustinRows, mattRows, combined, oscarNoms) {
     const dR = dustinRows[firstAnyEligible]?.rank
     const mR = mattRows[firstAnyEligible]?.rank
     const who = dR && mR ? `both ranked it — Dust at #${dR}, Hermz at #${mR}` : dR ? `Dust placed it at #${dR}` : `Hermz placed it at #${mR}`
-    insights.push({ p: 5, text: `Absent from the first ${eligibleMissed === 1 ? 'eligible event' : `${eligibleMissed} eligible events`} — it wasn't until ${firstAnyEligible} that ${who}. Late arrivals often reflect a film that needed time to fully register.` })
+    insights.push({ p: 5, text: `Absent from the first ${eligibleMissed === 1 ? 'eligible edition' : `${eligibleMissed} eligible editions`} — it wasn't until ${firstAnyEligible} that ${who}. Late arrivals often reflect a film that needed time to fully register.` })
   }
 
   // ── Combined list ─────────────────────────────────────────────────────────────

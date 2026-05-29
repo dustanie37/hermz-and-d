@@ -91,7 +91,7 @@ export default function MoviesHome() {
           <div className="flex items-center gap-3 mb-4">
             <span className="block w-7 h-px bg-film-500" />
             <span className="font-mono text-[11px] tracking-cinema uppercase text-film-400">
-              The Canon · {totalDbFilms} films · {events.length} events
+              The Canon · {totalDbFilms} films · {events.length} editions
             </span>
           </div>
           <h1 className="font-display text-6xl sm:text-7xl lg:text-8xl text-white tracking-wide leading-none">
