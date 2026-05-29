@@ -225,16 +225,21 @@ export default function MoviesList() {
               {eventYear} · {view === 'combined' ? 'Combined' : view === 'matt' ? 'Hermz' : 'Dust'}
             </span>
           </div>
-          <div className="flex items-center gap-2.5 mb-2.5 font-mono text-[12px] tracking-cinema uppercase text-gold-500">
+          <div className="flex items-center gap-2.5 mb-3 font-mono text-[12px] tracking-cinema uppercase text-gold-500">
             <span className="w-7 h-px bg-gold-500" />
-            The Canon · {eventYear} Edition
+            The Canon
           </div>
-          <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl text-white tracking-wide leading-[0.92]">
-            {rows.length} FILMS, RANKED.
-          </h1>
+          <div className="flex items-baseline gap-4 sm:gap-5">
+            <h1 className="font-display text-6xl sm:text-7xl lg:text-8xl tracking-wide leading-[0.9] text-gold-500">
+              {eventYear}
+            </h1>
+            <span className="font-display text-6xl sm:text-7xl lg:text-8xl text-white tracking-wide leading-[0.9]">
+              EDITION
+            </span>
+          </div>
           <p className="font-serif italic text-base sm:text-lg text-gray-400 mt-3">
             {view === 'combined' ? 'Combined' : view === 'matt' ? "Hermz's" : "Dust's"} list ·
-            sortable, searchable, with rank movement.
+            {rows.length} films · sortable, searchable, with rank movement.
           </p>
         </div>
       </FilmStill>
