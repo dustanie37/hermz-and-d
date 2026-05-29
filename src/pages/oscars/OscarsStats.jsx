@@ -252,7 +252,7 @@ export default function OscarsStats() {
     <div>
       {/* ── HERO ─────────────────────────────────────────────────────────── */}
       <FilmStill title="Hermz and D Oscar Stats" hue={48} mood="cool"
-                 className="w-full aspect-[21/9] min-h-[340px]">
+                 className="w-full h-[300px] sm:h-[340px]">
         <div className="absolute inset-0 scrim-bottom" />
 
         <div className="absolute inset-x-0 bottom-0 px-6 sm:px-10 pb-7 z-10">
@@ -273,9 +273,9 @@ export default function OscarsStats() {
         </div>
 
         {/* Floating big-number summary, hidden on mobile */}
-        <div className="hidden md:flex absolute bottom-32 right-10 z-10
+        <div className="hidden md:flex absolute bottom-7 right-6 sm:right-10 z-10
                         bg-night-950/70 backdrop-blur-md border border-white/[0.12]
-                        rounded-2xl px-6 py-4 gap-5 items-center shadow-still-lg">
+                        rounded-2xl px-5 py-3.5 gap-5 items-center shadow-still-lg">
           <BigPct who="matt"   pct={pct(mattAllTime,   totalPossible)} total={mattAllTime}   leading={mattAllTime > dustinAllTime} />
           <span className="w-px h-14 bg-white/10" />
           <BigPct who="dustin" pct={pct(dustinAllTime, totalPossible)} total={dustinAllTime} leading={dustinAllTime > mattAllTime} />

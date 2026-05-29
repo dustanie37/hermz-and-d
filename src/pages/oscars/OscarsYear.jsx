@@ -1,6 +1,7 @@
 // hermz-and-d/src/pages/oscars/OscarsYear.jsx
-// Phase 2 — Oscars Year detail page (Projector Room visual system).
-// Drop-in replacement for the existing file. No other files need to change.
+// Phase 5 — Oscars Year detail, Projector "tile" redesign.
+// Category-grouped poster-tile layout (Winner / Hermz / Dust) with the full
+// nominee field kept underneath. All edit-mode logic preserved.
 
 import { useState, useEffect, Fragment } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
@@ -9,51 +10,50 @@ import { useAuth } from '../../context/AuthContext'
 import OscarIcon from '../../components/OscarIcon'
 import FilmStill from '../../components/FilmStill'
 
-// ── helpers ──────────────────────────────────────────────────────────────────
+// ── category groups (display, in canvas order) ───────────────────────────────
+const CAT_GROUP = {
+  'Best Picture': 'Majors', 'Best Director': 'Majors',
+  'Best Actor': 'Performance', 'Best Actress': 'Performance',
+  'Best Supporting Actor': 'Performance', 'Best Supporting Actress': 'Performance',
+  'Best Original Screenplay': 'Writing', 'Best Adapted Screenplay': 'Writing',
+  'Best International Feature Film': 'Foreign + Animated + Doc',
+  'Best Animated Feature Film': 'Foreign + Animated + Doc',
+  'Best Documentary Feature Film': 'Foreign + Animated + Doc',
+  'Best Cinematography': 'Craft', 'Best Film Editing': 'Craft',
+  'Best Production Design': 'Craft', 'Best Costume Design': 'Craft',
+  'Best Makeup and Hairstyling': 'Craft', 'Best Visual Effects': 'Craft',
+  'Best Original Score': 'Music', 'Best Original Song': 'Music',
+  'Best Sound': 'Sound', 'Best Sound Editing': 'Sound', 'Best Sound Mixing': 'Sound',
+  'Best Animated Short Film': 'Shorts', 'Best Live Action Short Film': 'Shorts',
+  'Best Documentary Short Film': 'Shorts',
+  'Best Casting': 'Casting',
+}
+const GROUP_ORDER = [
+  'Majors', 'Performance', 'Writing', 'Foreign + Animated + Doc',
+  'Craft', 'Music', 'Sound', 'Shorts', 'Casting',
+]
+function groupOf(name) { return CAT_GROUP[name] || 'Craft' }
 
+// ── helpers (unchanged) ──────────────────────────────────────────────────────
 function parseInterval(str) {
   if (!str) return null
   const parts = str.split(':')
   if (parts.length < 2) return null
   return { h: parseInt(parts[0], 10), m: parseInt(parts[1], 10), s: parseInt(parts[2] || 0, 10) }
 }
-
-function fmtRuntime(str) {
-  const t = parseInterval(str)
-  if (!t) return '—'
-  return `${t.h}h ${t.m}m`
-}
-
-function fmtMonologue(str) {
-  const t = parseInterval(str)
-  if (!t) return '—'
-  if (t.h > 0) return `${t.h}h ${t.m}m ${t.s}s`
-  return `${t.m}m ${t.s}s`
-}
-
+function fmtRuntime(str) { const t = parseInterval(str); return t ? `${t.h}h ${t.m}m` : '—' }
+function fmtMonologue(str) { const t = parseInterval(str); if (!t) return '—'; return t.h > 0 ? `${t.h}h ${t.m}m ${t.s}s` : `${t.m}m ${t.s}s` }
 function runtimeDiff(actual, guess) {
-  const a = parseInterval(actual)
-  const g = parseInterval(guess)
+  const a = parseInterval(actual), g = parseInterval(guess)
   if (!a || !g) return null
   const diff = Math.abs((a.h * 60 + a.m) - (g.h * 60 + g.m))
   return diff === 0 ? 'exact' : `off by ${diff}m`
 }
-
-function shortCeremony(name) {
-  if (!name) return ''
-  return name.replace(/^The\s+/i, '').split(' - ')[0]
-}
-
-function formatDate(name) {
-  if (!name) return ''
-  const parts = name.split(' - ')
-  return parts[1] || ''
-}
-
+function shortCeremony(name) { return !name ? '' : name.replace(/^The\s+/i, '').split(' - ')[0] }
+function formatDate(name) { if (!name) return ''; return name.split(' - ')[1] || '' }
 function yearHue(y) { return ((y * 17) + 11) % 360 }
 
 // ── main component ────────────────────────────────────────────────────────────
-
 export default function OscarsYear() {
   const { year } = useParams()
   const navigate = useNavigate()
@@ -63,6 +63,7 @@ export default function OscarsYear() {
   const [yearData,    setYearData]    = useState(null)
   const [categories,  setCategories]  = useState([])
   const [allYears,    setAllYears]    = useState([])
+  const [posterMap,   setPosterMap]   = useState({})
   const [loading,     setLoading]     = useState(true)
   const [error,       setError]       = useState(null)
   const [editMode,    setEditMode]    = useState(false)
@@ -75,19 +76,15 @@ export default function OscarsYear() {
   }, [])
 
   useEffect(() => {
-    if (!yearNum || yearNum < 1990 || yearNum > 2100) {
-      navigate('/oscars')
-      return
-    }
+    if (!yearNum || yearNum < 1990 || yearNum > 2100) { navigate('/oscars'); return }
     fetchData(yearNum)
   }, [yearNum])
 
   useEffect(() => { setEditMode(false) }, [yearNum])
 
-  // ── data ────────────────────────────────────────────────────────────────
+  // ── data (fetch unchanged; poster lookup added at the end) ───────────────
   async function fetchData(yr) {
-    setLoading(true)
-    setError(null)
+    setLoading(true); setError(null)
     try {
       const { data: yrRow, error: yrErr } = await supabase
         .from('oscar_years').select('*').eq('year', yr).single()
@@ -131,6 +128,22 @@ export default function OscarsYear() {
       const sorted = Object.values(catMap).sort((a, b) => a.category.display_order - b.category.display_order)
       setYearData(yrRow)
       setCategories(sorted)
+
+      // ADDITIVE: look up real posters for any title that matches a film.
+      const names = new Set()
+      for (const cat of sorted) {
+        if (cat.winner) names.add(cat.winner)
+        for (const n of cat.nominees) names.add(n.name)
+        if (cat.guesses.matt?.guess)   names.add(cat.guesses.matt.guess)
+        if (cat.guesses.dustin?.guess) names.add(cat.guesses.dustin.guess)
+      }
+      if (names.size) {
+        const { data: films } = await supabase
+          .from('films').select('title, poster_url').in('title', [...names])
+        const map = {}
+        for (const f of films || []) if (f.poster_url) map[f.title] = f.poster_url
+        setPosterMap(map)
+      }
     } catch (err) {
       setError(err.message)
     } finally {
@@ -138,7 +151,7 @@ export default function OscarsYear() {
     }
   }
 
-  // ── edit handlers (unchanged logic) ─────────────────────────────────────
+  // ── edit handlers (UNCHANGED) ────────────────────────────────────────────
   async function toggleNomineeWinner(categoryIdx, nomineeIdx) {
     if (saving) return
     const cat = categories[categoryIdx]
@@ -282,9 +295,7 @@ export default function OscarsYear() {
 
   if (loading) return (
     <div className="py-20 flex items-center justify-center">
-      <span className="font-mono text-[11px] tracking-kicker text-gray-500 animate-pulse">
-        LOADING CEREMONY…
-      </span>
+      <span className="font-mono text-[11px] tracking-kicker text-gray-500 animate-pulse">LOADING CEREMONY…</span>
     </div>
   )
   if (error) return <div className="py-20 text-center text-red-400">Error: {error}</div>
@@ -296,78 +307,79 @@ export default function OscarsYear() {
   const dustinWon = yearData.winner === 'dustin'
   const tb = yearData.tiebreaker_used
 
+  // bucket categories into groups, preserving display_order within each group
+  const groups = GROUP_ORDER
+    .map(g => ({ name: g, cats: categories
+      .map((c, idx) => ({ c, idx }))
+      .filter(({ c }) => groupOf(c.category.name) === g) }))
+    .filter(g => g.cats.length > 0)
+
   return (
     <div>
-      {/* ── HERO ───────────────────────────────────────────────────────────── */}
+      {/* ── HERO (compact) ──────────────────────────────────────────────── */}
       <FilmStill
         title={`Hermz and D Oscar ${yearNum}`}
         hue={yearHue(yearNum)}
         mood={mattWon ? 'warm' : 'cool'}
-        className="w-full aspect-[21/9] min-h-[380px]"
+        className="w-full h-[300px] sm:h-[340px]"
       >
         <div className="absolute inset-0 scrim-bottom" />
 
-        {/* Breadcrumb + year nav */}
+        {/* Year nav — top-right */}
         <div className="absolute top-6 right-6 sm:right-10 flex items-center gap-2 z-10">
           {prevYear && <Link to={`/oscars/${prevYear}`} className="pill">← {prevYear}</Link>}
           <YearDropdown current={yearNum} allYears={allYears} />
           {nextYear && <Link to={`/oscars/${nextYear}`} className="pill">{nextYear} →</Link>}
           {isAuthenticated && (
-            <button
-              onClick={() => setEditMode(m => !m)}
-              className={editMode ? 'pill-active' : 'btn-cinema text-xs'}
-            >
+            <button onClick={() => setEditMode(m => !m)} className={editMode ? 'pill-active' : 'btn-cinema text-xs'}>
               {editMode ? (saving ? '⏳ Saving…' : '✓ Done') : '✏️ Edit'}
             </button>
           )}
         </div>
 
-        {/* Headline */}
-        <div className="absolute inset-x-0 bottom-0 px-6 sm:px-10 pb-8 z-10">
-          <div className="flex items-center gap-3 mb-3">
-            <Link to="/oscars" className="font-mono text-[11px] tracking-kicker text-gold-500
-                                          hover:text-gold-400 transition-colors flex items-center gap-2">
-              <OscarIcon size={12} /> OSCARS
-            </Link>
-            <span className="text-gray-600">/</span>
-            <span className="font-mono text-[11px] tracking-kicker text-white">{yearNum}</span>
+        {/* Headline + floating score, sharing the hero baseline */}
+        <div className="absolute inset-x-0 bottom-0 px-6 sm:px-10 pb-7 z-10
+                        flex items-end justify-between gap-4">
+          <div className="min-w-0">
+            <div className="flex items-center gap-3 mb-3">
+              <Link to="/oscars" className="font-mono text-[11px] tracking-kicker text-gold-500
+                                            hover:text-gold-400 transition-colors flex items-center gap-2">
+                <OscarIcon size={12} /> OSCARS
+              </Link>
+              <span className="text-gray-600">/</span>
+              <span className="font-mono text-[11px] tracking-kicker text-white">{yearNum}</span>
+            </div>
+            <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl text-white tracking-wide
+                           leading-[0.92] whitespace-nowrap">
+              {shortCeremony(yearData.ceremony_name).toUpperCase()}
+            </h1>
+            <p className="font-serif italic text-base sm:text-lg text-gray-400 mt-2">
+              {formatDate(yearData.ceremony_name)}
+            </p>
           </div>
-          <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl text-white tracking-wide leading-[0.92] whitespace-nowrap">
-            {shortCeremony(yearData.ceremony_name).toUpperCase()}
-          </h1>
-          <p className="font-serif italic text-lg sm:text-xl text-gray-400 mt-3">
-            {formatDate(yearData.ceremony_name)}
-          </p>
-        </div>
 
-        {/* Floating score panel */}
-        <div className="hidden md:flex absolute bottom-32 right-10 z-10
-                        bg-night-950/70 backdrop-blur-md border border-white/[0.12]
-                        rounded-2xl px-6 py-4 gap-4 items-center shadow-still-lg">
-          <HeroYearScore who="matt"   score={mattTotal}   total={categories.length} winner={mattWon} tb={tb} />
-          <span className="w-px h-14 bg-white/10" />
-          <HeroYearScore who="dustin" score={dustinTotal} total={categories.length} winner={dustinWon} tb={tb} />
+          <div className="hidden md:flex bg-night-950/70 backdrop-blur-md border border-white/[0.12]
+                          rounded-2xl px-5 py-3.5 gap-4 items-center shadow-still-lg flex-shrink-0">
+            <HeroYearScore who="matt"   score={mattTotal}   total={categories.length} winner={mattWon} tb={tb} />
+            <span className="w-px h-12 bg-white/10" />
+            <HeroYearScore who="dustin" score={dustinTotal} total={categories.length} winner={dustinWon} tb={tb} />
+          </div>
         </div>
       </FilmStill>
 
       {/* ── BODY ──────────────────────────────────────────────────────────── */}
       <div className="max-w-6xl mx-auto px-6 sm:px-10 py-8">
 
-        {/* Edit-mode banner */}
         {editMode && (
           <div className="mb-4 px-4 py-3 rounded-xl border border-cinema-500/40 bg-cinema-500/10
                           text-cinema-400 text-sm flex items-center gap-2">
             <span className="font-semibold">Edit mode active.</span>
-            <span className="opacity-80">
-              Click a nominee to set winner (✓/✗ updates automatically) · use dropdowns to change a guess.
-            </span>
+            <span className="opacity-80">Click a nominee to set the winner · use the dropdowns to change a guess.</span>
           </div>
         )}
 
-        {/* Tiebreaker detail */}
         {tb && !editMode && <TiebreakerPanel yearData={yearData} mattWon={mattWon} />}
 
-        {/* Edit form */}
         {editMode && (
           <YearDetailsEdit
             yearData={yearData} yearEdit={yearEdit} setYearEdit={setYearEdit}
@@ -376,51 +388,49 @@ export default function OscarsYear() {
           />
         )}
 
-        {/* Category list */}
-        <div className={`card p-0 overflow-hidden ${editMode ? 'ring-2 ring-cinema-500/40' : ''}`}>
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[520px]">
-              <thead>
-                <tr>
-                  <th className="table-header">Nominees</th>
-                  <th className="table-header text-gold-500 w-44">Hermz</th>
-                  <th className="table-header text-film-500 w-44">Dust</th>
-                </tr>
-              </thead>
-              <tbody>
-                {categories.map((cat, idx) => (
-                  <CategoryBlock
-                    key={cat.category.id}
-                    cat={cat} idx={idx} yearNum={yearNum} editMode={editMode}
+        {/* Category groups — two-column on lg */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-9 gap-y-7">
+          {groups.map(group => (
+            <div key={group.name}>
+              <div className="flex items-center gap-3 pb-2 mb-3 border-b border-night-700/60">
+                <span className="font-mono text-[10px] tracking-cinema text-gold-500 uppercase">{group.name}</span>
+                <span className="flex-1 h-px bg-night-700/60" />
+                <span className="font-mono text-[9px] tracking-kicker text-gray-600">{group.cats.length} CAT</span>
+              </div>
+              <div className="space-y-2.5">
+                {group.cats.map(({ c, idx }) => (
+                  <CategoryCard
+                    key={c.category.id}
+                    cat={c} idx={idx} yearNum={yearNum} editMode={editMode} posterMap={posterMap}
                     onToggleNominee={ni => toggleNomineeWinner(idx, ni)}
                     onChangeMatt={n => changeGuess(idx, 'matt', n)}
                     onChangeDustin={n => changeGuess(idx, 'dustin', n)}
                   />
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
   )
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
+// ── hero score ────────────────────────────────────────────────────────────────
 function HeroYearScore({ who, score, total, winner, tb }) {
   const c = who === 'matt' ? 'text-gold-500' : 'text-film-500'
   const name = who === 'matt' ? 'HERMZ' : 'DUST'
   return (
-    <div className="text-center px-2 relative">
+    <div className="text-center px-1.5 relative">
       {winner && (
-        <div className={`absolute -top-3.5 left-1/2 -translate-x-1/2 font-mono text-[8px]
+        <div className={`absolute -top-3 left-1/2 -translate-x-1/2 font-mono text-[8px]
                          tracking-cinema ${c} px-1.5 py-px rounded bg-night-950/80 whitespace-nowrap`}>
           ● WINNER{tb && ' · TIEBREAKER'}
         </div>
       )}
-      <div className={`font-mono text-[9px] tracking-cinema ${c} mb-1.5`}>{name}</div>
+      <div className={`font-mono text-[9px] tracking-cinema ${c} mb-1`}>{name}</div>
       <div className="flex items-baseline justify-center gap-1.5">
-        <span className="font-display text-5xl text-white leading-none tracking-wide">{score}</span>
+        <span className="font-display text-4xl text-white leading-none tracking-wide">{score}</span>
         <span className="font-mono text-xs text-gray-500 tracking-kicker">/{total}</span>
       </div>
     </div>
@@ -431,18 +441,139 @@ function YearDropdown({ current, allYears }) {
   const navigate = useNavigate()
   const sorted = [...allYears].sort((a, b) => b - a)
   return (
-    <select
-      value={current}
-      onChange={e => navigate(`/oscars/${e.target.value}`)}
+    <select value={current} onChange={e => navigate(`/oscars/${e.target.value}`)}
       className="bg-night-950/70 border border-white/[0.12] text-white font-mono text-[11px]
-                 tracking-kicker px-3 py-1.5 rounded-full cursor-pointer
-                 backdrop-blur-md hover:border-gold-500/60 transition-colors"
-    >
+                 tracking-kicker px-3 py-1.5 rounded-full cursor-pointer backdrop-blur-md
+                 hover:border-gold-500/60 transition-colors">
       {sorted.map(y => <option key={y} value={y} className="bg-night-900">{y}</option>)}
     </select>
   )
 }
 
+// ── CategoryCard — winner / hermz / dust tiles + nominee field ───────────────
+function CategoryCard({ cat, idx, yearNum, editMode, posterMap, onToggleNominee, onChangeMatt, onChangeDustin }) {
+  const { category, nominees, guesses, winner } = cat
+  const mattG = guesses.matt || {}
+  const dustinG = guesses.dustin || {}
+  const isNew = category.active_from && category.active_from > 2008 && category.active_from === yearNum
+  const isRetired = category.active_until && category.active_until === yearNum
+  const label = category.name.replace(/^Best\s+/i, '').toUpperCase()
+
+  return (
+    <div className="rounded-xl border border-night-700/60 bg-night-800/40 overflow-hidden">
+      {/* category header */}
+      <div className="px-3.5 pt-2.5 pb-2 flex items-center justify-center gap-2 flex-wrap
+                      border-b border-night-700/50 bg-night-900/30">
+        <span className="font-mono text-[10px] tracking-cinema text-gold-500 uppercase">{label}</span>
+        {isNew && <span className="text-[8px] bg-emerald-500/15 text-emerald-400 border border-emerald-500/40 px-1.5 py-0.5 rounded font-mono tracking-cinema">NEW</span>}
+        {isRetired && <span className="text-[8px] bg-gray-700 text-gray-400 border border-gray-600 px-1.5 py-0.5 rounded font-mono tracking-cinema">FINAL YEAR</span>}
+      </div>
+
+      {/* three picks */}
+      <div className="grid grid-cols-3 gap-2.5 px-3.5 py-3">
+        <PickTile who="winner" name={winner} posterMap={posterMap} />
+        <PickTile who="matt"   name={mattG.guess}   correct={mattG.is_correct}   posterMap={posterMap} />
+        <PickTile who="dustin" name={dustinG.guess} correct={dustinG.is_correct} posterMap={posterMap} />
+      </div>
+
+      {/* nominee field — view OR edit */}
+      {editMode ? (
+        <EditField
+          nominees={nominees} winner={winner}
+          mattGuess={mattG.guess} dustinGuess={dustinG.guess}
+          onToggleNominee={onToggleNominee} onChangeMatt={onChangeMatt} onChangeDustin={onChangeDustin}
+        />
+      ) : (
+        nominees.length > 0 && (
+          <div className="px-3.5 pb-3 pt-0.5">
+            <div className="font-mono text-[8px] tracking-cinema text-gray-600 uppercase mb-1.5">The Field</div>
+            <div className="flex flex-wrap gap-x-2 gap-y-1">
+              {nominees.map((n, i) => (
+                <span key={i} className={`text-[11px] leading-snug ${
+                  n.is_winner ? 'text-gold-400 font-semibold' : 'text-gray-500'
+                }`}>
+                  {n.is_winner && <span className="mr-0.5">★</span>}{n.name}
+                  {i < nominees.length - 1 && <span className="text-gray-700 ml-2">·</span>}
+                </span>
+              ))}
+            </div>
+          </div>
+        )
+      )}
+    </div>
+  )
+}
+
+// one tile: poster + label + name, with ✓/✗ for the two players
+function PickTile({ who, name, correct, posterMap }) {
+  const isWinner = who === 'winner'
+  const labelColor = who === 'matt' ? 'text-gold-500' : who === 'dustin' ? 'text-film-500' : 'text-gold-400'
+  const labelText  = who === 'matt' ? 'HERMZ' : who === 'dustin' ? 'DUST' : 'WINNER'
+  const nameColor  = isWinner ? 'text-white'
+    : correct === false ? 'text-gray-500 line-through' : 'text-white'
+  const wrong = correct === false
+  const src = name ? posterMap[name] : undefined
+
+  return (
+    <div className="min-w-0">
+      <div className="flex items-start gap-2">
+        <FilmStill src={src} title={name || ''}
+          className={`w-7 h-9 rounded-sm border border-white/10 flex-shrink-0 ${wrong ? 'opacity-40' : ''}`} />
+        <div className="min-w-0 flex-1">
+          <div className={`font-mono text-[8px] tracking-cinema uppercase mb-0.5 flex items-center gap-1 ${labelColor}`}>
+            <span>{labelText}</span>
+            {correct === true  && <span className="text-emerald-400">✓</span>}
+            {correct === false && <span className="text-red-400">✗</span>}
+          </div>
+          <div className={`font-display text-[13px] leading-tight tracking-wide line-clamp-2 ${nameColor}`}>
+            {(name || 'TBD').toUpperCase()}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// edit controls: nominee buttons (set winner) + two guess selects
+function EditField({ nominees, winner, mattGuess, dustinGuess, onToggleNominee, onChangeMatt, onChangeDustin }) {
+  const names = nominees.map(n => n.name)
+  const opts = g => (names.includes(g) ? names : g ? [g, ...names] : names)
+  return (
+    <div className="px-3.5 pb-3 pt-0.5 space-y-2.5 border-t border-night-700/50">
+      <div>
+        <div className="font-mono text-[8px] tracking-cinema text-cinema-400 uppercase mb-1.5">Set Winner</div>
+        <div className="flex flex-wrap gap-1.5">
+          {nominees.map((n, i) => (
+            <button key={i} onClick={() => onToggleNominee(i)}
+              className={`text-[11px] px-2 py-1 rounded transition-colors ${
+                n.is_winner
+                  ? 'text-gold-400 font-semibold bg-gold-500/10 ring-1 ring-gold-500/40'
+                  : 'text-gray-400 bg-night-700/50 hover:bg-night-700 hover:text-gray-200'
+              }`}>
+              {n.is_winner && <span className="mr-1">★</span>}{n.name}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <div className="font-mono text-[8px] tracking-cinema text-gold-500 uppercase mb-1">Hermz pick</div>
+          <select value={mattGuess || ''} onChange={e => onChangeMatt(e.target.value)} className="select text-xs py-1 px-2 w-full">
+            {opts(mattGuess).map(n => <option key={n} value={n} className="bg-night-900">{n}</option>)}
+          </select>
+        </div>
+        <div>
+          <div className="font-mono text-[8px] tracking-cinema text-film-500 uppercase mb-1">Dust pick</div>
+          <select value={dustinGuess || ''} onChange={e => onChangeDustin(e.target.value)} className="select text-xs py-1 px-2 w-full">
+            {opts(dustinGuess).map(n => <option key={n} value={n} className="bg-night-900">{n}</option>)}
+          </select>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Tiebreaker + year-details edit (UNCHANGED from current file) ─────────────
 function TiebreakerPanel({ yearData, mattWon }) {
   const dustinWon = !mattWon
   const mattDiff   = runtimeDiff(yearData.actual_runtime, yearData.matt_runtime_guess)
@@ -452,9 +583,7 @@ function TiebreakerPanel({ yearData, mattWon }) {
     <div className="border border-cinema-500/40 bg-cinema-500/[0.06] rounded-xl p-5 mb-6">
       <div className="flex items-center gap-2 mb-4">
         <span className="badge-tiebreaker">Tiebreaker</span>
-        <span className="font-mono text-[10px] tracking-kicker text-cinema-400 uppercase">
-          tied score — decided by runtime guess
-        </span>
+        <span className="font-mono text-[10px] tracking-kicker text-cinema-400 uppercase">tied score — decided by runtime guess</span>
       </div>
       <div className="grid grid-cols-3 gap-2 sm:gap-3 text-center text-sm">
         <TBCol who="matt"   value={fmtRuntime(yearData.matt_runtime_guess)}   diff={mattDiff}   winner={mattWon} />
@@ -491,111 +620,6 @@ function TBCol({ who, value, diff, winner }) {
   )
 }
 
-// ── CategoryBlock — one category, two rows: header + data ────────────────────
-function CategoryBlock({ cat, idx, yearNum, editMode, onToggleNominee, onChangeMatt, onChangeDustin }) {
-  const { category, nominees, guesses, winner } = cat
-  const mattG = guesses.matt || {}
-  const dustinG = guesses.dustin || {}
-  const isNew = category.active_from && category.active_from > 2008 && category.active_from === yearNum
-  const isRetired = category.active_until && category.active_until === yearNum
-  const stripe = idx % 2 === 0 ? 'bg-night-800/40' : 'bg-night-900/40'
-
-  return (
-    <Fragment>
-      <tr className="table-category-header">
-        <td colSpan={3} className="px-4 py-2.5 text-center">
-          <div className="flex items-center justify-center gap-2 flex-wrap">
-            <span className="font-mono text-[10px] tracking-cinema text-gold-500 uppercase">
-              {category.name.replace(/^Best\s+/i, '').toUpperCase()}
-            </span>
-            {isNew && (
-              <span className="text-[9px] bg-emerald-500/15 text-emerald-400 border border-emerald-500/40
-                               px-1.5 py-0.5 rounded font-mono tracking-cinema">NEW</span>
-            )}
-            {isRetired && (
-              <span className="text-[9px] bg-gray-700 text-gray-400 border border-gray-600
-                               px-1.5 py-0.5 rounded font-mono tracking-cinema">FINAL YEAR</span>
-            )}
-          </div>
-        </td>
-      </tr>
-      <tr className={`${stripe} table-row-hover`}>
-        <td className="table-cell align-top py-4 px-5">
-          {nominees.length > 0 ? (
-            <ul className="space-y-1">
-              {nominees.map((n, i) => (
-                editMode ? (
-                  <li key={i}>
-                    <button
-                      onClick={() => onToggleNominee(i)}
-                      className={`text-sm leading-snug text-left w-full px-2 py-1 rounded transition-colors ${
-                        n.is_winner
-                          ? 'text-gold-400 font-semibold bg-gold-500/10 ring-1 ring-gold-500/40'
-                          : 'text-gray-400 hover:bg-night-700/60 hover:text-gray-200'
-                      }`}
-                    >
-                      {n.is_winner && <span className="mr-1.5">★</span>}{n.name}
-                    </button>
-                  </li>
-                ) : (
-                  <li key={i} className={`text-sm leading-snug ${
-                    n.is_winner ? 'text-gold-400 font-semibold' : 'text-gray-500'
-                  }`}>
-                    {n.is_winner && <span className="mr-1.5">★</span>}{n.name}
-                  </li>
-                )
-              ))}
-            </ul>
-          ) : (
-            <span className="text-gray-600 text-sm">—</span>
-          )}
-        </td>
-        <td className="table-cell align-top py-4 px-5 w-44">
-          <GuessCell guess={mattG.guess} isCorrect={mattG.is_correct} nominees={nominees}
-                     winner={winner} editMode={editMode} onChange={onChangeMatt} player="matt" />
-        </td>
-        <td className="table-cell align-top py-4 px-5 w-44">
-          <GuessCell guess={dustinG.guess} isCorrect={dustinG.is_correct} nominees={nominees}
-                     winner={winner} editMode={editMode} onChange={onChangeDustin} player="dustin" />
-        </td>
-      </tr>
-    </Fragment>
-  )
-}
-
-const PLAYER_TEXT = { matt: 'text-gold-400', dustin: 'text-film-400' }
-const PLAYER_MARK = { matt: 'text-gold-500', dustin: 'text-film-500' }
-
-function GuessCell({ guess, isCorrect, nominees, winner, editMode, onChange, player }) {
-  if (!guess) return <span className="text-gray-600 text-sm">—</span>
-  const text = PLAYER_TEXT[player] || 'text-gray-300'
-  const mark = PLAYER_MARK[player] || 'text-emerald-400'
-
-  if (editMode) {
-    const names = nominees.map(n => n.name)
-    const options = names.includes(guess) ? names : [guess, ...names]
-    const derivedCorrect = winner ? guess === winner : false
-    return (
-      <div className="flex items-start gap-2">
-        <span className={`mt-1.5 flex-shrink-0 text-sm font-bold ${derivedCorrect ? mark : 'text-red-400'}`}>
-          {derivedCorrect ? '✓' : '✗'}
-        </span>
-        <select value={guess} onChange={e => onChange(e.target.value)} className="select text-xs py-1 px-2 w-full">
-          {options.map(name => <option key={name} value={name} className="bg-night-900">{name}</option>)}
-        </select>
-      </div>
-    )
-  }
-  return (
-    <div className="flex items-start gap-2">
-      <span className={`mt-0.5 flex-shrink-0 text-sm font-bold ${isCorrect ? mark : 'text-red-400'}`}>
-        {isCorrect ? '✓' : '✗'}
-      </span>
-      <span className={`text-sm leading-snug ${isCorrect ? text : 'text-gray-500'}`}>{guess}</span>
-    </div>
-  )
-}
-
 function YearDetailsEdit({ yearData, yearEdit, setYearEdit, mattTotal, dustinTotal, saving, onSave, onCalculateWinner }) {
   function fmtForInput(s) { const t = parseInterval(s); return t ? `${t.h}:${String(t.m).padStart(2,'0')}` : '' }
   function fmtMono(s) { const t = parseInterval(s); return t ? `${t.m}:${String(t.s).padStart(2,'0')}` : '' }
@@ -607,9 +631,7 @@ function YearDetailsEdit({ yearData, yearEdit, setYearEdit, mattTotal, dustinTot
   return (
     <div className="mb-6 rounded-xl border border-cinema-500/40 bg-cinema-500/[0.06] p-5">
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
-        <span className="font-mono text-[11px] tracking-cinema text-cinema-400 uppercase">
-          Year Details &amp; Tiebreaker
-        </span>
+        <span className="font-mono text-[11px] tracking-cinema text-cinema-400 uppercase">Year Details &amp; Tiebreaker</span>
         <div className="flex items-center gap-2 flex-wrap">
           <button onClick={onCalculateWinner} disabled={saving}
             className="text-xs px-3 py-1.5 rounded-lg bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 font-medium hover:bg-emerald-500/20 transition-colors">
@@ -621,7 +643,6 @@ function YearDetailsEdit({ yearData, yearEdit, setYearEdit, mattTotal, dustinTot
           </button>
         </div>
       </div>
-
       <div className="mb-4 flex items-center gap-2 text-xs text-gray-400">
         <span className="font-mono tracking-kicker uppercase">Status:</span>
         <span className={`font-semibold ${yearData.winner === 'pending' ? 'text-gray-500' : 'text-emerald-400'}`}>
@@ -632,24 +653,23 @@ function YearDetailsEdit({ yearData, yearEdit, setYearEdit, mattTotal, dustinTot
         </span>
         {yearData.tiebreaker_used && <span className="badge-tiebreaker">Tiebreaker</span>}
       </div>
-
       <div className="grid grid-cols-3 gap-3 mb-3">
-        <EditField label="Hermz Runtime Guess (H:MM)" value={runtimeVal('matt_runtime_guess')}    onChange={v => set('matt_runtime_guess', v)}    placeholder="3:22" />
-        <EditField label="Actual Runtime (H:MM)"       value={runtimeVal('actual_runtime')}        onChange={v => set('actual_runtime', v)}        placeholder="3:44" />
-        <EditField label="Dust Runtime Guess (H:MM)"   value={runtimeVal('dustin_runtime_guess')}  onChange={v => set('dustin_runtime_guess', v)}  placeholder="3:30" />
+        <YearInput label="Hermz Runtime Guess (H:MM)" value={runtimeVal('matt_runtime_guess')}    onChange={v => set('matt_runtime_guess', v)}    placeholder="3:22" />
+        <YearInput label="Actual Runtime (H:MM)"       value={runtimeVal('actual_runtime')}        onChange={v => set('actual_runtime', v)}        placeholder="3:44" />
+        <YearInput label="Dust Runtime Guess (H:MM)"   value={runtimeVal('dustin_runtime_guess')}  onChange={v => set('dustin_runtime_guess', v)}  placeholder="3:30" />
       </div>
       {showMonologue && (
         <div className="grid grid-cols-3 gap-3 pt-3 border-t border-cinema-500/20">
-          <EditField label="Hermz Monologue (M:SS)" value={monoVal('matt_monologue_guess')}   onChange={v => set('matt_monologue_guess', v)}   placeholder="12:30" />
-          <EditField label="Actual Monologue (M:SS)" value={monoVal('actual_monologue')}      onChange={v => set('actual_monologue', v)}       placeholder="14:00" />
-          <EditField label="Dust Monologue (M:SS)"   value={monoVal('dustin_monologue_guess')} onChange={v => set('dustin_monologue_guess', v)} placeholder="10:00" />
+          <YearInput label="Hermz Monologue (M:SS)" value={monoVal('matt_monologue_guess')}   onChange={v => set('matt_monologue_guess', v)}   placeholder="12:30" />
+          <YearInput label="Actual Monologue (M:SS)" value={monoVal('actual_monologue')}      onChange={v => set('actual_monologue', v)}       placeholder="14:00" />
+          <YearInput label="Dust Monologue (M:SS)"   value={monoVal('dustin_monologue_guess')} onChange={v => set('dustin_monologue_guess', v)} placeholder="10:00" />
         </div>
       )}
     </div>
   )
 }
 
-function EditField({ label, value, onChange, placeholder }) {
+function YearInput({ label, value, onChange, placeholder }) {
   return (
     <div>
       <label className="block font-mono text-[9px] tracking-kicker text-gray-400 uppercase mb-1">{label}</label>
