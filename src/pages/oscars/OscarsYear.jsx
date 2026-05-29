@@ -1,3 +1,7 @@
+// hermz-and-d/src/pages/oscars/OscarsYear.jsx
+// Phase 2 — Oscars Year detail page (Projector Room visual system).
+// Drop-in replacement for the existing file. No other files need to change.
+
 import { useState, useEffect, Fragment } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
@@ -299,7 +303,7 @@ export default function OscarsYear() {
         title={`Hermz and D Oscar ${yearNum}`}
         hue={yearHue(yearNum)}
         mood={mattWon ? 'warm' : 'cool'}
-        className="w-full h-[300px] sm:h-[340px]"
+        className="w-full aspect-[21/9] min-h-[380px]"
       >
         <div className="absolute inset-0 scrim-bottom" />
 
@@ -337,7 +341,7 @@ export default function OscarsYear() {
         </div>
 
         {/* Floating score panel */}
-        <div className="hidden md:flex absolute bottom-24 right-10 z-10
+        <div className="hidden md:flex absolute bottom-32 right-10 z-10
                         bg-night-950/70 backdrop-blur-md border border-white/[0.12]
                         rounded-2xl px-6 py-4 gap-4 items-center shadow-still-lg">
           <HeroYearScore who="matt"   score={mattTotal}   total={categories.length} winner={mattWon} tb={tb} />

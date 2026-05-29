@@ -1,3 +1,7 @@
+// hermz-and-d/src/pages/oscars/OscarsStats.jsx
+// Phase 2 — All-Time Oscar Stats page (Projector Room visual system).
+// Drop-in replacement for the existing file. No other files need to change.
+
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import {
@@ -248,7 +252,7 @@ export default function OscarsStats() {
     <div>
       {/* ── HERO ─────────────────────────────────────────────────────────── */}
       <FilmStill title="Hermz and D Oscar Stats" hue={48} mood="cool"
-                 className="w-full h-[300px] sm:h-[340px]">
+                 className="w-full aspect-[21/9] min-h-[340px]">
         <div className="absolute inset-0 scrim-bottom" />
 
         <div className="absolute inset-x-0 bottom-0 px-6 sm:px-10 pb-7 z-10">
@@ -269,7 +273,7 @@ export default function OscarsStats() {
         </div>
 
         {/* Floating big-number summary, hidden on mobile */}
-        <div className="hidden md:flex absolute bottom-24 right-10 z-10
+        <div className="hidden md:flex absolute bottom-32 right-10 z-10
                         bg-night-950/70 backdrop-blur-md border border-white/[0.12]
                         rounded-2xl px-6 py-4 gap-5 items-center shadow-still-lg">
           <BigPct who="matt"   pct={pct(mattAllTime,   totalPossible)} total={mattAllTime}   leading={mattAllTime > dustinAllTime} />
