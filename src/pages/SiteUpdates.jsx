@@ -7,7 +7,22 @@ const UPDATES = [
       {
         tag: 'Design',
         color: 'cinema',
-        text: 'Phase 6 visual overhaul — Films pages canvas alignment and readability pass. Rankings page: new mono kicker + volume headline in the hero ("X FILMS, RANKED."), grid view upgraded to full poster cards with title/score/rank-movement overlays. Film Detail: scorecard now has a 3-way toggle — Bars (default, side-by-side dual bars per category), Radar, and Table. Future Consideration: "Added · MON YYYY" caption added to each Want to Watch card. Stats panels: all headers converted to display-title + mono subtitle format. Global readability pass across all four pages — no text smaller than 11px.',
+        text: 'Films landing page cleanup — "No. 1 combined" subtitle removed from hero. Stats & Charts and All Films elevated to ghost buttons in the hero. "Four Editions" section header removed (redundant with the year grid). Dots removed before Combined / Dust / Hermz poster labels, label size bumped. Bottom "View Movie Stats" button eliminated.',
+      },
+      {
+        tag: 'Design',
+        color: 'cinema',
+        text: 'Rankings hero redesigned — year and edition are now the dominant headline. "2026" in gold and "EDITION" in white sit side by side at the same display scale. Film count moved to the italic subtitle line.',
+      },
+      {
+        tag: 'Design',
+        color: 'cinema',
+        text: 'Nomenclature unified — "The Canon" is the name of the overall ranking system. Each ranking session is now an "Edition" (2026 Edition, 2016 Edition, etc.). Replaced all instances of "ranking event/events" and "Volume I–IV" across Rankings, Films landing, Film Detail, Stats, External Lists, Future Consideration, and the home page.',
+      },
+      {
+        tag: 'Design',
+        color: 'cinema',
+        text: 'Phase 6 visual overhaul — Films pages canvas alignment and readability pass. Rankings page: new mono kicker in hero, grid view upgraded to full poster cards with title/score/rank-movement overlays. Film Detail: scorecard now has a 3-way toggle — Bars (default, side-by-side dual bars per category), Radar, and Table. Future Consideration: "Added · MON YYYY" caption added to each Want to Watch card. Stats panels: all headers converted to display-title + mono subtitle format. Global readability pass across all four pages — no text smaller than 11px.',
       },
       {
         tag: 'Oscars',
