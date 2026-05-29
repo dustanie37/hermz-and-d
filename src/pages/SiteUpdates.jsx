@@ -7,7 +7,7 @@ const UPDATES = [
       {
         tag: 'Oscars',
         color: 'gold',
-        text: 'Oscar Year page — Phase 5 redesign. Categories grouped identically to the Stats page (Major Awards, Acting, Writing, Craft, Music & Sound, Short Films, Discontinued) in a single column. Winner / Hermz / Dust shown as text tiles with ✓/✗ — no more tiny gradient squares. All fonts bumped up. Full nominee field and edit mode fully preserved.',
+        text: 'Oscar Year page — Phase 5 redesign. Categories grouped identically to the Stats page (Major Awards, Acting, Writing, Craft, Music & Sound, Short Films, Discontinued) in a single column. Winner / Hermz / Dust shown as text tiles with ✓/✗ — no gradient squares. Two rounds of font size increases. Full nominee field and edit mode preserved.',
       },
       {
         tag: 'Oscars',
