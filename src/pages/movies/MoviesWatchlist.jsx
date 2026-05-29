@@ -158,7 +158,7 @@ function UnseenCard({ item, onRemove, onMoveTab }) {
           >✕</button>
         </div>
 
-        {/* Move to "Seen It" button */}
+        {/* Move buttons */}
         <div className="absolute bottom-0 inset-x-0 opacity-0 group-hover:opacity-100 transition-all pointer-events-auto pb-1 px-1">
           <div className="flex gap-1">
             <button
@@ -167,6 +167,12 @@ function UnseenCard({ item, onRemove, onMoveTab }) {
                          bg-film-600/80 text-white rounded hover:bg-film-500 transition-colors"
               title="Move to First Watch"
             >→ First Watch</button>
+            <button
+              onClick={() => onMoveTab(item.id, 'rewatch')}
+              className="flex-1 font-mono text-[11px] tracking-kicker uppercase py-1
+                         bg-cinema-600/80 text-white rounded hover:bg-cinema-500 transition-colors"
+              title="Move to Rewatched"
+            >→ Rewatch</button>
           </div>
         </div>
 
