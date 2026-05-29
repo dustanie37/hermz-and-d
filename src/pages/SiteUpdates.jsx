@@ -5,6 +5,11 @@ const UPDATES = [
     date: 'May 29, 2026',
     entries: [
       {
+        tag: 'Design',
+        color: 'cinema',
+        text: 'Site Updates page font pass — date labels, tag pills, entry text, and hero subtitle all bumped up for legibility.',
+      },
+      {
         tag: 'Films',
         color: 'film',
         text: 'Future Consideration overhaul — renamed from "Watchlist / Up Next." Seen It and Rewatched cards redesigned with a full-height flush poster on the left (matching the Want to Watch poster size) and all content stacked to the right. "Add notes" is now a teal dashed-border button instead of invisible gray text. Existing notes text is larger and brighter. Grid reduced to 2-column for breathing room.',
@@ -367,7 +372,7 @@ export default function SiteUpdates() {
           <h1 className="font-display text-5xl sm:text-6xl tracking-wide text-cream-100 leading-none mb-3">
             SITE UPDATES
           </h1>
-          <p className="text-gray-400 text-sm max-w-md">
+          <p className="text-gray-400 text-base max-w-md">
             Everything that's been built — newest first. A running record of features, fixes, and improvements.
           </p>
         </div>
@@ -393,7 +398,7 @@ export default function SiteUpdates() {
                     ? 'border-gold-500 bg-gold-500/20'
                     : 'border-white/30 bg-night-950'
                 }`} />
-                <span className={`font-mono text-[11px] tracking-kicker uppercase ${
+                <span className={`font-mono text-xs tracking-kicker uppercase ${
                   group.isHistory
                     ? 'text-gray-600'
                     : gi === 0
@@ -402,7 +407,7 @@ export default function SiteUpdates() {
                 }`}>
                   {group.date}
                   {gi === 0 && (
-                    <span className="ml-2 px-1.5 py-0.5 rounded text-[9px] bg-gold-500/20 text-gold-400 border border-gold-500/20 normal-case tracking-normal">
+                    <span className="ml-2 px-1.5 py-0.5 rounded text-[10px] bg-gold-500/20 text-gold-400 border border-gold-500/20 normal-case tracking-normal">
                       Latest
                     </span>
                   )}
@@ -416,10 +421,10 @@ export default function SiteUpdates() {
                     key={ei}
                     className="bg-night-900/60 border border-white/[0.05] rounded-xl px-4 py-3.5 flex items-start gap-3 hover:border-white/[0.08] transition-colors"
                   >
-                    <span className={`mt-0.5 flex-shrink-0 font-mono text-[9px] tracking-kicker uppercase px-2 py-0.5 rounded-md ${TAG_STYLES[entry.color]}`}>
+                    <span className={`mt-0.5 flex-shrink-0 font-mono text-[10px] tracking-kicker uppercase px-2 py-0.5 rounded-md ${TAG_STYLES[entry.color]}`}>
                       {entry.tag}
                     </span>
-                    <p className="text-gray-300 text-sm leading-relaxed">{entry.text}</p>
+                    <p className="text-gray-300 text-base leading-relaxed">{entry.text}</p>
                   </div>
                 ))}
               </div>
