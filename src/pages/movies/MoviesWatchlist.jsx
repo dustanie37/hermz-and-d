@@ -82,17 +82,19 @@ function NotesArea({ item, onSave }) {
   return (
     <button
       onClick={() => setEditing(true)}
-      className="w-full text-left mt-2 group/notes"
+      className="w-full text-left mt-1 group/notes"
     >
       {item.notes ? (
-        <p className="text-xs text-gray-400 leading-relaxed line-clamp-3 group-hover/notes:text-gray-200 transition-colors">
+        <p className="text-sm text-gray-300 leading-relaxed line-clamp-4 group-hover/notes:text-gray-100 transition-colors">
           {item.notes}
         </p>
       ) : (
-        <p className="text-[10px] font-mono tracking-kicker text-gray-700
-                      group-hover/notes:text-gray-500 transition-colors uppercase">
-          + Add notes
-        </p>
+        <span className="inline-flex items-center gap-1.5 text-xs text-cinema-400
+                         border border-dashed border-cinema-500/30 rounded-lg px-3 py-1.5
+                         group-hover/notes:border-cinema-400/60 group-hover/notes:text-cinema-300
+                         transition-all">
+          ＋ Add notes
+        </span>
       )}
     </button>
   )
@@ -115,18 +117,18 @@ function UnseenCard({ item, onRemove, onMoveTab }) {
           style={{ background: 'linear-gradient(180deg, transparent 20%, rgba(0,0,0,0.93) 100%)' }}
         >
           {item.year && (
-            <p className="font-mono text-[9px] tracking-kicker text-white/60 uppercase mb-0.5">{item.year}</p>
+            <p className="font-mono text-xs tracking-kicker text-white/60 uppercase mb-0.5">{item.year}</p>
           )}
           {item.film_id ? (
             <Link
               to={`/movies/${item.film_id}`}
-              className="font-display text-sm text-white tracking-wide leading-tight line-clamp-2 block
+              className="font-display text-base text-white tracking-wide leading-tight line-clamp-2 block
                          hover:text-gold-400 transition-colors pointer-events-auto"
             >
               {item.title?.toUpperCase()}
             </Link>
           ) : (
-            <p className="font-display text-sm text-white tracking-wide leading-tight line-clamp-2">
+            <p className="font-display text-base text-white tracking-wide leading-tight line-clamp-2">
               {item.title?.toUpperCase()}
             </p>
           )}
@@ -178,19 +180,19 @@ function NotesCard({ item, onRemove, onSaveNotes, onMoveTab, tab }) {
       }`}>
 
       {/* Top row: poster + meta */}
-      <div className="flex gap-3">
+      <div className="flex gap-4">
         {/* Poster */}
-        <div className="flex-shrink-0 w-14">
+        <div className="flex-shrink-0 w-20">
           <FilmStill
             src={item.poster_url}
             title={item.title}
-            className="aspect-[2/3] rounded border border-white/10 shadow-still w-14"
+            className="aspect-[2/3] rounded-lg border border-white/10 shadow-still w-20"
           />
         </div>
 
         {/* Meta */}
         <div className="flex-1 min-w-0 pt-0.5">
-          <p className="font-mono text-[9px] tracking-kicker text-gray-500 uppercase mb-1">
+          <p className="font-mono text-xs tracking-kicker text-gray-500 uppercase mb-1">
             {item.year ?? '—'}
             {tab === 'first_time' && (
               <span className="ml-2 text-film-500">● First Watch</span>
@@ -202,13 +204,13 @@ function NotesCard({ item, onRemove, onSaveNotes, onMoveTab, tab }) {
           {item.film_id ? (
             <Link
               to={`/movies/${item.film_id}`}
-              className="font-display text-sm text-white tracking-wide leading-tight line-clamp-2
+              className="font-display text-base text-white tracking-wide leading-tight line-clamp-2
                          hover:text-cinema-400 transition-colors block"
             >
               {item.title?.toUpperCase()}
             </Link>
           ) : (
-            <p className="font-display text-sm text-white tracking-wide leading-tight line-clamp-2">
+            <p className="font-display text-base text-white tracking-wide leading-tight line-clamp-2">
               {item.title?.toUpperCase()}
             </p>
           )}
@@ -218,7 +220,7 @@ function NotesCard({ item, onRemove, onSaveNotes, onMoveTab, tab }) {
             {tab === 'first_time' && (
               <button
                 onClick={() => onMoveTab(item.id, 'rewatch')}
-                className="font-mono text-[9px] tracking-kicker text-cinema-500 hover:text-cinema-300 uppercase transition-colors"
+                className="font-mono text-xs tracking-kicker text-cinema-500 hover:text-cinema-300 uppercase transition-colors"
               >
                 → Rewatched
               </button>
@@ -226,14 +228,14 @@ function NotesCard({ item, onRemove, onSaveNotes, onMoveTab, tab }) {
             {tab === 'rewatch' && (
               <button
                 onClick={() => onMoveTab(item.id, 'first_time')}
-                className="font-mono text-[9px] tracking-kicker text-film-500 hover:text-film-300 uppercase transition-colors"
+                className="font-mono text-xs tracking-kicker text-film-500 hover:text-film-300 uppercase transition-colors"
               >
                 ← First Watch
               </button>
             )}
             <button
               onClick={() => onRemove(item.id)}
-              className="font-mono text-[9px] tracking-kicker text-gray-600 hover:text-red-400 uppercase transition-colors"
+              className="font-mono text-xs tracking-kicker text-gray-600 hover:text-red-400 uppercase transition-colors"
             >
               Remove
             </button>
@@ -242,8 +244,8 @@ function NotesCard({ item, onRemove, onSaveNotes, onMoveTab, tab }) {
       </div>
 
       {/* Notes */}
-      <div className="border-t border-white/5 pt-2.5">
-        <p className="font-mono text-[9px] tracking-kicker text-gray-600 uppercase mb-1.5">Notes</p>
+      <div className="border-t border-white/5 pt-3">
+        <p className="font-mono text-[10px] tracking-kicker text-gray-500 uppercase mb-2">Ranking Notes</p>
         <NotesArea item={item} onSave={onSaveNotes} />
       </div>
     </div>
@@ -544,13 +546,13 @@ export default function MoviesWatchlist() {
               ← FILMS
             </Link>
             <span className="text-gray-700">/</span>
-            <span className="font-mono text-[11px] tracking-kicker text-white uppercase">My Watchlist</span>
+            <span className="font-mono text-[11px] tracking-kicker text-white uppercase">Future Consideration</span>
           </div>
           <h1 className="font-display text-5xl sm:text-6xl text-white tracking-wide leading-none">
-            UP NEXT
+            FUTURE CONSIDERATION
           </h1>
           <p className="font-serif italic text-base text-gray-400 mt-3">
-            Track what to watch, log first-time views, and capture rewatch notes for future ranking
+            Films to watch, first-time views to consider, and rewatch notes for the next ranking event
             {!loading && items.length > 0 && (
               <span className="text-gray-500 ml-2">· {items.length} total</span>
             )}
@@ -570,7 +572,7 @@ export default function MoviesWatchlist() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`relative px-5 py-3 font-display text-sm tracking-wide transition-all
+                className={`relative px-5 py-3 font-display text-base tracking-wide transition-all
                   ${isActive
                     ? `${tab.color} after:absolute after:bottom-0 after:inset-x-0 after:h-[2px]
                        ${tab.id === 'unseen' ? 'after:bg-gold-400' : tab.id === 'first_time' ? 'after:bg-film-400' : 'after:bg-cinema-400'}`
@@ -629,7 +631,7 @@ export default function MoviesWatchlist() {
 
         {/* ── UNSEEN: poster grid ──────────────────────────────────────────── */}
         {!loading && activeTab === 'unseen' && sorted.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {sorted.map(item => (
               <UnseenCard
                 key={item.id}
