@@ -103,15 +103,14 @@ export default function PodcastHome() {
 
       const { data: rankings } = await supabase
         .from('combined_rankings')
-        .select('combined_rank, combined_score, films(id, title, poster_url, release_year, director)')
+        .select('combined_rank, films(id, title, poster_url, release_year, director)')
         .eq('event_id', event.id)
         .order('combined_rank', { ascending: false })
 
       const mapped = (rankings || []).map((r, i) => ({
-        episodeNum:    i + 1,              // ep 1 = last-ranked film
-        combinedRank:  r.combined_rank,    // rank on the 2026 combined list
-        combinedScore: r.combined_score,
-        film:          r.films,
+        episodeNum:   i + 1,           // ep 1 = last-ranked film
+        combinedRank: r.combined_rank, // rank on the 2026 combined list
+        film:         r.films,
       }))
 
       setEpisodes(mapped)
