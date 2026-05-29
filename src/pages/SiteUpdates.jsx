@@ -7,12 +7,12 @@ const UPDATES = [
       {
         tag: 'Oscars',
         color: 'gold',
-        text: 'Oscar Stats page redesigned — Projector Room visual system. New floating score panel in the hero, Championship and Correct Guesses cards side-by-side, Win Streaks with active-streak highlight, Peak & Valley clickable rows, Correct Guesses timeline chart, Winning Margin bar chart, and Category Accuracy table with Accuracy / Head-to-Head toggle and per-category year-by-year drilldown.',
+        text: 'Oscar Year page — Phase 5 poster-tile redesign. Categories now grouped (Majors, Performance, Writing, Foreign+Animated+Doc, Craft, Music, Sound, Shorts, Casting) in a two-column layout. Each category shows Winner / Hermz / Dust as mini film-still tiles with ✓/✗, real posters where the DB has them. Full nominee field kept underneath. All edit-mode functionality preserved.',
       },
       {
         tag: 'Oscars',
         color: 'gold',
-        text: 'Oscar Year page redesigned — Projector Room visual system. Full-bleed hero with floating score panel, year nav pills and dropdown, Tiebreaker panel, edit mode banner, and category table with nominee list, correct/incorrect indicators colored per player.',
+        text: 'Oscar Stats page — compact hero height normalized to h-[300px] sm:h-[340px]; floating all-time accuracy panel re-anchored to the hero baseline. All charts and cards unchanged.',
       },
       {
         tag: 'Design',
