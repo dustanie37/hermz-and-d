@@ -111,7 +111,7 @@ export default function MoviesHome() {
       {/* ── EVENT GRID ───────────────────────────────────────────────────── */}
       <section className="max-w-7xl mx-auto px-6 sm:px-10 py-10 space-y-8">
         <div className="flex items-center justify-between">
-          <span className="kicker">Four Events · 2001 → 2026</span>
+          <span className="kicker">Four Editions · 2001 → 2026</span>
           <Link to="/movies/all" className="font-mono text-[11px] tracking-kicker text-gray-400 hover:text-film-400 transition-colors">
             View all films →
           </Link>

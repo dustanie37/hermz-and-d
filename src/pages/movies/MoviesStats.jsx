@@ -834,7 +834,7 @@ function RivalryTab({ rivalryData, allH2HFilms, allH2HLoading }) {
         <div className="card">
           <PanelHeader title="The Flip" />
           <p className="font-serif italic text-base text-gray-400 mt-1 mb-4">
-            {theFlip.length} film{theFlip.length !== 1 ? 's' : ''} where allegiance switched direction between events
+            {theFlip.length} film{theFlip.length !== 1 ? 's' : ''} where allegiance switched direction between editions
           </p>
           <div className="space-y-1">
             {theFlip.map(f => (
@@ -867,7 +867,7 @@ function RivalryTab({ rivalryData, allH2HFilms, allH2HLoading }) {
       {/* Solo Picks */}
       <div>
         <h2 className="font-display text-3xl text-white tracking-wide leading-none mb-1">SOLO PICKS</h2>
-        <p className="font-serif italic text-base text-gray-400 mb-5">Films one person ranked that the other never did — across all 4 events</p>
+        <p className="font-serif italic text-base text-gray-400 mb-5">Films one person ranked that the other never did — across all 4 editions</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="card">
             <div className="flex items-center gap-2 mb-1">
@@ -1955,7 +1955,7 @@ export default function MoviesStats() {
               <div className="card">
                 <PanelHeader title="Bump Chart" subtitle="Combined Rankings" />
                 <p className="font-serif italic text-base text-gray-400 mt-1 mb-4">
-                  Rank trajectory across all 4 events. Rank 1 at top. Gaps = not on that event's combined list.
+                  Rank trajectory across all 4 editions. Rank 1 at top. Gaps = not on that edition's combined list.
                 </p>
                 <BumpChart allTimeData={allTimeData} />
               </div>
