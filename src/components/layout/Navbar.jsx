@@ -15,6 +15,10 @@ const FILMS_LINKS = [
   { to: '/movies/lists',     label: 'External Lists' },
 ]
 
+const PODCAST_LINKS = [
+  { to: '/podcast', label: 'Episodes' },
+]
+
 export default function Navbar() {
   const { isAuthenticated, displayName, signOut } = useAuth()
   const navigate = useNavigate()
@@ -33,16 +37,19 @@ export default function Navbar() {
     navigate('/login')
   }
 
-  const inOscars = location.pathname.startsWith('/oscars')
-  const inFilms  = location.pathname.startsWith('/movies')
+  const inOscars  = location.pathname.startsWith('/oscars')
+  const inFilms   = location.pathname.startsWith('/movies')
+  const inPodcast = location.pathname.startsWith('/podcast')
 
-  const subLinks = inOscars ? OSCARS_LINKS : inFilms ? FILMS_LINKS : null
-  const subAccent = inOscars ? 'gold' : 'blue'
+  const subLinks  = inOscars ? OSCARS_LINKS : inFilms ? FILMS_LINKS : inPodcast ? PODCAST_LINKS : null
+  const subAccent = inOscars ? 'gold' : inPodcast ? 'cinema' : 'blue'
 
   const activeSubStyle = (active) =>
     active
       ? subAccent === 'gold'
         ? 'text-gold-400 bg-gold-500/10'
+        : subAccent === 'cinema'
+        ? 'text-cinema-400 bg-cinema-500/10'
         : 'text-film-400 bg-film-500/10'
       : 'text-gray-400 hover:text-gray-200 hover:bg-white/[0.04]'
 
@@ -98,6 +105,19 @@ export default function Navbar() {
               }
             >
               Films
+            </NavLink>
+
+            <NavLink
+              to="/podcast"
+              className={() =>
+                `px-3.5 py-1.5 rounded-full text-sm font-medium tracking-wide transition-colors ${
+                  inPodcast
+                    ? 'text-cinema-400 bg-cinema-500/10'
+                    : 'text-gray-400 hover:text-cinema-400 hover:bg-white/[0.04]'
+                }`
+              }
+            >
+              Cinematrix
             </NavLink>
 
           </nav>
@@ -292,6 +312,21 @@ export default function Navbar() {
                 <span className="w-1.5 h-1.5 rounded-full bg-cinema-500" /> My Watchlist
               </NavLink>
             )}
+
+            <div className="border-t border-white/[0.06] my-4" />
+
+            {/* Cinematrix / Podcast */}
+            <div className="px-4 py-2 font-mono text-[10px] tracking-kicker text-gray-600 uppercase">Cinematrix</div>
+            <NavLink to="/podcast"
+              end
+              className={({ isActive }) =>
+                `flex items-center px-4 py-3 rounded-xl text-sm transition-colors ${
+                  isActive || inPodcast ? 'text-cinema-400 bg-cinema-500/10' : 'text-gray-300 hover:text-cinema-400 hover:bg-white/[0.04]'
+                }`
+              }
+            >
+              Episodes
+            </NavLink>
 
             <div className="border-t border-white/[0.06] my-4" />
 

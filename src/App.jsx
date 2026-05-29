@@ -15,6 +15,10 @@ import OscarsYear    from './pages/oscars/OscarsYear'
 import OscarsStats   from './pages/oscars/OscarsStats'
 import OscarsNewYear from './pages/oscars/OscarsNewYear'
 
+// Podcast pages
+import PodcastHome    from './pages/podcast/PodcastHome'
+import PodcastEpisode from './pages/podcast/PodcastEpisode'
+
 // Movies pages
 import MoviesHome    from './pages/movies/MoviesHome'
 import MoviesList    from './pages/movies/MoviesList'
@@ -55,6 +59,10 @@ function AppRoutes() {
         <Route path="/oscars/stats"  element={<Protected><OscarsStats /></Protected>} />
         <Route path="/oscars/new"    element={<Protected><OscarsNewYear /></Protected>} />
         <Route path="/oscars/:year"  element={<Protected><OscarsYear /></Protected>} />
+
+        {/* Podcast */}
+        <Route path="/podcast"              element={<Protected><PodcastHome /></Protected>} />
+        <Route path="/podcast/:episodeNum"  element={<Protected><PodcastEpisode /></Protected>} />
 
         {/* Movies */}
         <Route path="/movies"          element={<Protected><MoviesHome /></Protected>} />

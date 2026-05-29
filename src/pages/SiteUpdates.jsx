@@ -5,6 +5,11 @@ const UPDATES = [
     date: 'May 29, 2026',
     entries: [
       {
+        tag: 'Podcast',
+        color: 'cinema',
+        text: 'Cinematrix launched — new top-level section at /podcast. Landing page lists Episode 0 (origin story) followed by all 2026 combined films ordered from last-ranked to #1 (each becomes a numbered episode). Individual episode pages pull full film data: ranking history across all editions, narrative talking points from ranking data, Oscar story, external list appearances, score breakdown by category, and a show notes scaffold. Prev/next navigation between episodes. "Cinematrix" added to desktop nav and mobile menu.',
+      },
+      {
         tag: 'Design',
         color: 'cinema',
         text: 'Films landing page cleanup — "No. 1 combined" subtitle removed from hero. Stats & Charts and All Films elevated to ghost buttons in the hero. "Four Editions" section header removed (redundant with the year grid). Dots removed before Combined / Dust / Hermz poster labels, label size bumped. Bottom "View Movie Stats" button eliminated.',
