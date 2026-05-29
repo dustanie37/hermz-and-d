@@ -2,6 +2,16 @@
 
 const UPDATES = [
   {
+    date: 'May 29, 2026',
+    entries: [
+      {
+        tag: 'Films',
+        color: 'film',
+        text: 'Future Consideration overhaul — renamed from "Watchlist / Up Next." Seen It and Rewatched cards redesigned with a full-height flush poster on the left (matching the Want to Watch poster size) and all content stacked to the right. "Add notes" is now a teal dashed-border button instead of invisible gray text. Existing notes text is larger and brighter. Grid reduced to 2-column for breathing room.',
+      },
+    ],
+  },
+  {
     date: 'May 28, 2026',
     entries: [
       {
