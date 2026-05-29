@@ -97,26 +97,15 @@ export default function MoviesHome() {
           <h1 className="font-display text-6xl sm:text-7xl lg:text-8xl text-white tracking-wide leading-none">
             MOVIE RANKINGS
           </h1>
-          {heroFilm && (
-            <p className="font-serif italic text-base text-gray-400 mt-3 max-w-2xl">
-              No. 1 ({latestYear} combined):
-              <Link to={`/movies/${heroFilm.id}`} className="text-white hover:text-gold-400 transition-colors ml-2">
-                {heroFilm.title}
-              </Link>
-            </p>
-          )}
+          <div className="flex items-center gap-3 mt-5 flex-wrap">
+            <Link to="/movies/stats" className="btn-ghost text-sm">Stats &amp; Charts →</Link>
+            <Link to="/movies/all" className="btn-ghost text-sm">All Films →</Link>
+          </div>
         </div>
       </FilmStill>
 
       {/* ── EVENT GRID ───────────────────────────────────────────────────── */}
       <section className="max-w-7xl mx-auto px-6 sm:px-10 py-10 space-y-8">
-        <div className="flex items-center justify-between">
-          <span className="kicker">Four Editions · 2001 → 2026</span>
-          <Link to="/movies/all" className="font-mono text-[11px] tracking-kicker text-gray-400 hover:text-film-400 transition-colors">
-            View all films →
-          </Link>
-        </div>
-
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {EVENTS_ORDER.map(year => {
             const ev = eventByYear[year]
@@ -143,11 +132,6 @@ export default function MoviesHome() {
           })}
         </div>
 
-        <div className="flex justify-center pt-2">
-          <Link to="/movies/stats" className="btn-film inline-flex items-center gap-2 text-sm">
-            📊 View Movie Stats
-          </Link>
-        </div>
       </section>
     </div>
   )
@@ -184,8 +168,8 @@ function PosterTile({ film, label, labelColor, listUrl }) {
           </span>
         </div>
       </FilmStill>
-      <span className={`font-mono text-[10px] tracking-cinema uppercase text-center ${labelColor}`}>
-        ● {label}
+      <span className={`font-mono text-[13px] tracking-cinema uppercase text-center ${labelColor}`}>
+        {label}
       </span>
     </Link>
   )
