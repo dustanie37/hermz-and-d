@@ -9,7 +9,7 @@ import FilmStill from '../../components/FilmStill'
 
 const TABS = [
   { id: 'unseen',     label: 'Want to Watch',   kicker: 'HAVEN\'T SEEN',  color: 'text-gold-400' },
-  { id: 'first_time', label: 'Seen It',          kicker: 'FIRST TIME',     color: 'text-film-400' },
+  { id: 'first_time', label: 'First Watch',       kicker: 'FIRST TIME',     color: 'text-film-400' },
   { id: 'rewatch',   label: 'Rewatched',         kicker: 'REWATCH',        color: 'text-cinema-400' },
 ]
 
@@ -165,8 +165,8 @@ function UnseenCard({ item, onRemove, onMoveTab }) {
               onClick={() => onMoveTab(item.id, 'first_time')}
               className="flex-1 font-mono text-[11px] tracking-kicker uppercase py-1
                          bg-film-600/80 text-white rounded hover:bg-film-500 transition-colors"
-              title="Move to Seen It"
-            >→ Seen It</button>
+              title="Move to First Watch"
+            >→ First Watch</button>
           </div>
         </div>
 
@@ -306,7 +306,7 @@ function AddFilmModal({ onClose, onAdd, existingImdbIds, defaultTab }) {
 
   const TYPE_OPTIONS = [
     { id: 'unseen',     label: 'Want to Watch',  desc: 'Haven\'t seen it yet' },
-    { id: 'first_time', label: 'Seen It',         desc: 'Just watched for the first time' },
+    { id: 'first_time', label: 'First Watch',      desc: 'Just watched for the first time' },
     { id: 'rewatch',   label: 'Rewatched',        desc: 'Watched again — keeping notes' },
   ]
 
