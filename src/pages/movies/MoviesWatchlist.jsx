@@ -169,37 +169,39 @@ function UnseenCard({ item, onRemove, onMoveTab }) {
   )
 }
 
-// ── Seen / Rewatch card (poster + notes) ─────────────────────────────────────
+// ── Seen / Rewatch card (full-height poster left, content right) ──────────────
 
 function NotesCard({ item, onRemove, onSaveNotes, onMoveTab, tab }) {
   return (
-    <div className={`card p-3 flex flex-col gap-3 border transition-all
+    <div className={`card overflow-hidden flex border transition-all
       ${tab === 'first_time'
         ? 'border-film-800/40 hover:border-film-600/60'
         : 'border-cinema-800/40 hover:border-cinema-600/60'
       }`}>
 
-      {/* Top row: poster + meta */}
-      <div className="flex gap-4">
-        {/* Poster */}
-        <div className="flex-shrink-0 w-20">
-          <FilmStill
-            src={item.poster_url}
-            title={item.title}
-            className="aspect-[2/3] rounded-lg border border-white/10 shadow-still w-20"
-          />
-        </div>
+      {/* Poster — flush left, fills full card height */}
+      <div className="flex-shrink-0 w-36 self-stretch relative">
+        <FilmStill
+          src={item.poster_url}
+          title={item.title}
+          className="absolute inset-0 w-full h-full shadow-still"
+        />
+        {item.film_id && (
+          <span className="absolute top-2 left-2 w-2 h-2 rounded-full bg-cinema-500
+                           shadow-[0_0_8px_rgba(0,224,217,0.7)]"
+                title="In our database" />
+        )}
+      </div>
 
-        {/* Meta */}
-        <div className="flex-1 min-w-0 pt-0.5">
+      {/* Content — right column */}
+      <div className="flex-1 flex flex-col min-w-0 p-4 gap-3">
+
+        {/* Year + title */}
+        <div>
           <p className="font-mono text-xs tracking-kicker text-gray-500 uppercase mb-1">
             {item.year ?? '—'}
-            {tab === 'first_time' && (
-              <span className="ml-2 text-film-500">● First Watch</span>
-            )}
-            {tab === 'rewatch' && (
-              <span className="ml-2 text-cinema-500">● Rewatch</span>
-            )}
+            {tab === 'first_time' && <span className="ml-2 text-film-500">● First Watch</span>}
+            {tab === 'rewatch'    && <span className="ml-2 text-cinema-500">● Rewatch</span>}
           </p>
           {item.film_id ? (
             <Link
@@ -214,39 +216,40 @@ function NotesCard({ item, onRemove, onSaveNotes, onMoveTab, tab }) {
               {item.title?.toUpperCase()}
             </p>
           )}
-
-          {/* Actions */}
-          <div className="flex items-center gap-3 mt-2">
-            {tab === 'first_time' && (
-              <button
-                onClick={() => onMoveTab(item.id, 'rewatch')}
-                className="font-mono text-xs tracking-kicker text-cinema-500 hover:text-cinema-300 uppercase transition-colors"
-              >
-                → Rewatched
-              </button>
-            )}
-            {tab === 'rewatch' && (
-              <button
-                onClick={() => onMoveTab(item.id, 'first_time')}
-                className="font-mono text-xs tracking-kicker text-film-500 hover:text-film-300 uppercase transition-colors"
-              >
-                ← First Watch
-              </button>
-            )}
-            <button
-              onClick={() => onRemove(item.id)}
-              className="font-mono text-xs tracking-kicker text-gray-600 hover:text-red-400 uppercase transition-colors"
-            >
-              Remove
-            </button>
-          </div>
         </div>
-      </div>
 
-      {/* Notes */}
-      <div className="border-t border-white/5 pt-3">
-        <p className="font-mono text-[10px] tracking-kicker text-gray-500 uppercase mb-2">Ranking Notes</p>
-        <NotesArea item={item} onSave={onSaveNotes} />
+        {/* Notes — grows to fill space */}
+        <div className="border-t border-white/5 pt-3 flex-1">
+          <p className="font-mono text-[10px] tracking-kicker text-gray-500 uppercase mb-2">Ranking Notes</p>
+          <NotesArea item={item} onSave={onSaveNotes} />
+        </div>
+
+        {/* Actions — pinned to bottom */}
+        <div className="flex items-center gap-3 border-t border-white/5 pt-2">
+          {tab === 'first_time' && (
+            <button
+              onClick={() => onMoveTab(item.id, 'rewatch')}
+              className="font-mono text-xs tracking-kicker text-cinema-500 hover:text-cinema-300 uppercase transition-colors"
+            >
+              → Rewatched
+            </button>
+          )}
+          {tab === 'rewatch' && (
+            <button
+              onClick={() => onMoveTab(item.id, 'first_time')}
+              className="font-mono text-xs tracking-kicker text-film-500 hover:text-film-300 uppercase transition-colors"
+            >
+              ← First Watch
+            </button>
+          )}
+          <button
+            onClick={() => onRemove(item.id)}
+            className="font-mono text-xs tracking-kicker text-gray-600 hover:text-red-400 uppercase transition-colors ml-auto"
+          >
+            Remove
+          </button>
+        </div>
+
       </div>
     </div>
   )
@@ -645,7 +648,7 @@ export default function MoviesWatchlist() {
 
         {/* ── FIRST TIME + REWATCH: notes card grid ───────────────────────── */}
         {!loading && (activeTab === 'first_time' || activeTab === 'rewatch') && sorted.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {sorted.map(item => (
               <NotesCard
                 key={item.id}
