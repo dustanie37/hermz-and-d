@@ -5,6 +5,16 @@ const UPDATES = [
     date: 'May 29, 2026',
     entries: [
       {
+        tag: 'Oscars',
+        color: 'gold',
+        text: 'Oscar Stats page redesigned — Projector Room visual system. New floating score panel in the hero, Championship and Correct Guesses cards side-by-side, Win Streaks with active-streak highlight, Peak & Valley clickable rows, Correct Guesses timeline chart, Winning Margin bar chart, and Category Accuracy table with Accuracy / Head-to-Head toggle and per-category year-by-year drilldown.',
+      },
+      {
+        tag: 'Oscars',
+        color: 'gold',
+        text: 'Oscar Year page redesigned — Projector Room visual system. Full-bleed hero with floating score panel, year nav pills and dropdown, Tiebreaker panel, edit mode banner, and category table with nominee list, correct/incorrect indicators colored per player.',
+      },
+      {
         tag: 'Design',
         color: 'cinema',
         text: 'Site Updates page font pass — date labels, tag pills, entry text, and hero subtitle all bumped up for legibility.',
