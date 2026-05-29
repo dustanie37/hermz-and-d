@@ -58,8 +58,10 @@ const GROUP_META = {
 const GROUP_ORDER = ['Major','Acting','Writing','Craft','Music','Shorts','Sound']
 
 // ── helpers ─────────────────────────────────────────────────────────────────
-const pct    = (n, d) => d ? Math.round((n / d) * 100) : 0
-const pctStr = (n, d) => `${pct(n, d)}%`
+const pct        = (n, d) => d ? Math.round((n / d) * 100) : 0
+const pctStr     = (n, d) => `${pct(n, d)}%`
+const pctFull    = (n, d) => d ? Math.round((n / d) * 10000) / 100 : 0
+const pctStrFull = (n, d) => `${pctFull(n, d).toFixed(2)}%`
 
 function computeStreaks(sorted) {
   let mC = 0, dC = 0, mMax = 0, dMax = 0
@@ -276,9 +278,9 @@ export default function OscarsStats() {
         <div className="hidden md:flex absolute bottom-7 right-6 sm:right-10 z-10
                         bg-night-950/70 backdrop-blur-md border border-white/[0.12]
                         rounded-2xl px-5 py-3.5 gap-5 items-center shadow-still-lg">
-          <BigPct who="matt"   pct={pct(mattAllTime,   totalPossible)} total={mattAllTime}   leading={mattAllTime > dustinAllTime} />
+          <BigPct who="matt"   pct={pctFull(mattAllTime,   totalPossible)} total={mattAllTime}   leading={mattAllTime > dustinAllTime} />
           <span className="w-px h-14 bg-white/10" />
-          <BigPct who="dustin" pct={pct(dustinAllTime, totalPossible)} total={dustinAllTime} leading={dustinAllTime > mattAllTime} />
+          <BigPct who="dustin" pct={pctFull(dustinAllTime, totalPossible)} total={dustinAllTime} leading={dustinAllTime > mattAllTime} />
         </div>
       </FilmStill>
 
@@ -309,12 +311,12 @@ export default function OscarsStats() {
           <div className="card">
             <p className="kicker mb-4">ALL-TIME CORRECT GUESSES</p>
             <div className="grid grid-cols-3 gap-3 text-center">
-              <PlayerStat name="Hermz" value={mattAllTime}   sub={`${pctStr(mattAllTime, totalPossible)} accuracy`}   color="gold" leading={mattAllTime > dustinAllTime} />
+              <PlayerStat name="Hermz" value={mattAllTime}   sub={`${pctStrFull(mattAllTime, totalPossible)} accuracy`}   color="gold" leading={mattAllTime > dustinAllTime} />
               <div className="flex flex-col items-center justify-center">
                 <span className="font-display text-2xl text-gray-500">vs</span>
                 <span className="font-mono text-[10px] tracking-kicker text-gray-500 mt-1">{totalPossible} possible</span>
               </div>
-              <PlayerStat name="Dust"  value={dustinAllTime} sub={`${pctStr(dustinAllTime, totalPossible)} accuracy`} color="film" leading={dustinAllTime > mattAllTime} />
+              <PlayerStat name="Dust"  value={dustinAllTime} sub={`${pctStrFull(dustinAllTime, totalPossible)} accuracy`} color="film" leading={dustinAllTime > mattAllTime} />
             </div>
             <div className="mt-4 pt-4 border-t border-night-700 grid grid-cols-2 gap-4 text-center">
               <div>
@@ -466,7 +468,7 @@ function BigPct({ who, pct, total, leading }) {
     <div className="text-center px-2 relative">
       <div className={`font-mono text-[9px] tracking-cinema ${c} mb-1.5`}>{name}{leading && ' · LEADING'}</div>
       <div className="flex items-baseline justify-center gap-1">
-        <span className="font-display text-4xl text-white leading-none tracking-wide">{pct}</span>
+        <span className="font-display text-4xl text-white leading-none tracking-wide">{typeof pct === 'number' ? pct.toFixed(2) : pct}</span>
         <span className="font-mono text-sm text-gray-500">%</span>
       </div>
       <div className="font-mono text-[9px] tracking-kicker text-gray-500 mt-1">{total} CORRECT</div>

@@ -7,12 +7,12 @@ const UPDATES = [
       {
         tag: 'Oscars',
         color: 'gold',
-        text: 'Oscar Year page — Phase 5 redesign. Categories grouped identically to the Stats page (Major Awards, Acting, Writing, Craft, Music & Sound, Short Films, Discontinued) in a single column. Winner / Hermz / Dust shown as text tiles with ✓/✗ — no gradient squares. Two rounds of font size increases. Full nominee field and edit mode preserved.',
+        text: 'Oscar Stats — all-time correct percentage now shown to the hundredths place (e.g. 73.24%) in the hero panel and the All-Time Correct Guesses card. Win-by-year percentages unchanged.',
       },
       {
         tag: 'Oscars',
         color: 'gold',
-        text: 'Oscar Stats page — compact hero height normalized to h-[300px] sm:h-[340px]; floating all-time accuracy panel re-anchored to the hero baseline. All charts and cards unchanged.',
+        text: 'Oscar Year and Stats pages redesigned — Projector Room visual system. Oscar Year: categories grouped to match Stats page (Major Awards, Acting, Writing, Craft, Music & Sound, Short Films, Discontinued), single-column layout, Winner / Hermz / Dust as text tiles with ✓/✗, full nominee field and all edit-mode functionality preserved. Oscar Stats: compact hero height, accuracy panel anchored to the hero baseline.',
       },
       {
         tag: 'Design',
@@ -22,7 +22,7 @@ const UPDATES = [
       {
         tag: 'Films',
         color: 'film',
-        text: 'Future Consideration overhaul — renamed from "Watchlist / Up Next." Seen It and Rewatched cards redesigned with a full-height flush poster on the left (matching the Want to Watch poster size) and all content stacked to the right. "Add notes" is now a teal dashed-border button instead of invisible gray text. Existing notes text is larger and brighter. Grid reduced to 2-column for breathing room.',
+        text: 'Future Consideration overhaul — renamed from "Watchlist / Up Next." Seen It and Rewatched cards redesigned with a full-height flush poster on the left and all content stacked to the right. "Add notes" is now a teal dashed-border button. Grid reduced to 2-column.',
       },
     ],
   },
