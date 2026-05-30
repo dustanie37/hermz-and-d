@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import OscarIcon from '../OscarIcon'
+
 
 const OSCARS_LINKS = [
   { to: '/oscars',       label: 'Ceremonies' },
@@ -88,10 +88,7 @@ export default function Navbar() {
                 }`
               }
             >
-              <span className="flex items-center gap-1.5">
-                <OscarIcon size={14} />
-                Oscars
-              </span>
+              Oscars
             </NavLink>
 
             <NavLink
@@ -270,7 +267,6 @@ export default function Navbar() {
                   }`
                 }
               >
-                {to === '/oscars' && <OscarIcon size={13} className="mr-2" />}
                 {label}
               </NavLink>
             ))}

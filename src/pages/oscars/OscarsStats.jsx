@@ -255,6 +255,15 @@ export default function OscarsStats() {
       {/* ── HERO ─────────────────────────────────────────────────────────── */}
       <FilmStill title="Hermz and D Oscar Stats" hue={48} mood="cool"
                  className="w-full h-[300px] sm:h-[340px]">
+        {/* Oscar statuette — Mirko Fabian / Unsplash, screen blend */}
+        <div className="absolute pointer-events-none hidden sm:block"
+             style={{ right: 0, top: 0, width: '40%', height: '100%', overflow: 'hidden' }}>
+          <img src="https://images.unsplash.com/photo-1648538874920-5deefcb65673?fm=jpg&q=85&w=800&auto=format&fit=crop"
+               alt=""
+               style={{ position: 'absolute', right: '-5%', top: '50%', transform: 'translateY(-50%)',
+                        width: '100%', height: '140%', objectFit: 'cover', objectPosition: 'center top',
+                        mixBlendMode: 'screen', opacity: 0.55, filter: 'contrast(1.15) brightness(0.85)' }} />
+        </div>
         <div className="absolute inset-0 scrim-bottom" />
 
         <div className="absolute inset-x-0 bottom-0 px-6 sm:px-10 pb-7 z-10">
