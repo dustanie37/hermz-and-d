@@ -175,7 +175,7 @@ export default function OscarsHome() {
         {/* Oscar statuette — Mirko Fabian / Unsplash, screen blend */}
         <div className="absolute pointer-events-none hidden sm:block"
              style={{ right: 0, top: 0, width: '40%', height: '100%', overflow: 'hidden' }}>
-          <img src="https://images.unsplash.com/photo-1648538874920-5deefcb65673?fm=jpg&q=85&w=800&auto=format&fit=crop"
+          <img src="https://images.unsplash.com/photo-1741887864007-271499b10d53?fm=jpg&q=85&w=800&auto=format&fit=crop"
                alt=""
                style={{ position: 'absolute', right: '-5%', top: '50%', transform: 'translateY(-50%)',
                         width: '100%', height: '140%', objectFit: 'cover', objectPosition: 'center top',
