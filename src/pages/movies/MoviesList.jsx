@@ -244,56 +244,35 @@ export default function MoviesList() {
               background: `radial-gradient(ellipse 80% 80% at 91% 22%, ${br(0.22)} 0%, ${br(0.05)} 45%, transparent 65%)`,
               clipPath: 'polygon(91% 22%, 55% 100%, -5% 100%, 30% 55%)',
             }} />
-            {/* Lens glow — bright spot at the aperture */}
+            {/* Lens glow — tinted accent halo over the projector lens area */}
             <div className="absolute pointer-events-none hidden sm:block" style={{
-              right: 43, top: 38,
-              width: 52, height: 52,
+              right: '28%', top: '45%',
+              width: 80, height: 80,
               borderRadius: '50%',
-              background: `radial-gradient(circle, ${br(0.95)} 0%, ${br(0.40)} 30%, ${br(0.10)} 55%, transparent 70%)`,
+              background: `radial-gradient(circle, ${br(0.55)} 0%, ${br(0.20)} 40%, transparent 70%)`,
               transform: 'translate(50%, -50%)',
             }} />
 
-            {/* ── Film projector silhouette — desktop only ── */}
-            <div className="absolute pointer-events-none hidden sm:block" style={{ right: 36, top: 20, opacity: 0.30 }}>
-              <svg viewBox="0 0 134 98" width="108" fill="none" xmlns="http://www.w3.org/2000/svg">
-                {/* Reel 1 */}
-                <circle cx="72" cy="18" r="14" stroke="white" strokeWidth="1.5"/>
-                <circle cx="72" cy="18" r="5.5" fill="white" fillOpacity="0.3"/>
-                <line x1="72" y1="4"    x2="72" y2="32"   stroke="white" strokeWidth="1"   strokeOpacity="0.65"/>
-                <line x1="59.9" y1="11" x2="84.1" y2="25" stroke="white" strokeWidth="1"   strokeOpacity="0.65"/>
-                <line x1="59.9" y1="25" x2="84.1" y2="11" stroke="white" strokeWidth="1"   strokeOpacity="0.65"/>
-                {/* Reel 2 */}
-                <circle cx="110" cy="18" r="14" stroke="white" strokeWidth="1.5"/>
-                <circle cx="110" cy="18" r="5.5" fill="white" fillOpacity="0.3"/>
-                <line x1="110" y1="4"    x2="110" y2="32"   stroke="white" strokeWidth="1" strokeOpacity="0.65"/>
-                <line x1="97.9" y1="11"  x2="122.1" y2="25" stroke="white" strokeWidth="1" strokeOpacity="0.65"/>
-                <line x1="97.9" y1="25"  x2="122.1" y2="11" stroke="white" strokeWidth="1" strokeOpacity="0.65"/>
-                {/* Film strip connector between reels */}
-                <path d="M58 28 Q72 34 88 28 Q100 22 110 28 L110 32 Q100 26 88 32 Q72 38 58 32 Z"
-                      fill="white" fillOpacity="0.10"/>
-                {/* Main body */}
-                <rect x="53" y="28" width="75" height="50" rx="4" stroke="white" strokeWidth="1.5" fill="white" fillOpacity="0.05"/>
-                {/* Lens barrel */}
-                <rect x="9"  y="39" width="48" height="28" rx="12" stroke="white" strokeWidth="1.5" fill="white" fillOpacity="0.05"/>
-                {/* Outer lens ring */}
-                <circle cx="13" cy="53" r="13" stroke="white" strokeWidth="1.5" fill="white" fillOpacity="0.06"/>
-                {/* Inner lens */}
-                <circle cx="13" cy="53" r="8"  stroke="white" strokeWidth="1"   fill="white" fillOpacity="0.14"/>
-                {/* Lens bright center — the aperture */}
-                <circle cx="13" cy="53" r="4"  fill="white" fillOpacity="0.80"/>
-                <circle cx="13" cy="53" r="1.5" fill="white" fillOpacity="1.00"/>
-                {/* Body detail — control dial */}
-                <circle cx="83" cy="42" r="5"  stroke="white" strokeWidth="1"   fill="white" fillOpacity="0.07"/>
-                <circle cx="83" cy="42" r="1.5" fill="white" fillOpacity="0.3"/>
-                {/* Body detail — bottom slot/strip */}
-                <rect x="59" y="61" width="60" height="5" rx="2"  fill="white" fillOpacity="0.08"/>
-                {/* Legs */}
-                <rect x="64" y="78" width="7"  height="16" rx="2" fill="white" fillOpacity="0.20"/>
-                <rect x="104" y="78" width="7" height="16" rx="2" fill="white" fillOpacity="0.20"/>
-                {/* Feet */}
-                <rect x="57" y="92" width="21" height="4" rx="2" fill="white" fillOpacity="0.14"/>
-                <rect x="97" y="92" width="21" height="4" rx="2" fill="white" fillOpacity="0.14"/>
-              </svg>
+            {/* ── Film projector photo (Jason Dent / Unsplash) — desktop only ── */}
+            <div className="absolute pointer-events-none hidden sm:block"
+                 style={{ right: 0, top: 0, width: '52%', height: '100%', overflow: 'hidden' }}>
+              <img
+                src="https://images.unsplash.com/photo-1568876694728-451bbf694b83?fm=jpg&q=85&w=900&auto=format&fit=crop"
+                alt=""
+                style={{
+                  position: 'absolute',
+                  right: '-5%',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  width: '100%',
+                  height: '130%',
+                  objectFit: 'cover',
+                  objectPosition: 'center center',
+                  mixBlendMode: 'screen',
+                  opacity: 0.52,
+                  filter: 'grayscale(1) contrast(1.3) brightness(0.85)',
+                }}
+              />
             </div>
 
             <div className="absolute inset-0 scrim-bottom" />
