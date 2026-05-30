@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { useTheme } from '../context/ThemeContext'
 
 // ── Tool card ─────────────────────────────────────────────────────────────────
 
@@ -48,40 +47,10 @@ function Section({ title, children }) {
   )
 }
 
-// ── Toggle row ────────────────────────────────────────────────────────────────
-
-function ToggleRow({ label, description, checked, onChange }) {
-  return (
-    <div className="card flex items-center justify-between gap-4">
-      <div className="min-w-0">
-        <p className="font-display text-lg text-white tracking-wide leading-none mb-1">
-          {label}
-        </p>
-        <p className="text-sm text-gray-400">{description}</p>
-      </div>
-      {/* Toggle pill */}
-      <button
-        onClick={onChange}
-        role="switch"
-        aria-checked={checked}
-        className={`relative flex-shrink-0 w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none
-          ${checked ? 'bg-gold-500' : 'bg-night-600'}`}
-      >
-        <span
-          className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow
-                      transition-transform duration-200
-                      ${checked ? 'translate-x-5' : 'translate-x-0'}`}
-        />
-      </button>
-    </div>
-  )
-}
-
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 export default function Settings() {
   const { displayName, isDustin } = useAuth()
-  const { isDark, toggle } = useTheme()
   const dotColor = isDustin ? 'bg-film-500' : 'bg-gold-500'
   const nameColor = isDustin ? 'text-film-400' : 'text-gold-400'
 
@@ -108,16 +77,6 @@ export default function Settings() {
           </span>
         </p>
       </div>
-
-      {/* Preferences */}
-      <Section title="Preferences">
-        <ToggleRow
-          label="Dark Mode"
-          description="Switch between the cinematic dark theme and a light view."
-          checked={isDark}
-          onChange={toggle}
-        />
-      </Section>
 
       {/* Admin tools — Dustin only */}
       {isDustin && (

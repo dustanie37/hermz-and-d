@@ -212,37 +212,44 @@ export default function MoviesList() {
   return (
     <div>
       {/* ── HERO ───────────────────────────────────────────────────────────── */}
-      <FilmStill title={`Hermz and D Films ${eventYear} ${view}`} hue={view === 'combined' ? 220 : view === 'matt' ? 36 : 234}
-                 className="w-full h-[300px] sm:h-[340px]">
-        <div className="absolute inset-0 scrim-bottom" />
-        <div className="absolute inset-x-0 bottom-0 px-6 sm:px-10 pb-7 z-10">
-          <div className="flex items-center gap-3 mb-3">
-            <Link to="/movies" className="font-mono text-[11px] tracking-kicker text-film-400 hover:text-film-300 transition-colors">
-              ← FILMS
-            </Link>
-            <span className="text-gray-600">/</span>
-            <span className="font-mono text-[11px] tracking-kicker text-white uppercase">
-              {eventYear} · {view === 'combined' ? 'Combined' : view === 'matt' ? 'Hermz' : 'Dust'}
-            </span>
-          </div>
-          <div className="flex items-center gap-2.5 mb-3 font-mono text-[12px] tracking-cinema uppercase text-gold-500">
-            <span className="w-7 h-px bg-gold-500" />
-            The Canon
-          </div>
-          <div className="flex items-baseline gap-4 sm:gap-5">
-            <h1 className="font-display text-6xl sm:text-7xl lg:text-8xl tracking-wide leading-[0.9] text-gold-500">
-              {eventYear}
-            </h1>
-            <span className="font-display text-6xl sm:text-7xl lg:text-8xl text-white tracking-wide leading-[0.9]">
-              EDITION
-            </span>
-          </div>
-          <p className="font-serif italic text-base sm:text-lg text-gray-400 mt-3">
-            {view === 'combined' ? 'Combined' : view === 'matt' ? "Hermz's" : "Dust's"} list ·
-            {rows.length} films · sortable, searchable, with rank movement.
-          </p>
-        </div>
-      </FilmStill>
+      {(() => {
+        const heroHue    = view === 'combined' ? 178 : view === 'matt' ? 36 : 234
+        const accentText = view === 'combined' ? 'text-cinema-400' : view === 'matt' ? 'text-gold-500' : 'text-film-400'
+        const accentBg   = view === 'combined' ? 'bg-cinema-400'   : view === 'matt' ? 'bg-gold-500'   : 'bg-film-400'
+        return (
+          <FilmStill title={`Hermz and D Films ${eventYear} ${view}`} hue={heroHue}
+                     className="w-full h-[300px] sm:h-[340px]">
+            <div className="absolute inset-0 scrim-bottom" />
+            <div className="absolute inset-x-0 bottom-0 px-6 sm:px-10 pb-7 z-10">
+              <div className="flex items-center gap-3 mb-3">
+                <Link to="/movies" className="font-mono text-[11px] tracking-kicker text-film-400 hover:text-film-300 transition-colors">
+                  ← FILMS
+                </Link>
+                <span className="text-gray-600">/</span>
+                <span className="font-mono text-[11px] tracking-kicker text-white uppercase">
+                  {eventYear} · {view === 'combined' ? 'Combined' : view === 'matt' ? 'Hermz' : 'Dust'}
+                </span>
+              </div>
+              <div className={`flex items-center gap-2.5 mb-3 font-mono text-[12px] tracking-cinema uppercase ${accentText}`}>
+                <span className={`w-7 h-px ${accentBg}`} />
+                The Canon
+              </div>
+              <div className="flex items-baseline gap-4 sm:gap-5">
+                <h1 className={`font-display text-6xl sm:text-7xl lg:text-8xl tracking-wide leading-[0.9] ${accentText}`}>
+                  {eventYear}
+                </h1>
+                <span className="font-display text-6xl sm:text-7xl lg:text-8xl text-white tracking-wide leading-[0.9]">
+                  EDITION
+                </span>
+              </div>
+              <p className="font-serif italic text-base sm:text-lg text-gray-400 mt-3">
+                {view === 'combined' ? 'Combined' : view === 'matt' ? "Hermz's" : "Dust's"} list ·
+                {rows.length} films · sortable, searchable, with rank movement.
+              </p>
+            </div>
+          </FilmStill>
+        )
+      })()}
 
       {/* ── BODY ──────────────────────────────────────────────────────────── */}
       <div className="max-w-7xl mx-auto px-6 sm:px-10 py-8">
