@@ -7,6 +7,16 @@ const UPDATES = [
       {
         tag: 'Design',
         color: 'cinema',
+        text: 'Oscars page heroes — Mirko Fabian\'s Oscar statuette photo (Unsplash, free license) added to the Ceremonies, Year, and Stats page headers. Shot against a black background, screen blend mode drops the dark areas and leaves the golden statue glowing over the hero gradient. Desktop only.',
+      },
+      {
+        tag: 'Design',
+        color: 'cinema',
+        text: 'Navbar — OscarIcon removed from the Oscars nav link on desktop and mobile.',
+      },
+      {
+        tag: 'Design',
+        color: 'cinema',
         text: 'Rankings hero — Jason Dent b&w projector photo (Unsplash) placed in the upper-right of the Rankings page hero. mix-blend-mode:screen drops the dark background and leaves the glowing metallic projector body over the cinematic gradient. Desktop only.',
       },
       {
