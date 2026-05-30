@@ -154,6 +154,159 @@ function SplitBar({ h, d }) {
   )
 }
 
+// ── MomentumTooltip ─────────────────────────────────────────────────────────
+function MomentumTooltip({ active, payload, label }) {
+  if (!active || !payload?.length) return null
+  const h = payload.find(p => p.dataKey === 'Hermz')?.value ?? 0
+  const d = payload.find(p => p.dataKey === 'Dust')?.value ?? 0
+  const diff = h - d
+  const leader = diff > 0 ? 'Hermz' : diff < 0 ? 'Dust' : null
+  const leaderColor = diff > 0 ? HC : DC
+  return (
+    <div className="card-panel px-3 py-2 text-sm">
+      <p className="font-mono text-[10px] tracking-kicker text-white mb-1">{label}</p>
+      <p style={{ color: HC }}>Hermz: <span className="font-bold">{h}</span> wins</p>
+      <p style={{ color: DC }}>Dust: <span className="font-bold">{d}</span> wins</p>
+      {leader && (
+        <p className="text-xs mt-1" style={{ color: leaderColor }}>
+          {leader} leads by {Math.abs(diff)}
+        </p>
+      )}
+      {diff === 0 && <p className="text-xs mt-1 text-gray-400">Tied</p>}
+    </div>
+  )
+}
+
+// ── CategoryHeatmap ──────────────────────────────────────────────────────────
+function CategoryHeatmap({ catData, sorted }) {
+  const CC = '#00E0D9'
+  const years = sorted.map(y => y.year)
+  const CELL = 22
+  const LABEL_W = 172
+
+  const cats = [...catData].sort((a, b) => {
+    const gA = GROUP_ORDER.indexOf(CAT_GROUP[a.name] || 'Craft')
+    const gB = GROUP_ORDER.indexOf(CAT_GROUP[b.name] || 'Craft')
+    if (gA !== gB) return gA - gB
+    return (a.order || 0) - (b.order || 0)
+  })
+
+  function cellState(cat, year) {
+    const data = cat.byYear[year]
+    if (!data) return 'inactive'
+    const m = data.matt?.correct ?? false
+    const d = data.dustin?.correct ?? false
+    if (m && d) return 'both'
+    if (m) return 'hermz'
+    if (d) return 'dust'
+    return 'neither'
+  }
+
+  const stateColor = { both: CC, hermz: HC, dust: DC, neither: '#1a1825', inactive: '#070608' }
+  const stateBorder = { neither: '#2A2734' }
+
+  let lastGroup = null
+
+  return (
+    <div className="overflow-x-auto -mx-1">
+      <div style={{ minWidth: LABEL_W + years.length * CELL + 16, paddingRight: 8 }}>
+        {/* Year column headers */}
+        <div className="flex" style={{ paddingLeft: LABEL_W }}>
+          {years.map(yr => (
+            <div key={yr} style={{ width: CELL, flexShrink: 0, textAlign: 'center', paddingBottom: 6 }}>
+              <span style={{ fontFamily: 'monospace', fontSize: 9, color: '#9298A6' }}>
+                '{String(yr).slice(2)}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        {/* Category rows */}
+        {cats.map((cat, i) => {
+          const group = CAT_GROUP[cat.name] || 'Craft'
+          const meta = GROUP_META[group]
+          const isNewGroup = group !== lastGroup
+          if (isNewGroup) lastGroup = group
+          return (
+            <div key={cat.id}>
+              {isNewGroup && i > 0 && <div style={{ height: 8 }} />}
+              <div className="flex items-center" style={{ marginBottom: 2 }}>
+                {/* Label */}
+                <div style={{ width: LABEL_W, flexShrink: 0, paddingRight: 10, textAlign: 'right' }}>
+                  <span style={{
+                    fontSize: 11, lineHeight: 1,
+                    color: cat.isLegacy ? '#6b7280' : '#d1d5db',
+                  }}>
+                    {cat.name.replace('Best ', '')}
+                  </span>
+                </div>
+                {/* Cells */}
+                {years.map(yr => {
+                  const state = cellState(cat, yr)
+                  const isInactive = state === 'inactive'
+                  const isNeither = state === 'neither'
+                  const bg = isInactive ? '#070608' : isNeither ? '#1a1825' : stateColor[state]
+                  return isInactive ? (
+                    <div key={yr} style={{ width: CELL, flexShrink: 0, display: 'flex', justifyContent: 'center' }}>
+                      <div style={{ width: CELL - 4, height: CELL - 4, borderRadius: 3, backgroundColor: '#070608' }} />
+                    </div>
+                  ) : (
+                    <Link key={yr} to={`/oscars/${yr}`}
+                      title={`${yr} · ${cat.name}`}
+                      style={{ width: CELL, flexShrink: 0, display: 'flex', justifyContent: 'center' }}>
+                      <div
+                        style={{
+                          width: CELL - 4, height: CELL - 4, borderRadius: 3,
+                          backgroundColor: bg,
+                          border: isNeither ? '1px solid #2A2734' : 'none',
+                          opacity: isNeither ? 0.65 : 0.87,
+                          transition: 'opacity 0.12s, transform 0.12s',
+                        }}
+                        onMouseEnter={e => {
+                          e.currentTarget.style.opacity = 1
+                          e.currentTarget.style.transform = 'scale(1.18)'
+                        }}
+                        onMouseLeave={e => {
+                          e.currentTarget.style.opacity = isNeither ? 0.65 : 0.87
+                          e.currentTarget.style.transform = 'scale(1)'
+                        }}
+                      />
+                    </Link>
+                  )
+                })}
+              </div>
+            </div>
+          )
+        })}
+
+        {/* Legend */}
+        <div className="flex flex-wrap items-center gap-5 mt-5 pt-4 border-t border-night-700/60">
+          {[
+            { color: CC,        label: 'Both correct',   neither: false, inactive: false },
+            { color: HC,        label: 'Hermz only',     neither: false, inactive: false },
+            { color: DC,        label: 'Dust only',      neither: false, inactive: false },
+            { color: '#1a1825', label: 'Neither',        neither: true,  inactive: false },
+            { color: '#070608', label: 'N/A (inactive)', neither: false, inactive: true  },
+          ].map(({ color, label, neither, inactive }) => (
+            <div key={label} className="flex items-center gap-2">
+              <div style={{
+                width: 14, height: 14, borderRadius: 2,
+                backgroundColor: color,
+                border: neither ? '1px solid #2A2734' : inactive ? '1px solid #1a1825' : 'none',
+                opacity: inactive ? 0.4 : 1,
+              }} />
+              <span style={{ fontFamily: 'monospace', fontSize: 10, color: '#6b7280' }}>{label}</span>
+            </div>
+          ))}
+          <span style={{ fontFamily: 'monospace', fontSize: 10, color: '#4b5563', marginLeft: 'auto' }}>
+            Click any cell → ceremony
+          </span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── main component ──────────────────────────────────────────────────────────
 export default function OscarsStats() {
   const [years,       setYears]       = useState([])
@@ -239,6 +392,13 @@ export default function OscarsStats() {
 
   const timelineData = sorted.map(y => ({ year: y.year, Hermz: y.matt_correct||0, Dust: y.dustin_correct||0, total: y.total_categories||0, tb: y.tiebreaker_used }))
   const marginData   = sorted.map(y => ({ year: y.year, diff: (y.matt_correct||0)-(y.dustin_correct||0), tb: y.tiebreaker_used }))
+
+  let mCum = 0, dCum = 0
+  const momentumData = sorted.map(y => {
+    if (y.winner === 'matt') mCum++
+    else if (y.winner === 'dustin') dCum++
+    return { year: y.year, Hermz: mCum, Dust: dCum, tb: y.tiebreaker_used }
+  })
 
   const grouped = GROUP_ORDER.map(g => ({
     g, meta: GROUP_META[g],
@@ -380,25 +540,35 @@ export default function OscarsStats() {
           </ResponsiveContainer>
         </div>
 
-        {/* ── 4. Margin ─────────────────────────────────────────────────── */}
+        {/* ── 4. Championship Race ──────────────────────────────────────── */}
         <div className="card">
-          <p className="kicker">WINNING MARGIN BY YEAR</p>
-          <p className="text-xs text-gray-500 mt-1 mb-5">Positive = Hermz won · Negative = Dust won · 0 = tiebreaker.</p>
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={marginData} margin={{ top:5, right:20, left:0, bottom:5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
+          <p className="kicker">CHAMPIONSHIP RACE</p>
+          <p className="text-xs text-gray-500 mt-1 mb-5">Cumulative wins over all {sorted.length} ceremonies. ◆ = tiebreaker year.</p>
+          <ResponsiveContainer width="100%" height={220}>
+            <LineChart data={momentumData} margin={{ top:5, right:20, left:0, bottom:5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
               <XAxis dataKey="year" tick={{ fontSize:11, fill:axisColor }} tickLine={false} />
-              <YAxis tick={{ fontSize:11, fill:axisColor }} tickLine={false} axisLine={false} />
-              <Tooltip content={<DiffTooltip />} />
-              <ReferenceLine y={0} stroke={axisColor} strokeWidth={1} />
-              <Bar dataKey="diff" radius={[3,3,0,0]} maxBarSize={32}>
-                {marginData.map((e,i) => <Cell key={i} fill={e.diff>0 ? HC : e.diff<0 ? DC : '#6b7280'} opacity={e.tb ? 0.55 : 1} />)}
-              </Bar>
-            </BarChart>
+              <YAxis tick={{ fontSize:11, fill:axisColor }} tickLine={false} axisLine={false} allowDecimals={false} domain={[0, 'dataMax + 1']} />
+              <Tooltip content={<MomentumTooltip />} />
+              <Legend iconType="circle" wrapperStyle={{ fontSize:12, paddingTop:12, color:axisColor }} />
+              <Line type="stepAfter" dataKey="Hermz" stroke={HC} strokeWidth={2.5}
+                    dot={(p) => <ChartDot {...p} tb={p.payload.tb} color={HC} />} activeDot={{ r:5 }} />
+              <Line type="stepAfter" dataKey="Dust"  stroke={DC} strokeWidth={2.5}
+                    dot={(p) => <ChartDot {...p} tb={p.payload.tb} color={DC} />} activeDot={{ r:5 }} />
+            </LineChart>
           </ResponsiveContainer>
         </div>
 
-        {/* ── 5. Category Accuracy ──────────────────────────────────────── */}
+        {/* ── 5. Category Heatmap ──────────────────────────────────────── */}
+        <div className="card">
+          <p className="kicker">CATEGORY HEATMAP</p>
+          <p className="text-xs text-gray-500 mt-1 mb-5">
+            Every category · every year — who got it right at a glance.
+          </p>
+          <CategoryHeatmap catData={catData} sorted={sorted} />
+        </div>
+
+        {/* ── 6. Category Accuracy ──────────────────────────────────────── */}
         <div className="card p-0 overflow-hidden">
           <div className="px-6 pt-5 pb-3 border-b border-night-700/60 flex flex-wrap items-center justify-between gap-3">
             <div>

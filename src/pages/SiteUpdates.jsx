@@ -5,6 +5,16 @@ const UPDATES = [
     date: 'May 30, 2026',
     entries: [
       {
+        tag: 'Oscars',
+        color: 'gold',
+        text: 'Oscar Stats — Championship Race chart added: a step-line chart showing cumulative wins over all 19 ceremonies, replacing the year-by-year margin bar chart. The gap between the two lines makes the rivalry arc visible at a glance.',
+      },
+      {
+        tag: 'Oscars',
+        color: 'gold',
+        text: 'Oscar Stats — Category Heatmap added: a color-coded grid of every category × every year. Cyan = both correct, gold = Hermz only, blue = Dust only, dark = neither, black = category inactive that year. Each cell links to the ceremony. Makes 19 years of picks scannable in a single view.',
+      },
+      {
         tag: 'Design',
         color: 'cinema',
         text: 'Oscars page heroes — Oscar trophy photo (Hunter Scott / Unsplash, free license) added to the Ceremonies, Year, and Stats page headers. mix-blend-mode:screen blends the photo into the cinematic gradient. Desktop only.',
