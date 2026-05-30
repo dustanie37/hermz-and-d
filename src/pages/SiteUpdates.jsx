@@ -7,7 +7,7 @@ const UPDATES = [
       {
         tag: 'Design',
         color: 'cinema',
-        text: 'Oscars page heroes — Mirko Fabian\'s Oscar statuette photo (Unsplash, free license) added to the Ceremonies, Year, and Stats page headers. Shot against a black background, screen blend mode drops the dark areas and leaves the golden statue glowing over the hero gradient. Desktop only.',
+        text: 'Oscars page heroes — Oscar trophy photo (Hunter Scott / Unsplash, free license) added to the Ceremonies, Year, and Stats page headers. mix-blend-mode:screen blends the photo into the cinematic gradient. Desktop only.',
       },
       {
         tag: 'Design',
