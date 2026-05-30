@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useTheme } from '../context/ThemeContext'
 
 // ── Tool card ─────────────────────────────────────────────────────────────────
 
@@ -47,10 +48,40 @@ function Section({ title, children }) {
   )
 }
 
+// ── Toggle row ────────────────────────────────────────────────────────────────
+
+function ToggleRow({ label, description, checked, onChange }) {
+  return (
+    <div className="card flex items-center justify-between gap-4">
+      <div className="min-w-0">
+        <p className="font-display text-lg text-white tracking-wide leading-none mb-1">
+          {label}
+        </p>
+        <p className="text-sm text-gray-400">{description}</p>
+      </div>
+      {/* Toggle pill */}
+      <button
+        onClick={onChange}
+        role="switch"
+        aria-checked={checked}
+        className={`relative flex-shrink-0 w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none
+          ${checked ? 'bg-gold-500' : 'bg-night-600'}`}
+      >
+        <span
+          className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow
+                      transition-transform duration-200
+                      ${checked ? 'translate-x-5' : 'translate-x-0'}`}
+        />
+      </button>
+    </div>
+  )
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 export default function Settings() {
   const { displayName, isDustin } = useAuth()
+  const { isDark, toggle } = useTheme()
   const dotColor = isDustin ? 'bg-film-500' : 'bg-gold-500'
   const nameColor = isDustin ? 'text-film-400' : 'text-gold-400'
 
@@ -78,6 +109,16 @@ export default function Settings() {
         </p>
       </div>
 
+      {/* Preferences */}
+      <Section title="Preferences">
+        <ToggleRow
+          label="Dark Mode"
+          description="Switch between the cinematic dark theme and a light view."
+          checked={isDark}
+          onChange={toggle}
+        />
+      </Section>
+
       {/* Admin tools — Dustin only */}
       {isDustin && (
         <Section title="Admin Tools">
@@ -94,36 +135,6 @@ export default function Settings() {
             description="Query Wikidata for each film missing Oscar nomination data and save category-level results to Supabase. Fixes the ~120 films with win/nom counts but no category breakdown."
             accent="film"
           />
-        </Section>
-      )}
-
-      {/* Pending SQL — Dustin only */}
-      {isDustin && (
-        <Section title="Pending Supabase Steps">
-          <div className="card">
-            <div className="flex items-start gap-3">
-              <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-cinema-500 flex-shrink-0" />
-              <div className="min-w-0">
-                <h3 className="font-display text-lg text-white tracking-wide leading-none mb-2">
-                  add_actor_columns.sql
-                </h3>
-                <p className="text-sm text-gray-400 mb-4 leading-relaxed">
-                  Adds <code className="font-mono text-[12px] bg-night-700 text-cinema-400 px-1.5 py-0.5 rounded">actor_6</code> through{' '}
-                  <code className="font-mono text-[12px] bg-night-700 text-cinema-400 px-1.5 py-0.5 rounded">actor_10</code> columns to the{' '}
-                  <code className="font-mono text-[12px] bg-night-700 text-cinema-400 px-1.5 py-0.5 rounded">films</code> table.
-                  Run this in Supabase SQL Editor before using the Actor Backfill tool.
-                </p>
-                <a
-                  href="https://supabase.com/dashboard/project/fpbjpefcrxdgwhautswl/sql"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="btn-cinema text-xs"
-                >
-                  Open Supabase SQL Editor →
-                </a>
-              </div>
-            </div>
-          </div>
         </Section>
       )}
 
