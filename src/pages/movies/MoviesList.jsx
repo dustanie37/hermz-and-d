@@ -217,41 +217,9 @@ export default function MoviesList() {
         const accentText = view === 'combined' ? 'text-cinema-400' : view === 'matt' ? 'text-gold-500' : 'text-film-400'
         const accentBg   = view === 'combined' ? 'bg-cinema-400'   : view === 'matt' ? 'bg-gold-500'   : 'bg-film-400'
         // Beam colors keyed to view accent
-        const beamHex    = view === 'combined' ? '0,224,217' : view === 'matt' ? '224,162,47' : '91,108,255'
-        const br = (a) => `rgba(${beamHex},${a})`
         return (
           <FilmStill title={`Hermz and D Films ${eventYear} ${view}`} hue={heroHue}
                      className="w-full h-[300px] sm:h-[340px]">
-
-            {/* ── Projector light beam — desktop only ── */}
-            {/* Cone of light: apex near projector lens (upper-right), opens toward lower-left text area */}
-            <div className="absolute inset-0 pointer-events-none hidden sm:block" style={{
-              background: `
-                conic-gradient(
-                  from 202deg at 91% 22%,
-                  transparent    0deg,
-                  ${br(0.00)}    0deg,
-                  ${br(0.16)}   10deg,
-                  ${br(0.18)}   22deg,
-                  ${br(0.08)}   36deg,
-                  ${br(0.00)}   46deg,
-                  transparent   46deg
-                )
-              `,
-            }} />
-            {/* Radial falloff: beam fades with distance from lens source */}
-            <div className="absolute inset-0 pointer-events-none hidden sm:block" style={{
-              background: `radial-gradient(ellipse 80% 80% at 91% 22%, ${br(0.22)} 0%, ${br(0.05)} 45%, transparent 65%)`,
-              clipPath: 'polygon(91% 22%, 55% 100%, -5% 100%, 30% 55%)',
-            }} />
-            {/* Lens glow — tinted accent halo over the projector lens area */}
-            <div className="absolute pointer-events-none hidden sm:block" style={{
-              right: '28%', top: '45%',
-              width: 80, height: 80,
-              borderRadius: '50%',
-              background: `radial-gradient(circle, ${br(0.55)} 0%, ${br(0.20)} 40%, transparent 70%)`,
-              transform: 'translate(50%, -50%)',
-            }} />
 
             {/* ── Film projector photo (Jason Dent / Unsplash) — desktop only ── */}
             <div className="absolute pointer-events-none hidden sm:block"
