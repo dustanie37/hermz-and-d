@@ -2,6 +2,26 @@
 
 const UPDATES = [
   {
+    date: 'May 30, 2026',
+    entries: [
+      {
+        tag: 'Design',
+        color: 'cinema',
+        text: 'Rankings hero — Jason Dent b&w projector photo (Unsplash) placed in the upper-right of the Rankings page hero. mix-blend-mode:screen drops the dark background and leaves the glowing metallic projector body over the cinematic gradient. Desktop only.',
+      },
+      {
+        tag: 'Design',
+        color: 'cinema',
+        text: 'Rankings hero — view-aware accent colors. Combined view uses cinema cyan for the gradient, kicker, and year number. Dust uses film blue, Hermz uses gold. Previously all three views showed gold.',
+      },
+      {
+        tag: 'System',
+        color: 'gold',
+        text: 'Settings page cleanup — stale "Pending Supabase Steps" SQL section removed. Non-functional dark mode toggle removed (the Projector Room design system is dark-only; light mode was never rebuilt for it).',
+      },
+    ],
+  },
+  {
     date: 'May 29, 2026',
     entries: [
       {
