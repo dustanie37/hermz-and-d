@@ -216,9 +216,86 @@ export default function MoviesList() {
         const heroHue    = view === 'combined' ? 178 : view === 'matt' ? 36 : 234
         const accentText = view === 'combined' ? 'text-cinema-400' : view === 'matt' ? 'text-gold-500' : 'text-film-400'
         const accentBg   = view === 'combined' ? 'bg-cinema-400'   : view === 'matt' ? 'bg-gold-500'   : 'bg-film-400'
+        // Beam colors keyed to view accent
+        const beamHex    = view === 'combined' ? '0,224,217' : view === 'matt' ? '224,162,47' : '91,108,255'
+        const br = (a) => `rgba(${beamHex},${a})`
         return (
           <FilmStill title={`Hermz and D Films ${eventYear} ${view}`} hue={heroHue}
                      className="w-full h-[300px] sm:h-[340px]">
+
+            {/* ── Projector light beam — desktop only ── */}
+            {/* Cone of light: apex near projector lens (upper-right), opens toward lower-left text area */}
+            <div className="absolute inset-0 pointer-events-none hidden sm:block" style={{
+              background: `
+                conic-gradient(
+                  from 202deg at 91% 22%,
+                  transparent    0deg,
+                  ${br(0.00)}    0deg,
+                  ${br(0.16)}   10deg,
+                  ${br(0.18)}   22deg,
+                  ${br(0.08)}   36deg,
+                  ${br(0.00)}   46deg,
+                  transparent   46deg
+                )
+              `,
+            }} />
+            {/* Radial falloff: beam fades with distance from lens source */}
+            <div className="absolute inset-0 pointer-events-none hidden sm:block" style={{
+              background: `radial-gradient(ellipse 80% 80% at 91% 22%, ${br(0.22)} 0%, ${br(0.05)} 45%, transparent 65%)`,
+              clipPath: 'polygon(91% 22%, 55% 100%, -5% 100%, 30% 55%)',
+            }} />
+            {/* Lens glow — bright spot at the aperture */}
+            <div className="absolute pointer-events-none hidden sm:block" style={{
+              right: 43, top: 38,
+              width: 52, height: 52,
+              borderRadius: '50%',
+              background: `radial-gradient(circle, ${br(0.95)} 0%, ${br(0.40)} 30%, ${br(0.10)} 55%, transparent 70%)`,
+              transform: 'translate(50%, -50%)',
+            }} />
+
+            {/* ── Film projector silhouette — desktop only ── */}
+            <div className="absolute pointer-events-none hidden sm:block" style={{ right: 36, top: 20, opacity: 0.30 }}>
+              <svg viewBox="0 0 134 98" width="108" fill="none" xmlns="http://www.w3.org/2000/svg">
+                {/* Reel 1 */}
+                <circle cx="72" cy="18" r="14" stroke="white" strokeWidth="1.5"/>
+                <circle cx="72" cy="18" r="5.5" fill="white" fillOpacity="0.3"/>
+                <line x1="72" y1="4"    x2="72" y2="32"   stroke="white" strokeWidth="1"   strokeOpacity="0.65"/>
+                <line x1="59.9" y1="11" x2="84.1" y2="25" stroke="white" strokeWidth="1"   strokeOpacity="0.65"/>
+                <line x1="59.9" y1="25" x2="84.1" y2="11" stroke="white" strokeWidth="1"   strokeOpacity="0.65"/>
+                {/* Reel 2 */}
+                <circle cx="110" cy="18" r="14" stroke="white" strokeWidth="1.5"/>
+                <circle cx="110" cy="18" r="5.5" fill="white" fillOpacity="0.3"/>
+                <line x1="110" y1="4"    x2="110" y2="32"   stroke="white" strokeWidth="1" strokeOpacity="0.65"/>
+                <line x1="97.9" y1="11"  x2="122.1" y2="25" stroke="white" strokeWidth="1" strokeOpacity="0.65"/>
+                <line x1="97.9" y1="25"  x2="122.1" y2="11" stroke="white" strokeWidth="1" strokeOpacity="0.65"/>
+                {/* Film strip connector between reels */}
+                <path d="M58 28 Q72 34 88 28 Q100 22 110 28 L110 32 Q100 26 88 32 Q72 38 58 32 Z"
+                      fill="white" fillOpacity="0.10"/>
+                {/* Main body */}
+                <rect x="53" y="28" width="75" height="50" rx="4" stroke="white" strokeWidth="1.5" fill="white" fillOpacity="0.05"/>
+                {/* Lens barrel */}
+                <rect x="9"  y="39" width="48" height="28" rx="12" stroke="white" strokeWidth="1.5" fill="white" fillOpacity="0.05"/>
+                {/* Outer lens ring */}
+                <circle cx="13" cy="53" r="13" stroke="white" strokeWidth="1.5" fill="white" fillOpacity="0.06"/>
+                {/* Inner lens */}
+                <circle cx="13" cy="53" r="8"  stroke="white" strokeWidth="1"   fill="white" fillOpacity="0.14"/>
+                {/* Lens bright center — the aperture */}
+                <circle cx="13" cy="53" r="4"  fill="white" fillOpacity="0.80"/>
+                <circle cx="13" cy="53" r="1.5" fill="white" fillOpacity="1.00"/>
+                {/* Body detail — control dial */}
+                <circle cx="83" cy="42" r="5"  stroke="white" strokeWidth="1"   fill="white" fillOpacity="0.07"/>
+                <circle cx="83" cy="42" r="1.5" fill="white" fillOpacity="0.3"/>
+                {/* Body detail — bottom slot/strip */}
+                <rect x="59" y="61" width="60" height="5" rx="2"  fill="white" fillOpacity="0.08"/>
+                {/* Legs */}
+                <rect x="64" y="78" width="7"  height="16" rx="2" fill="white" fillOpacity="0.20"/>
+                <rect x="104" y="78" width="7" height="16" rx="2" fill="white" fillOpacity="0.20"/>
+                {/* Feet */}
+                <rect x="57" y="92" width="21" height="4" rx="2" fill="white" fillOpacity="0.14"/>
+                <rect x="97" y="92" width="21" height="4" rx="2" fill="white" fillOpacity="0.14"/>
+              </svg>
+            </div>
+
             <div className="absolute inset-0 scrim-bottom" />
             <div className="absolute inset-x-0 bottom-0 px-6 sm:px-10 pb-7 z-10">
               <div className="flex items-center gap-3 mb-3">
