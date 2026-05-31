@@ -7,12 +7,7 @@ const UPDATES = [
       {
         tag: 'Oscars',
         color: 'gold',
-        text: 'Oscar Stats — Championship Race removed. New additions: Agreement Rate (agree %, when-agreed accuracy, each player\'s edge when disagreeing); Annual Difficulty Rating (hardest→easiest year ranked list with tier labels); Category Ownership Cards (per-category leader grid); Streak Tracker (visual year-block timeline); Radar chart tab in Category Accuracy.',
-      },
-      {
-        tag: 'Oscars',
-        color: 'gold',
-        text: 'Oscar Stats — Category Heatmap added: a color-coded grid of every category × every year. Cyan = both correct, gold = Hermz only, blue = Dust only, dark = neither, black = category inactive that year. Each cell links to the ceremony. Makes 19 years of picks scannable in a single view.',
+        text: 'Oscar Stats — major overhaul. Category Heatmap: color-coded grid of every category × every year (cyan = both, gold = Hermz, blue = Dust, dark = neither; each cell links to the ceremony). Streak Tracker: visual year-block timeline in the Win Streaks card. Annual Difficulty: all 19 years ranked hardest→easiest by combined accuracy with Chalk/Average/Tough/Brutal tier labels. Category Ownership Cards: per-category leader grid grouped by section. Agreement Rate: merged into the Peak & Valley card — shows agree %, when-agreed accuracy, and each player\'s edge when they diverge.',
       },
       {
         tag: 'Design',
