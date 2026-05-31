@@ -7,6 +7,11 @@ const UPDATES = [
       {
         tag: 'Oscars',
         color: 'gold',
+        text: 'Oscar Stats — Category Streaks section added: three sub-sections showing currently hot (active correct streaks of 3+ years), currently cold (active miss streaks of 3+ years), and all-time records (longest correct streaks ever, top 12). Each entry shows the count, category name, person, and year range.',
+      },
+      {
+        tag: 'Oscars',
+        color: 'gold',
         text: 'Oscar Stats — major overhaul. Category Heatmap: color-coded grid of every category × every year (cyan = both, gold = Hermz, blue = Dust, dark = neither; each cell links to the ceremony). Streak Tracker: visual year-block timeline in the Win Streaks card. Annual Difficulty: all 19 years ranked hardest→easiest by combined accuracy with Chalk/Average/Tough/Brutal tier labels. Category Ownership Cards: per-category leader grid grouped by section. Agreement Rate: merged into the Peak & Valley card — shows agree %, when-agreed accuracy, and each player\'s edge when they diverge.',
       },
       {

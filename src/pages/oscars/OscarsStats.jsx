@@ -475,6 +475,127 @@ function OwnershipGrid({ catData }) {
   )
 }
 
+// ── CategoryStreaksSection ───────────────────────────────────────────────────
+function buildCatStreaks(catData, sorted) {
+  const years = sorted.map(y => y.year)
+  const results = []
+  for (const cat of catData) {
+    for (const who of ['matt', 'dustin']) {
+      const chron = years
+        .map(yr => {
+          const d = cat.byYear[yr]?.[who]
+          return d != null ? { year: yr, correct: d.correct } : null
+        })
+        .filter(Boolean)
+      if (chron.length < 2) continue
+
+      // current streak (walk backwards from most recent)
+      let curLen = 1, curType = chron[chron.length - 1].correct
+      let curStart = chron[chron.length - 1].year
+      for (let i = chron.length - 2; i >= 0; i--) {
+        if (chron[i].correct === curType) { curLen++; curStart = chron[i].year }
+        else break
+      }
+
+      // longest ever correct streak + its year range
+      let longest = 0, run = 0, runStart = null, longestStart = null, longestEnd = null
+      for (const r of chron) {
+        if (r.correct) {
+          if (run === 0) runStart = r.year
+          run++
+          if (run > longest) { longest = run; longestStart = runStart; longestEnd = r.year }
+        } else run = 0
+      }
+
+      results.push({
+        catName: cat.name.replace('Best ', ''),
+        who, name: who === 'matt' ? 'Hermz' : 'Dust',
+        color: who === 'matt' ? HC : DC,
+        isLegacy: cat.isLegacy,
+        curLen, curType, curStart,
+        lastYear: chron[chron.length - 1].year,
+        longest, longestStart, longestEnd,
+      })
+    }
+  }
+  return results
+}
+
+function CatStreakRow({ entry, type, rank }) {
+  const isRecord = type === 'record'
+  const isCold   = type === 'cold'
+  const count     = isRecord ? entry.longest     : entry.curLen
+  const startYear = isRecord ? entry.longestStart : entry.curStart
+  const endYear   = isRecord ? entry.longestEnd   : entry.lastYear
+  const range     = startYear === endYear ? `${startYear}` : `${startYear}–${endYear}`
+  const numColor  = isCold ? '#6b7280' : entry.color
+
+  return (
+    <div className="flex items-center gap-3 rounded-lg px-3 py-2.5 bg-night-800/50 hover:bg-night-800 transition-colors">
+      {rank != null && (
+        <span className="font-mono text-xs text-gray-600 w-5 flex-shrink-0 text-center">#{rank}</span>
+      )}
+      <span className="font-display text-3xl leading-none flex-shrink-0 w-8 text-center" style={{ color: numColor }}>
+        {count}
+      </span>
+      <div className="flex-1 min-w-0">
+        <div className="text-sm font-medium text-gray-100 leading-tight truncate">{entry.catName}</div>
+        <div className="font-mono text-xs mt-0.5" style={{ color: entry.color }}>{entry.name}</div>
+      </div>
+      <div className="text-right flex-shrink-0">
+        <div className="font-mono text-xs text-gray-300">{range}</div>
+        <div className="font-mono text-xs text-gray-500 mt-0.5">
+          {isCold ? 'missed' : 'correct'} in a row
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function CategoryStreaksSection({ catData, sorted }) {
+  const all = buildCatStreaks(catData, sorted)
+
+  const hot = all
+    .filter(s => !s.isLegacy && s.curType  && s.curLen  >= 3)
+    .sort((a, b) => b.curLen - a.curLen)
+
+  const cold = all
+    .filter(s => !s.isLegacy && !s.curType && s.curLen  >= 3)
+    .sort((a, b) => b.curLen - a.curLen)
+
+  const records = all
+    .filter(s => s.longest >= 4)
+    .sort((a, b) => b.longest - a.longest || b.longestEnd - a.longestEnd)
+    .slice(0, 12)
+
+  const Sub = ({ label, accent, children, empty }) => (
+    <div>
+      <p className="kicker mb-3" style={{ color: accent }}>{label}</p>
+      {children.length === 0
+        ? <p className="text-sm text-gray-500 italic">{empty}</p>
+        : <div className="space-y-1.5">{children}</div>
+      }
+    </div>
+  )
+
+  return (
+    <div className="space-y-7">
+      <Sub label="🔥 CURRENTLY HOT" accent="#f59e0b"
+           empty="No active correct streaks of 3+ years">
+        {hot.map((s, i) => <CatStreakRow key={`${s.who}-${s.catName}-h`} entry={s} type="hot" />)}
+      </Sub>
+      <Sub label="🧊 CURRENTLY COLD" accent="#94a3b8"
+           empty="No active miss streaks of 3+ years">
+        {cold.map((s, i) => <CatStreakRow key={`${s.who}-${s.catName}-c`} entry={s} type="cold" />)}
+      </Sub>
+      <Sub label="ALL-TIME RECORDS" accent={HC}
+           empty="No correct streaks of 4+ years found">
+        {records.map((s, i) => <CatStreakRow key={`${s.who}-${s.catName}-r`} entry={s} type="record" rank={i + 1} />)}
+      </Sub>
+    </div>
+  )
+}
+
 // ── main component ──────────────────────────────────────────────────────────
 export default function OscarsStats() {
   const [years,       setYears]       = useState([])
@@ -755,7 +876,16 @@ export default function OscarsStats() {
           </ResponsiveContainer>
         </div>
 
-        {/* ── 4. Annual Difficulty ─────────────────────────────────────── */}
+        {/* ── 4. Category Streaks ──────────────────────────────────────── */}
+        <div className="card">
+          <p className="kicker mb-1">CATEGORY STREAKS</p>
+          <p className="text-sm text-gray-400 mt-0.5 mb-6">
+            Active runs and all-time records by individual category · excludes retired Sound categories
+          </p>
+          <CategoryStreaksSection catData={catData} sorted={sorted} />
+        </div>
+
+        {/* ── 5. Annual Difficulty ──────────────────────────────────────── */}
         <div className="card">
           <p className="kicker mb-1">ANNUAL DIFFICULTY</p>
           <p className="text-sm text-gray-400 mt-0.5 mb-4">Combined accuracy (both players) · hardest years first</p>
