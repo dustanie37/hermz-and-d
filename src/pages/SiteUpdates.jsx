@@ -7,7 +7,7 @@ const UPDATES = [
       {
         tag: 'Oscars',
         color: 'gold',
-        text: 'Oscar Stats — Championship Race chart added: a step-line chart showing cumulative wins over all 19 ceremonies, replacing the year-by-year margin bar chart. The gap between the two lines makes the rivalry arc visible at a glance.',
+        text: 'Oscar Stats — Championship Race removed. New additions: Agreement Rate (agree %, when-agreed accuracy, each player\'s edge when disagreeing); Annual Difficulty Rating (hardest→easiest year ranked list with tier labels); Category Ownership Cards (per-category leader grid); Streak Tracker (visual year-block timeline); Radar chart tab in Category Accuracy.',
       },
       {
         tag: 'Oscars',

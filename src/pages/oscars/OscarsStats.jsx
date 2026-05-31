@@ -6,7 +6,8 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
-  Legend, ResponsiveContainer, BarChart, Bar, ReferenceLine, Cell,
+  Legend, ResponsiveContainer,
+  RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
 } from 'recharts'
 import { supabase } from '../../lib/supabase'
 import OscarIcon from '../../components/OscarIcon'
@@ -307,6 +308,175 @@ function CategoryHeatmap({ catData, sorted }) {
   )
 }
 
+// ── StreakTimeline ───────────────────────────────────────────────────────────
+function StreakTimeline({ sorted }) {
+  const CC = '#00E0D9'
+  return (
+    <div>
+      <div className="flex flex-wrap gap-1.5">
+        {sorted.map(y => {
+          const isHermz = y.winner === 'matt'
+          const isDust  = y.winner === 'dustin'
+          const bg = isHermz ? HC : isDust ? DC : '#6b7280'
+          return (
+            <Link key={y.year} to={`/oscars/${y.year}`}
+              title={`${y.year} — ${isHermz ? 'Hermz' : 'Dust'} won${y.tiebreaker_used ? ' (TB)' : ''}`}
+              className="flex flex-col items-center gap-1 group">
+              <div
+                style={{
+                  width: 30, height: 30, borderRadius: 6, backgroundColor: bg,
+                  border: y.tiebreaker_used ? `2px solid ${CC}` : '2px solid transparent',
+                  opacity: 0.88, transition: 'transform 0.12s, opacity 0.12s',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.opacity = 1; e.currentTarget.style.transform = 'scale(1.12)' }}
+                onMouseLeave={e => { e.currentTarget.style.opacity = 0.88; e.currentTarget.style.transform = 'scale(1)' }}
+              />
+              <span className="font-mono text-gray-600 group-hover:text-gray-400 transition-colors"
+                    style={{ fontSize: 9 }}>
+                '{String(y.year).slice(2)}
+              </span>
+            </Link>
+          )
+        })}
+      </div>
+      <div className="flex items-center gap-5 mt-4 flex-wrap">
+        {[
+          { color: HC, label: 'Hermz' },
+          { color: DC, label: 'Dust' },
+          { color: 'transparent', border: `2px solid ${CC}`, label: 'Tiebreaker' },
+        ].map(({ color, border, label }) => (
+          <div key={label} className="flex items-center gap-1.5">
+            <div style={{ width: 12, height: 12, borderRadius: 2, backgroundColor: color, border: border || 'none' }} />
+            <span className="font-mono text-gray-500" style={{ fontSize: 10 }}>{label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ── DifficultyRating ─────────────────────────────────────────────────────────
+function DifficultyRating({ sorted }) {
+  const tier = p => {
+    if (p >= 80) return { label: 'Chalk',   color: '#4ade80' }
+    if (p >= 70) return { label: 'Average', color: '#facc15' }
+    if (p >= 60) return { label: 'Tough',   color: '#fb923c' }
+    return            { label: 'Brutal',  color: '#f87171' }
+  }
+  const data = sorted
+    .map(y => ({
+      year:  y.year,
+      pct:   pct((y.matt_correct||0) + (y.dustin_correct||0), (y.total_categories||0) * 2),
+      matt:  y.matt_correct  || 0,
+      dust:  y.dustin_correct|| 0,
+      total: y.total_categories || 0,
+    }))
+    .sort((a, b) => a.pct - b.pct)
+
+  return (
+    <div className="space-y-1.5">
+      {data.map(d => {
+        const t = tier(d.pct)
+        return (
+          <Link key={d.year} to={`/oscars/${d.year}`}
+            className="flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-night-700/30 transition-colors group">
+            <span className="font-mono text-xs text-gray-400 w-10 flex-shrink-0">{d.year}</span>
+            <div className="flex-1 h-2 bg-night-700 rounded overflow-hidden">
+              <div style={{ width: `${d.pct}%`, backgroundColor: t.color, opacity: 0.7 }}
+                   className="h-full rounded" />
+            </div>
+            <span className="font-mono w-8 text-right flex-shrink-0" style={{ fontSize: 10, color: t.color }}>
+              {d.pct}%
+            </span>
+            <span className="font-mono w-12 text-right flex-shrink-0 hidden sm:block"
+                  style={{ fontSize: 9, color: t.color, opacity: 0.7 }}>
+              {t.label}
+            </span>
+            <span className="font-mono text-gray-600 w-20 text-right flex-shrink-0 hidden sm:block"
+                  style={{ fontSize: 9 }}>
+              {d.matt}+{d.dust}/{d.total}
+            </span>
+          </Link>
+        )
+      })}
+      <div className="flex flex-wrap items-center gap-4 pt-3 mt-2 border-t border-night-700/60">
+        {[
+          { label: 'Chalk ≥80%',   color: '#4ade80' },
+          { label: 'Average 70%',  color: '#facc15' },
+          { label: 'Tough 60%',    color: '#fb923c' },
+          { label: 'Brutal <60%',  color: '#f87171' },
+        ].map(({ label, color }) => (
+          <div key={label} className="flex items-center gap-1.5">
+            <div style={{ width: 10, height: 10, borderRadius: 2, backgroundColor: color, opacity: 0.7 }} />
+            <span className="font-mono text-gray-500" style={{ fontSize: 9 }}>{label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ── OwnershipGrid ────────────────────────────────────────────────────────────
+function OwnershipGrid({ catData }) {
+  const cats = [...catData].sort((a, b) => {
+    const gA = GROUP_ORDER.indexOf(CAT_GROUP[a.name] || 'Craft')
+    const gB = GROUP_ORDER.indexOf(CAT_GROUP[b.name] || 'Craft')
+    if (gA !== gB) return gA - gB
+    return (a.order || 0) - (b.order || 0)
+  })
+  const byGroup = GROUP_ORDER
+    .map(g => ({ g, meta: GROUP_META[g], cats: cats.filter(c => (CAT_GROUP[c.name] || 'Craft') === g) }))
+    .filter(({ cats }) => cats.length > 0)
+
+  return (
+    <div className="space-y-5">
+      {byGroup.map(({ g, meta, cats }) => (
+        <div key={g}>
+          <div className="flex items-center gap-2 mb-2"
+               style={{ borderLeft: `3px solid ${meta.color}`, paddingLeft: 10 }}>
+            <span className="font-mono text-[10px] tracking-cinema uppercase" style={{ color: meta.color }}>
+              {meta.label}
+            </span>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+            {cats.map(cat => {
+              const h = cat.mattPct, d = cat.dustinPct
+              const hL = h > d, dL = d > h
+              const edge = hL ? HC : dL ? DC : '#9ca3af'
+              const leader = hL ? 'Hermz' : dL ? 'Dust' : 'Tied'
+              const margin = Math.abs(h - d)
+              return (
+                <div key={cat.id}
+                  style={{ borderLeft: `3px solid ${edge}` }}
+                  className={`bg-night-800 rounded-r-lg px-3 py-2.5 ${cat.isLegacy ? 'opacity-45' : ''}`}>
+                  <div className="text-xs text-gray-300 leading-snug mb-2">
+                    {cat.name.replace('Best ', '')}
+                  </div>
+                  <div className="flex items-baseline justify-between">
+                    <span className="font-display text-lg leading-none" style={{ color: edge }}>
+                      {leader}
+                    </span>
+                    {margin > 0 && (
+                      <span className="font-mono text-gray-500" style={{ fontSize: 10 }}>
+                        +{margin}%
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1 mt-1">
+                    <span className="font-mono" style={{ fontSize: 9, color: HC }}>{h}%</span>
+                    <span className="font-mono text-gray-600" style={{ fontSize: 9 }}>·</span>
+                    <span className="font-mono" style={{ fontSize: 9, color: DC }}>{d}%</span>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 // ── main component ──────────────────────────────────────────────────────────
 export default function OscarsStats() {
   const [years,       setYears]       = useState([])
@@ -391,13 +561,38 @@ export default function OscarsStats() {
   const dustinWorst  = [...years].sort((a,b) => (a.dustin_correct||0) - (b.dustin_correct||0))[0]
 
   const timelineData = sorted.map(y => ({ year: y.year, Hermz: y.matt_correct||0, Dust: y.dustin_correct||0, total: y.total_categories||0, tb: y.tiebreaker_used }))
-  const marginData   = sorted.map(y => ({ year: y.year, diff: (y.matt_correct||0)-(y.dustin_correct||0), tb: y.tiebreaker_used }))
 
-  let mCum = 0, dCum = 0
-  const momentumData = sorted.map(y => {
-    if (y.winner === 'matt') mCum++
-    else if (y.winner === 'dustin') dCum++
-    return { year: y.year, Hermz: mCum, Dust: dCum, tb: y.tiebreaker_used }
+  // agreement stats
+  let totalPairs = 0, agreements = 0, agreedCorrect = 0, disagreements = 0, hermzWhenDisagree = 0, dustWhenDisagree = 0
+  for (const cat of catData) {
+    for (const d of Object.values(cat.byYear)) {
+      if (d.matt?.guess != null && d.dustin?.guess != null) {
+        totalPairs++
+        if (d.matt.guess === d.dustin.guess) {
+          agreements++
+          if (d.matt.correct) agreedCorrect++
+        } else {
+          disagreements++
+          if (d.matt.correct) hermzWhenDisagree++
+          if (d.dustin.correct) dustWhenDisagree++
+        }
+      }
+    }
+  }
+  const agreePct      = pct(agreements, totalPairs)
+  const agreeAccuracy = pct(agreedCorrect, agreements)
+  const hermzEdgePct  = pct(hermzWhenDisagree, disagreements)
+  const dustEdgePct   = pct(dustWhenDisagree, disagreements)
+
+  // radar data (group accuracy, exclude discontinued Sound categories)
+  const radarData = GROUP_ORDER.filter(g => g !== 'Sound').map(g => {
+    const gc = catData.filter(c => (CAT_GROUP[c.name] || 'Craft') === g)
+    const mT = gc.reduce((s, c) => s + c.matt.total,   0)
+    const mC = gc.reduce((s, c) => s + c.matt.correct, 0)
+    const dT = gc.reduce((s, c) => s + c.dustin.total,   0)
+    const dC = gc.reduce((s, c) => s + c.dustin.correct, 0)
+    const shortLabel = { Major: 'Major', Acting: 'Acting', Writing: 'Writing', Craft: 'Craft', Music: 'Music', Shorts: 'Shorts' }
+    return { group: shortLabel[g] || g, Hermz: pct(mC, mT), Dust: pct(dC, dT) }
   })
 
   const grouped = GROUP_ORDER.map(g => ({
@@ -503,8 +698,14 @@ export default function OscarsStats() {
         {/* ── 2. Streaks + Peak/Valley ──────────────────────────────────── */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="card">
-            <p className="kicker mb-4">WIN STREAKS</p>
+            <p className="kicker mb-1">WIN STREAKS</p>
+            <p className="text-xs text-gray-500 mt-0.5 mb-4">
+              Hermz longest: {streaks.mattLongest} · Dust longest: {streaks.dustinLongest}
+            </p>
             <ActiveStreak streaks={streaks} />
+            <div className="mt-5 pt-4 border-t border-night-700/60">
+              <StreakTimeline sorted={sorted} />
+            </div>
           </div>
           <div className="card">
             <p className="kicker mb-4">PEAK &amp; VALLEY</p>
@@ -540,23 +741,43 @@ export default function OscarsStats() {
           </ResponsiveContainer>
         </div>
 
-        {/* ── 4. Championship Race ──────────────────────────────────────── */}
-        <div className="card">
-          <p className="kicker">CHAMPIONSHIP RACE</p>
-          <p className="text-xs text-gray-500 mt-1 mb-5">Cumulative wins over all {sorted.length} ceremonies. ◆ = tiebreaker year.</p>
-          <ResponsiveContainer width="100%" height={220}>
-            <LineChart data={momentumData} margin={{ top:5, right:20, left:0, bottom:5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
-              <XAxis dataKey="year" tick={{ fontSize:11, fill:axisColor }} tickLine={false} />
-              <YAxis tick={{ fontSize:11, fill:axisColor }} tickLine={false} axisLine={false} allowDecimals={false} domain={[0, 'dataMax + 1']} />
-              <Tooltip content={<MomentumTooltip />} />
-              <Legend iconType="circle" wrapperStyle={{ fontSize:12, paddingTop:12, color:axisColor }} />
-              <Line type="stepAfter" dataKey="Hermz" stroke={HC} strokeWidth={2.5}
-                    dot={(p) => <ChartDot {...p} tb={p.payload.tb} color={HC} />} activeDot={{ r:5 }} />
-              <Line type="stepAfter" dataKey="Dust"  stroke={DC} strokeWidth={2.5}
-                    dot={(p) => <ChartDot {...p} tb={p.payload.tb} color={DC} />} activeDot={{ r:5 }} />
-            </LineChart>
-          </ResponsiveContainer>
+        {/* ── 4. Agreement Rate + Annual Difficulty ────────────────────── */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="card">
+            <p className="kicker mb-4">AGREEMENT RATE</p>
+            <div className="grid grid-cols-3 text-center gap-3 mb-4">
+              <div className="bg-night-700/40 rounded-xl py-3 px-2">
+                <div className="font-display text-3xl text-white">{agreePct}%</div>
+                <div className="kicker-dim mt-2">AGREE</div>
+              </div>
+              <div className="bg-emerald-900/30 border border-emerald-700/40 rounded-xl py-3 px-2">
+                <div className="font-display text-3xl text-emerald-400">{agreeAccuracy}%</div>
+                <div className="kicker-dim mt-2">WHEN AGREED · RIGHT</div>
+              </div>
+              <div className="bg-night-700/40 rounded-xl py-3 px-2">
+                <div className="font-display text-3xl text-white">{100 - agreePct}%</div>
+                <div className="kicker-dim mt-2">DISAGREE</div>
+              </div>
+            </div>
+            <div className="pt-3 border-t border-night-700 grid grid-cols-2 gap-3 text-center">
+              <div>
+                <div className="font-mono text-[10px] tracking-cinema mb-2" style={{ color: HC }}>HERMZ WHEN DISAGREE</div>
+                <div className="font-display text-2xl" style={{ color: HC }}>{hermzEdgePct}%</div>
+                <div className="kicker-dim mt-1">CORRECT</div>
+              </div>
+              <div>
+                <div className="font-mono text-[10px] tracking-cinema mb-2" style={{ color: DC }}>DUST WHEN DISAGREE</div>
+                <div className="font-display text-2xl" style={{ color: DC }}>{dustEdgePct}%</div>
+                <div className="kicker-dim mt-1">CORRECT</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="card">
+            <p className="kicker mb-1">ANNUAL DIFFICULTY</p>
+            <p className="text-xs text-gray-500 mt-0.5 mb-4">Combined accuracy · hardest years first</p>
+            <DifficultyRating sorted={sorted} />
+          </div>
         </div>
 
         {/* ── 5. Category Heatmap ──────────────────────────────────────── */}
@@ -568,7 +789,14 @@ export default function OscarsStats() {
           <CategoryHeatmap catData={catData} sorted={sorted} />
         </div>
 
-        {/* ── 6. Category Accuracy ──────────────────────────────────────── */}
+        {/* ── 6. Category Ownership ────────────────────────────────────── */}
+        <div className="card">
+          <p className="kicker mb-1">CATEGORY OWNERSHIP</p>
+          <p className="text-xs text-gray-500 mt-0.5 mb-5">All-time edge per category · faded = retired</p>
+          <OwnershipGrid catData={catData} />
+        </div>
+
+        {/* ── 7. Category Accuracy ──────────────────────────────────────── */}
         <div className="card p-0 overflow-hidden">
           <div className="px-6 pt-5 pb-3 border-b border-night-700/60 flex flex-wrap items-center justify-between gap-3">
             <div>
@@ -576,7 +804,7 @@ export default function OscarsStats() {
               <p className="text-xs text-gray-500 mt-1">All-time correct guesses per category · click any row to expand</p>
             </div>
             <div className="flex items-center gap-1 bg-night-700/60 rounded-full p-1">
-              {[['accuracy','Accuracy'],['h2h','Head-to-Head']].map(([val, label]) => (
+              {[['accuracy','Accuracy'],['h2h','Head-to-Head'],['radar','Radar']].map(([val, label]) => (
                 <button key={val} onClick={() => setCatView(val)}
                   className={`text-xs px-3 py-1.5 rounded-full font-medium transition-colors ${
                     catView === val ? 'bg-white text-night-950' : 'text-gray-400 hover:text-gray-200'
@@ -612,7 +840,24 @@ export default function OscarsStats() {
             </div>
           )}
 
-          <div className="px-4 py-4 space-y-5">
+          {catView === 'radar' && (
+            <div className="px-6 py-6">
+              <p className="text-xs text-gray-500 mb-4">Accuracy % by category group · excludes retired Sound categories</p>
+              <ResponsiveContainer width="100%" height={340}>
+                <RadarChart data={radarData} margin={{ top: 10, right: 30, left: 30, bottom: 10 }}>
+                  <PolarGrid stroke={gridColor} />
+                  <PolarAngleAxis dataKey="group" tick={{ fontSize: 12, fill: axisColor }} />
+                  <PolarRadiusAxis angle={90} domain={[0, 100]} tick={{ fontSize: 9, fill: axisColor }} tickCount={4} />
+                  <Radar name="Hermz" dataKey="Hermz" stroke={HC} fill={HC} fillOpacity={0.15} strokeWidth={2.5} dot={{ fill: HC, r: 4 }} />
+                  <Radar name="Dust"  dataKey="Dust"  stroke={DC} fill={DC} fillOpacity={0.15} strokeWidth={2.5} dot={{ fill: DC, r: 4 }} />
+                  <Legend iconType="circle" wrapperStyle={{ fontSize: 12, paddingTop: 16, color: axisColor }} />
+                  <Tooltip content={<TimelineTooltip />} />
+                </RadarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+
+          <div className="px-4 py-4 space-y-5" style={{ display: catView === 'radar' ? 'none' : undefined }}>
             {grouped.map(({ g, meta, cats }) => (
               <div key={g}>
                 <div className="flex items-center gap-2 mb-2"
