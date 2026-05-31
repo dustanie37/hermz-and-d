@@ -544,9 +544,6 @@ function CatStreakRow({ entry, type, rank }) {
       </div>
       <div className="text-right flex-shrink-0">
         <div className="font-mono text-xs text-gray-300">{range}</div>
-        <div className="font-mono text-xs text-gray-500 mt-0.5">
-          {isCold ? 'missed' : 'correct'} in a row
-        </div>
       </div>
     </div>
   )
