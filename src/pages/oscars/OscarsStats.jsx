@@ -7,7 +7,6 @@ import { Link } from 'react-router-dom'
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   Legend, ResponsiveContainer,
-  RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
 } from 'recharts'
 import { supabase } from '../../lib/supabase'
 import OscarIcon from '../../components/OscarIcon'
@@ -374,41 +373,40 @@ function DifficultyRating({ sorted }) {
     .sort((a, b) => a.pct - b.pct)
 
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-1">
       {data.map(d => {
         const t = tier(d.pct)
         return (
           <Link key={d.year} to={`/oscars/${d.year}`}
-            className="flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-night-700/30 transition-colors group">
-            <span className="font-mono text-xs text-gray-400 w-10 flex-shrink-0">{d.year}</span>
-            <div className="flex-1 h-2 bg-night-700 rounded overflow-hidden">
-              <div style={{ width: `${d.pct}%`, backgroundColor: t.color, opacity: 0.7 }}
+            className="flex items-center gap-3 rounded-lg px-3 py-2.5 hover:bg-night-700/30 transition-colors group">
+            <span className="font-mono text-sm font-medium text-gray-200 w-12 flex-shrink-0">{d.year}</span>
+            <div className="flex-1 h-3 bg-night-700 rounded overflow-hidden">
+              <div style={{ width: `${d.pct}%`, backgroundColor: t.color, opacity: 0.75 }}
                    className="h-full rounded" />
             </div>
-            <span className="font-mono w-8 text-right flex-shrink-0" style={{ fontSize: 10, color: t.color }}>
+            <span className="font-mono text-sm font-semibold w-10 text-right flex-shrink-0" style={{ color: t.color }}>
               {d.pct}%
             </span>
-            <span className="font-mono w-12 text-right flex-shrink-0 hidden sm:block"
-                  style={{ fontSize: 9, color: t.color, opacity: 0.7 }}>
+            <span className="font-mono text-sm w-14 text-right flex-shrink-0 hidden sm:block font-medium"
+                  style={{ color: t.color }}>
               {t.label}
             </span>
-            <span className="font-mono text-gray-600 w-20 text-right flex-shrink-0 hidden sm:block"
-                  style={{ fontSize: 9 }}>
+            <span className="font-mono text-xs text-gray-400 w-20 text-right flex-shrink-0 hidden sm:block">
               {d.matt}+{d.dust}/{d.total}
             </span>
           </Link>
         )
       })}
-      <div className="flex flex-wrap items-center gap-4 pt-3 mt-2 border-t border-night-700/60">
+      <div className="flex flex-wrap items-center gap-5 pt-3 mt-2 border-t border-night-700/60">
         {[
           { label: 'Chalk ≥80%',   color: '#4ade80' },
           { label: 'Average 70%',  color: '#facc15' },
           { label: 'Tough 60%',    color: '#fb923c' },
           { label: 'Brutal <60%',  color: '#f87171' },
         ].map(({ label, color }) => (
-          <div key={label} className="flex items-center gap-1.5">
-            <div style={{ width: 10, height: 10, borderRadius: 2, backgroundColor: color, opacity: 0.7 }} />
-            <span className="font-mono text-gray-500" style={{ fontSize: 9 }}>{label}</span>
+          <div key={label} className="flex items-center gap-2">
+            <div style={{ width: 12, height: 12, borderRadius: 2, backgroundColor: color, opacity: 0.75 }} />
+            <span className="font-mono text-xs text-gray-300">{label}</span>
           </div>
         ))}
       </div>
@@ -429,12 +427,12 @@ function OwnershipGrid({ catData }) {
     .filter(({ cats }) => cats.length > 0)
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {byGroup.map(({ g, meta, cats }) => (
         <div key={g}>
-          <div className="flex items-center gap-2 mb-2"
-               style={{ borderLeft: `3px solid ${meta.color}`, paddingLeft: 10 }}>
-            <span className="font-mono text-[10px] tracking-cinema uppercase" style={{ color: meta.color }}>
+          <div className="flex items-center gap-2 mb-3"
+               style={{ borderLeft: `3px solid ${meta.color}`, paddingLeft: 12 }}>
+            <span className="font-mono text-sm font-semibold uppercase" style={{ color: meta.color }}>
               {meta.label}
             </span>
           </div>
@@ -447,25 +445,25 @@ function OwnershipGrid({ catData }) {
               const margin = Math.abs(h - d)
               return (
                 <div key={cat.id}
-                  style={{ borderLeft: `3px solid ${edge}` }}
-                  className={`bg-night-800 rounded-r-lg px-3 py-2.5 ${cat.isLegacy ? 'opacity-45' : ''}`}>
-                  <div className="text-xs text-gray-300 leading-snug mb-2">
+                  style={{ borderLeft: `4px solid ${edge}` }}
+                  className={`bg-night-800 rounded-r-lg px-3 py-3 ${cat.isLegacy ? 'opacity-45' : ''}`}>
+                  <div className="text-sm text-gray-200 leading-snug mb-2 font-medium">
                     {cat.name.replace('Best ', '')}
                   </div>
-                  <div className="flex items-baseline justify-between">
-                    <span className="font-display text-lg leading-none" style={{ color: edge }}>
+                  <div className="flex items-baseline justify-between mb-1.5">
+                    <span className="font-display text-2xl leading-none" style={{ color: edge }}>
                       {leader}
                     </span>
                     {margin > 0 && (
-                      <span className="font-mono text-gray-500" style={{ fontSize: 10 }}>
+                      <span className="font-mono text-sm text-gray-300">
                         +{margin}%
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center gap-1 mt-1">
-                    <span className="font-mono" style={{ fontSize: 9, color: HC }}>{h}%</span>
-                    <span className="font-mono text-gray-600" style={{ fontSize: 9 }}>·</span>
-                    <span className="font-mono" style={{ fontSize: 9, color: DC }}>{d}%</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-mono text-xs font-semibold" style={{ color: HC }}>{h}%</span>
+                    <span className="font-mono text-xs text-gray-500">·</span>
+                    <span className="font-mono text-xs font-semibold" style={{ color: DC }}>{d}%</span>
                   </div>
                 </div>
               )
@@ -584,17 +582,6 @@ export default function OscarsStats() {
   const hermzEdgePct  = pct(hermzWhenDisagree, disagreements)
   const dustEdgePct   = pct(dustWhenDisagree, disagreements)
 
-  // radar data (group accuracy, exclude discontinued Sound categories)
-  const radarData = GROUP_ORDER.filter(g => g !== 'Sound').map(g => {
-    const gc = catData.filter(c => (CAT_GROUP[c.name] || 'Craft') === g)
-    const mT = gc.reduce((s, c) => s + c.matt.total,   0)
-    const mC = gc.reduce((s, c) => s + c.matt.correct, 0)
-    const dT = gc.reduce((s, c) => s + c.dustin.total,   0)
-    const dC = gc.reduce((s, c) => s + c.dustin.correct, 0)
-    const shortLabel = { Major: 'Major', Acting: 'Acting', Writing: 'Writing', Craft: 'Craft', Music: 'Music', Shorts: 'Shorts' }
-    return { group: shortLabel[g] || g, Hermz: pct(mC, mT), Dust: pct(dC, dT) }
-  })
-
   const grouped = GROUP_ORDER.map(g => ({
     g, meta: GROUP_META[g],
     cats: catData.filter(c => (CAT_GROUP[c.name] || 'Craft') === g).sort((a,b) => a.order - b.order),
@@ -709,7 +696,7 @@ export default function OscarsStats() {
           </div>
           <div className="card">
             <p className="kicker mb-4">PEAK &amp; VALLEY</p>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4 mb-5">
               <div>
                 <div className="font-mono text-[10px] tracking-kicker text-gold-400 mb-2">HERMZ</div>
                 <PeakRow label="Best"  year={mattBest?.year}   value={mattBest?.matt_correct}    total={mattBest?.total_categories} />
@@ -719,6 +706,33 @@ export default function OscarsStats() {
                 <div className="font-mono text-[10px] tracking-kicker text-film-400 mb-2">DUST</div>
                 <PeakRow label="Best"  year={dustinBest?.year}  value={dustinBest?.dustin_correct}  total={dustinBest?.total_categories} />
                 <PeakRow label="Worst" year={dustinWorst?.year} value={dustinWorst?.dustin_correct} total={dustinWorst?.total_categories} isWorst />
+              </div>
+            </div>
+            <div className="pt-4 border-t border-night-700">
+              <p className="kicker mb-3">AGREEMENT RATE</p>
+              <div className="grid grid-cols-3 text-center gap-2 mb-4">
+                <div className="bg-night-700/40 rounded-xl py-2.5 px-2">
+                  <div className="font-display text-2xl text-white">{agreePct}%</div>
+                  <div className="kicker-dim mt-1.5">AGREE</div>
+                </div>
+                <div className="bg-emerald-900/30 border border-emerald-700/40 rounded-xl py-2.5 px-2">
+                  <div className="font-display text-2xl text-emerald-400">{agreeAccuracy}%</div>
+                  <div className="kicker-dim mt-1.5">AGREED · RIGHT</div>
+                </div>
+                <div className="bg-night-700/40 rounded-xl py-2.5 px-2">
+                  <div className="font-display text-2xl text-white">{100 - agreePct}%</div>
+                  <div className="kicker-dim mt-1.5">DISAGREE</div>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3 text-center">
+                <div>
+                  <div className="font-mono text-[10px] tracking-cinema mb-1" style={{ color: HC }}>HERMZ WHEN DISAGREE</div>
+                  <div className="font-display text-xl" style={{ color: HC }}>{hermzEdgePct}%</div>
+                </div>
+                <div>
+                  <div className="font-mono text-[10px] tracking-cinema mb-1" style={{ color: DC }}>DUST WHEN DISAGREE</div>
+                  <div className="font-display text-xl" style={{ color: DC }}>{dustEdgePct}%</div>
+                </div>
               </div>
             </div>
           </div>
@@ -741,43 +755,11 @@ export default function OscarsStats() {
           </ResponsiveContainer>
         </div>
 
-        {/* ── 4. Agreement Rate + Annual Difficulty ────────────────────── */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <div className="card">
-            <p className="kicker mb-4">AGREEMENT RATE</p>
-            <div className="grid grid-cols-3 text-center gap-3 mb-4">
-              <div className="bg-night-700/40 rounded-xl py-3 px-2">
-                <div className="font-display text-3xl text-white">{agreePct}%</div>
-                <div className="kicker-dim mt-2">AGREE</div>
-              </div>
-              <div className="bg-emerald-900/30 border border-emerald-700/40 rounded-xl py-3 px-2">
-                <div className="font-display text-3xl text-emerald-400">{agreeAccuracy}%</div>
-                <div className="kicker-dim mt-2">WHEN AGREED · RIGHT</div>
-              </div>
-              <div className="bg-night-700/40 rounded-xl py-3 px-2">
-                <div className="font-display text-3xl text-white">{100 - agreePct}%</div>
-                <div className="kicker-dim mt-2">DISAGREE</div>
-              </div>
-            </div>
-            <div className="pt-3 border-t border-night-700 grid grid-cols-2 gap-3 text-center">
-              <div>
-                <div className="font-mono text-[10px] tracking-cinema mb-2" style={{ color: HC }}>HERMZ WHEN DISAGREE</div>
-                <div className="font-display text-2xl" style={{ color: HC }}>{hermzEdgePct}%</div>
-                <div className="kicker-dim mt-1">CORRECT</div>
-              </div>
-              <div>
-                <div className="font-mono text-[10px] tracking-cinema mb-2" style={{ color: DC }}>DUST WHEN DISAGREE</div>
-                <div className="font-display text-2xl" style={{ color: DC }}>{dustEdgePct}%</div>
-                <div className="kicker-dim mt-1">CORRECT</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="card">
-            <p className="kicker mb-1">ANNUAL DIFFICULTY</p>
-            <p className="text-xs text-gray-500 mt-0.5 mb-4">Combined accuracy · hardest years first</p>
-            <DifficultyRating sorted={sorted} />
-          </div>
+        {/* ── 4. Annual Difficulty ─────────────────────────────────────── */}
+        <div className="card">
+          <p className="kicker mb-1">ANNUAL DIFFICULTY</p>
+          <p className="text-sm text-gray-400 mt-0.5 mb-4">Combined accuracy (both players) · hardest years first</p>
+          <DifficultyRating sorted={sorted} />
         </div>
 
         {/* ── 5. Category Heatmap ──────────────────────────────────────── */}
@@ -804,7 +786,7 @@ export default function OscarsStats() {
               <p className="text-xs text-gray-500 mt-1">All-time correct guesses per category · click any row to expand</p>
             </div>
             <div className="flex items-center gap-1 bg-night-700/60 rounded-full p-1">
-              {[['accuracy','Accuracy'],['h2h','Head-to-Head'],['radar','Radar']].map(([val, label]) => (
+              {[['accuracy','Accuracy'],['h2h','Head-to-Head']].map(([val, label]) => (
                 <button key={val} onClick={() => setCatView(val)}
                   className={`text-xs px-3 py-1.5 rounded-full font-medium transition-colors ${
                     catView === val ? 'bg-white text-night-950' : 'text-gray-400 hover:text-gray-200'
@@ -840,24 +822,7 @@ export default function OscarsStats() {
             </div>
           )}
 
-          {catView === 'radar' && (
-            <div className="px-6 py-6">
-              <p className="text-xs text-gray-500 mb-4">Accuracy % by category group · excludes retired Sound categories</p>
-              <ResponsiveContainer width="100%" height={340}>
-                <RadarChart data={radarData} margin={{ top: 10, right: 30, left: 30, bottom: 10 }}>
-                  <PolarGrid stroke={gridColor} />
-                  <PolarAngleAxis dataKey="group" tick={{ fontSize: 12, fill: axisColor }} />
-                  <PolarRadiusAxis angle={90} domain={[0, 100]} tick={{ fontSize: 9, fill: axisColor }} tickCount={4} />
-                  <Radar name="Hermz" dataKey="Hermz" stroke={HC} fill={HC} fillOpacity={0.15} strokeWidth={2.5} dot={{ fill: HC, r: 4 }} />
-                  <Radar name="Dust"  dataKey="Dust"  stroke={DC} fill={DC} fillOpacity={0.15} strokeWidth={2.5} dot={{ fill: DC, r: 4 }} />
-                  <Legend iconType="circle" wrapperStyle={{ fontSize: 12, paddingTop: 16, color: axisColor }} />
-                  <Tooltip content={<TimelineTooltip />} />
-                </RadarChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-
-          <div className="px-4 py-4 space-y-5" style={{ display: catView === 'radar' ? 'none' : undefined }}>
+          <div className="px-4 py-4 space-y-5">
             {grouped.map(({ g, meta, cats }) => (
               <div key={g}>
                 <div className="flex items-center gap-2 mb-2"
