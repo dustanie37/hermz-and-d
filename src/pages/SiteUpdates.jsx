@@ -9,6 +9,16 @@ const UPDATES = [
         color: 'film',
         text: 'Oscar nomination data fix — 27 films were showing a phantom extra acting nomination (e.g. The Silence of the Lambs listed 9 nominations instead of 7). Wikidata stores both a "nominated" and a "won" record for the same winner, and the import kept both. 30 phantom rows and 8 duplicate rows with missing ceremony years were removed, each verified against actual Oscar history. Legitimate double nominations (Amadeus, Bullets Over Broadway, Chicago) preserved. The backfill tools were corrected so re-running them can\'t reintroduce the bug.',
       },
+      {
+        tag: 'Films',
+        color: 'film',
+        text: 'Oscar nomination data completed — 66 films with missing or incomplete category breakdowns filled in, each verified against actual Academy Awards history: The Holdovers, Banshees of Inisherin, 1917, The Favourite, La La Land, The Godfather (all three Supporting Actor noms now named), Rocky (Meredith + Young), The Lion King (all three songs), Skyfall, every Star Trek and Star Wars nomination, and 50 more. Every film in the canon now shows its full, accurate Oscar record. Also corrected five factual errors in the recorded totals (Superman II actually received zero nominations — the 1978 Superman got those).',
+      },
+      {
+        tag: 'System',
+        color: 'gold',
+        text: 'New admin tool: Oscar Data Health (Settings → Admin Tools). Reconciles every film\'s recorded nomination and win totals against its category rows and flags phantom, missing, or miscounted data — the check that would have caught the phantom-nomination bug the day it happened. Currently reads ALL CLEAR.',
+      },
     ],
   },
   {

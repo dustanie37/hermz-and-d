@@ -1,0 +1,60 @@
+-- Oscar nominations manual completion (run 2026-07-03 — ALREADY APPLIED via MCP)
+--
+-- Completes film_oscar_noms for the 66 films whose category rows didn't match the
+-- spreadsheet totals in films.oscar_nominations / films.oscar_wins after the phantom
+-- cleanup (fix_phantom_acting_noms.sql). Every row below was verified against actual
+-- Academy Awards history film by film.
+--
+-- Conventions established here:
+--  • films.oscar_nominations / oscar_wins = COMPETITIVE categories only.
+--  • Special Achievement Awards are stored as rows (category_name =
+--    'Special Achievement Award', is_winner = TRUE, award subject in nominee_name)
+--    for display, but are EXCLUDED from reconciliation counts.
+--  • Multi-nominee acting categories and multi-song films use nominee_name to hold
+--    the person or song title so rows coexist under the partial unique indexes.
+--  • Pre-2021 dual sound categories: the Sound/Sound Mixing lineage stays on the
+--    existing 'Best Sound' rows; the Sound Effects Editing / Sound Editing lineage
+--    uses 'Best Sound Editing'.
+--
+-- Factual corrections to films (spreadsheet errors):
+--  • Superman II: had ZERO Oscar nominations (sheet conflated it with Superman 1978)
+--    → oscar_nominations = 0, oscar_wins = 0
+--  • Gone Baby Gone: Amy Ryan was nominated, did not win → oscar_wins = 0
+--  • Raiders of the Lost Ark: 4 competitive wins (+1 Special Achievement) → oscar_wins = 4
+--  • The Empire Strikes Back: 1 competitive win (+1 SA) → oscar_wins = 1
+--  • The Poseidon Adventure: 1 competitive win, "The Morning After" (+1 SA) → oscar_wins = 1
+--
+-- Row repairs:
+--  • Good Will Hunting: shared screenplay win was 3 rows (Affleck winner + Damon winner
+--    + unnamed nom) → single winner row 'Ben Affleck & Matt Damon'
+--  • Wizard of Oz: duplicate 1939 Original Score row deleted
+--  • Anatomy of a Fall: Original Screenplay marked as the win it was
+--  • NULL ceremony years set: La La Land, Rocky, Star Wars ANH, There Will Be Blood,
+--    Poseidon SA; SA ceremony years corrected (ANH 1978, Toy Story 1996)
+--  • Rocky: Supporting Actor rows named (Burgess Meredith, Burt Young) + Original Song
+--  • The Godfather: all three Supporting Actor noms named (Caan, Duvall, Pacino)
+--
+-- Verification after run: 0 films mismatched (was 66). Query:
+--   SELECT f.id, f.title FROM films f
+--   CROSS JOIN LATERAL (
+--     SELECT count(*)::int AS r, count(*) FILTER (WHERE is_winner)::int AS w
+--     FROM film_oscar_noms n WHERE n.film_id=f.id
+--       AND n.category_name <> 'Special Achievement Award') nr
+--   WHERE f.oscar_nominations > 0
+--     AND (nr.r <> f.oscar_nominations OR nr.w <> COALESCE(f.oscar_wins,0));
+--
+-- The full INSERT/UPDATE/DELETE set was applied directly to Supabase on 2026-07-03;
+-- this file documents the work. See git commit for the complete statement list in
+-- the session that produced it. Films completed:
+-- 1917, Aladdin, Anatomy of a Fall, Avengers Endgame + Infinity War, Back to the
+-- Future, Braveheart, Charade, Clear and Present Danger, Die Hard, E.T., Face/Off,
+-- Fight Club, Forrest Gump, Ghostbusters, Gone Baby Gone, Good Will Hunting, Hugo,
+-- Inception, Indiana Jones Last Crusade, Interstellar, Iron Man, Jurassic Park,
+-- La La Land, Les Miserables, Magnolia, Meet the Parents, Minority Report,
+-- Nightmare Alley, Poltergeist, Raiders, Rocky, Saving Private Ryan, Skyfall,
+-- Star Trek (2009/IV/VI), Star Wars (IV/V/VI/VII), Superman II, T2, Banshees of
+-- Inisherin, Bourne Ultimatum, Dark Knight, Fabelmans, The Favourite, The Fugitive,
+-- The Godfather, The Holdovers, The Lion King, LOTR Two Towers, The Matrix,
+-- Pink Panther Strikes Again, Poseidon Adventure, Princess Bride, Wizard of Oz,
+-- There Will Be Blood, tick tick BOOM, Toy Story 1+2, Up, WALL-E, Who Framed
+-- Roger Rabbit, Willy Wonka.

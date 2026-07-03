@@ -94,6 +94,13 @@ export default function Settings() {
             description="Query Wikidata for each film missing Oscar nomination data and save category-level results to Supabase. Fixes the ~120 films with win/nom counts but no category breakdown."
             accent="film"
           />
+          <ToolCard
+            to="/movies/data-health"
+            title="Oscar Data Health"
+            description="Reconciles every film's recorded nomination and win totals against its category rows. Run after any backfill or Fix Info edit — flags phantom, missing, or miscounted data instantly."
+            tag="Check"
+            accent="gold"
+          />
         </Section>
       )}
 

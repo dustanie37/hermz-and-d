@@ -29,6 +29,7 @@ import MoviesAcclaim  from './pages/movies/MoviesAcclaim'
 import MoviesLists    from './pages/movies/MoviesLists'
 import MoviesBackfill      from './pages/movies/MoviesBackfill'
 import MoviesOscarBackfill from './pages/movies/MoviesOscarBackfill'
+import MoviesDataHealth    from './pages/movies/MoviesDataHealth'
 import MoviesWatchlist     from './pages/movies/MoviesWatchlist'
 
 /** Redirect to /login if not authenticated */
@@ -74,6 +75,7 @@ function AppRoutes() {
         <Route path="/movies/watchlist"       element={<Protected><MoviesWatchlist /></Protected>} />
         <Route path="/movies/backfill"        element={<Protected><MoviesBackfill /></Protected>} />
         <Route path="/movies/oscar-backfill"  element={<Protected><MoviesOscarBackfill /></Protected>} />
+        <Route path="/movies/data-health"     element={<Protected><MoviesDataHealth /></Protected>} />
         <Route path="/movies/:filmId"   element={<Protected><MovieDetail /></Protected>} />
 
         {/* Fallback */}
