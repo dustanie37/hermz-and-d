@@ -11,10 +11,9 @@ import {
 import { supabase } from '../../lib/supabase'
 import OscarIcon from '../../components/OscarIcon'
 import FilmStill from '../../components/FilmStill'
+import { DC, HC, CC } from '../../lib/helpers'
 
 // ── colour tokens (must match tailwind.config.js gold-500 / film-500) ────────
-const HC = '#E0A22F'   // Hermz / matt
-const DC = '#5B6CFF'   // Dust  / dustin
 
 // ── category groupings ──────────────────────────────────────────────────────
 const CAT_GROUP = {
@@ -179,7 +178,6 @@ function MomentumTooltip({ active, payload, label }) {
 
 // ── CategoryHeatmap ──────────────────────────────────────────────────────────
 function CategoryHeatmap({ catData, sorted }) {
-  const CC = '#00E0D9'
   const years = sorted.map(y => y.year)
   const CELL = 22
   const LABEL_W = 172
@@ -309,7 +307,6 @@ function CategoryHeatmap({ catData, sorted }) {
 
 // ── StreakTimeline ───────────────────────────────────────────────────────────
 function StreakTimeline({ sorted }) {
-  const CC = '#00E0D9'
   return (
     <div>
       <div className="flex flex-wrap gap-1.5">

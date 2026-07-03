@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import FilmStill from '../../components/FilmStill'
+import { DC, HC, CC } from '../../lib/helpers'
 
 // ── list definitions ──────────────────────────────────────────────────────────
 
@@ -16,9 +17,6 @@ const LISTS = [
 ]
 
 const EVENTS = [2001, 2007, 2016, 2026]
-const DC = '#5B6CFF'
-const HC = '#E0A22F'
-const CC = '#00E0D9'   // cinema-500 — Combined
 
 // ── sub-components ────────────────────────────────────────────────────────────
 

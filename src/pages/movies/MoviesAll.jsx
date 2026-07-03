@@ -2,17 +2,14 @@ import { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import FilmStill from '../../components/FilmStill'
+import { DC, HC, CC, sortTitle } from '../../lib/helpers'
 
 // ── constants ─────────────────────────────────────────────────────────────────
 
 const EVENTS = [2001, 2007, 2016, 2026]
-const DC = '#5B6CFF'   // film-500  — Dust
-const HC = '#E0A22F'   // gold-500  — Hermz
-const CC = '#00E0D9'   // cinema-500 — Combined
 
 // ── sort helpers ──────────────────────────────────────────────────────────────
 
-function sortTitle(t) { return (t || '').replace(/^(the|a|an)\s+/i, '').trim() }
 function defaultDir(_key) { return 'asc' }
 
 function rankCmp(ra, rb, dir) {

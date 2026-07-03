@@ -5,12 +5,10 @@ import {
 } from 'recharts'
 import { supabase } from '../../lib/supabase'
 import FilmStill from '../../components/FilmStill'
+import { DC, HC, CC, sortTitle } from '../../lib/helpers'
 
 // ── colour tokens ────────────────────────────────────────────────────────────
 const EVENTS_ORDER = [2001, 2007, 2016, 2026]
-const HC = '#E0A22F'   // gold-500  — Hermz
-const DC = '#5B6CFF'   // film-500  — Dust
-const CC = '#00E0D9'   // cinema-500 — combined
 
 const BUMP_COLORS = [
   HC, DC, '#10B981', '#F43F5E', '#A78BFA',
@@ -46,7 +44,6 @@ function primaryGenre(film) {
 function decade(year)     { return year ? Math.floor(year / 10) * 10 : null }
 function decadeLabel(d)   { return d ? `${d}s` : 'Unknown' }
 function shortYear(y)     { return `'${String(y).slice(2)}` }
-function sortTitle(t)     { return (t || '').replace(/^(A |An |The )/i, '').trim() }
 
 const TOOLTIP = { background: '#15141E', border: '1px solid #2A2734', borderRadius: 8, fontSize: 12, color: '#F3F4F6' }
 const AXIS = '#9298A6'

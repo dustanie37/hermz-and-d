@@ -9,12 +9,10 @@ import {
   RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
 } from 'recharts'
 import FilmStill from '../../components/FilmStill'
+import { DC, HC, CC, sortTitle } from '../../lib/helpers'
 
 // ── constants ───────────────────────────────────────────────────────────────
 const EVENTS = [2001, 2007, 2016, 2026]
-const HC = '#E0A22F'   // gold — Hermz / Matt
-const DC = '#5B6CFF'   // film — Dust
-const CC = '#00E0D9'   // cinema-500 — Combined
 
 const SCORE_CATS = [
   { key: 'score_lead_performance',  label: 'Lead Performance',       max: 10, years: 'all' },
@@ -834,7 +832,6 @@ function PeerTile({ f }) {
   )
 }
 
-function sortTitle(t) { return (t || '').replace(/^(A |An |The )/i, '').trim() }
 
 function generateInsights(film, dustinRows, mattRows, combined, oscarNoms) {
   const insights    = []

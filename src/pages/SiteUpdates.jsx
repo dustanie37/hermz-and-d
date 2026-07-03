@@ -19,6 +19,11 @@ const UPDATES = [
         color: 'gold',
         text: 'New admin tool: Oscar Data Health (Settings → Admin Tools). Reconciles every film\'s recorded nomination and win totals against its category rows and flags phantom, missing, or miscounted data — the check that would have caught the phantom-nomination bug the day it happened. Currently reads ALL CLEAR.',
       },
+      {
+        tag: 'System',
+        color: 'gold',
+        text: 'Under the hood: shared code consolidation. The Wikidata category normalization table (previously duplicated in two pages — the reason the phantom-nomination fix had to be applied twice), the article-aware title sort (five slightly different copies), and the Dust/Hermz/Combined color constants (eight files) now each live in one shared module. No visible changes; future fixes land everywhere at once.',
+      },
     ],
   },
   {

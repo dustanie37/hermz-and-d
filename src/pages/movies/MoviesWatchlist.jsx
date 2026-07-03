@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
 import { searchFilmsByQuery } from '../../lib/omdb'
 import FilmStill from '../../components/FilmStill'
+import { sortTitle } from '../../lib/helpers'
 
 // ── constants ─────────────────────────────────────────────────────────────────
 
@@ -17,9 +18,6 @@ const TAB_META = Object.fromEntries(TABS.map(t => [t.id, t]))
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
-function sortTitle(title = '') {
-  return title.replace(/^(a |an |the )/i, '').trim().toLowerCase()
-}
 
 function addedLabel(ts) {
   if (!ts) return null

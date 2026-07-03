@@ -1,12 +1,10 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
+import { DC, HC, CC } from '../../lib/helpers'
 
 // ── constants ────────────────────────────────────────────────────────────────
 const EVENTS   = [2001, 2007, 2016, 2026]
-const HC = '#E0A22F'
-const DC = '#5B6CFF'
-const CC = '#00E0D9'
 
 const SCORE_CATS = [
   { key: 'score_lead_performance',  label: 'Lead Performance',       max: 10, years: 'all'              },

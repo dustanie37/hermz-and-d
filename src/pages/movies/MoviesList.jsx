@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { Link, useSearchParams, useLocation } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import FilmStill from '../../components/FilmStill'
+import { DC, HC, CC, sortTitle } from '../../lib/helpers'
 
 // ── view-mode icons ─────────────────────────────────────────────────────────
 function ListViewIcon() {
@@ -25,9 +26,6 @@ function GridViewIcon() {
 }
 
 const EVENTS_ORDER = [2001, 2007, 2016, 2026]
-const HC = '#E0A22F'   // gold-500   — Hermz
-const DC = '#5B6CFF'   // film-500   — Dust
-const CC = '#00E0D9'   // cinema-500 — Combined
 
 // One prior-year cell — shows prior rank + movement
 function PriorYearCell({ currentRank, filmId, priorMap }) {
@@ -166,7 +164,6 @@ export default function MoviesList() {
   }, [eventYear, view, profiles, events])
 
   // ── sort + search derived ───────────────────────────────────────────────
-  function sortTitle(t) { return (t || '').replace(/^(the|a|an)\s+/i, '').trim() }
   const displayRows = useMemo(() => {
     if (sortBy === 'score')       return [...rows].sort((a,b) => (b.score||0) - (a.score||0))
     if (sortBy === 'year')        return [...rows].sort((a,b) => (a.film?.release_year||0) - (b.film?.release_year||0))
