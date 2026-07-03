@@ -317,13 +317,13 @@ function AddFilmModal({ onClose, onAdd, existingImdbIds, defaultTab }) {
   ]
 
   return (
-   <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-  <div className="absolute inset-0 bg-night-950/80 backdrop-blur-md" onClick={onClose} />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-night-950/80 backdrop-blur-md" onClick={onClose} />
 
-  <div className="relative z-10 w-full max-w-lg
-                  bg-night-900 border border-white/[0.1]
-                  rounded-2xl shadow-still-lg flex flex-col max-h-[90vh]"
-       onClick={e => e.stopPropagation()}>
+      <div className="relative z-10 w-full max-w-lg
+                      bg-night-900 border border-white/[0.1]
+                      rounded-2xl shadow-still-lg flex flex-col max-h-[90vh]"
+           onClick={e => e.stopPropagation()}>
 
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-night-700/60">

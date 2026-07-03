@@ -238,10 +238,16 @@ function processRows(rows, imdbIdKey = 'imdbId', nomineeKey = 'nomineeName') {
     const won  = row.won === true || row.won === 'true'
     const year = row.year != null ? parseInt(row.year) : null
 
-    if (ACTING_CATEGORIES.has(canon)) {
+    if (ACTING_CATEGORIES.has(canon) && nomineeName) {
+      // Named acting rows: different people may hold a win and a nomination in the
+      // same category (e.g. Amadeus — Abraham won, Hulce nominated). Keep separately.
       const key = `${canon}|${year}|${nomineeName}|${won}`
       if (!seenActing.has(key)) { seenActing.add(key); result.push({ category_name: canon, is_winner: won, ceremony_year: year, nominee_name: nomineeName }) }
     } else {
+      // Unnamed rows (acting included): Wikidata film pages often carry BOTH a
+      // "nominated for" and an "award received" statement for the SAME winner.
+      // Keeping both created phantom extra nominations (2026-07 bug fix) —
+      // collapse to a single row where a win beats a nomination.
       const key = `${canon}|${year}|${nomineeName}`
       if (seenOther.has(key)) {
         if (won) {

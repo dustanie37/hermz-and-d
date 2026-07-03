@@ -2,6 +2,26 @@
 
 const UPDATES = [
   {
+    date: 'July 3, 2026',
+    entries: [
+      {
+        tag: 'Films',
+        color: 'film',
+        text: 'Oscar nomination data fix — 27 films were showing a phantom extra acting nomination (e.g. The Silence of the Lambs listed 9 nominations instead of 7). Wikidata stores both a "nominated" and a "won" record for the same winner, and the import kept both. 30 phantom rows and 8 duplicate rows with missing ceremony years were removed, each verified against actual Oscar history. Legitimate double nominations (Amadeus, Bullets Over Broadway, Chicago) preserved. The backfill tools were corrected so re-running them can\'t reintroduce the bug.',
+      },
+    ],
+  },
+  {
+    date: 'June 10, 2026',
+    entries: [
+      {
+        tag: 'Films',
+        color: 'film',
+        text: 'Future Consideration — Add Film modal no longer closes unexpectedly while searching.',
+      },
+    ],
+  },
+  {
     date: 'May 30, 2026',
     entries: [
       {

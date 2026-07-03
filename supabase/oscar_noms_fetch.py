@@ -574,9 +574,11 @@ def main():
         Dedup rules:
         - Non-acting categories: dedup on (canon, year, nominee_name); upgrade False→True
           when the same entity appears as both nominated and won.
-        - Acting categories (Best Actor/Actress/Supporting): a won=True row alongside a
-          won=False row for the same (canon, year) means two DIFFERENT people — one was
-          nominated, one won. Keep both. Only deduplicate identical won-status duplicates.
+        - Acting categories WITH a nominee name: a win row and a nom row may be two
+          DIFFERENT people (e.g. Amadeus — Abraham won, Hulce nominated). Keep separately.
+        - Acting categories WITHOUT a nominee name: collapse like non-acting. Wikidata
+          film pages often carry BOTH "nominated for" and "award received" for the SAME
+          winner; keeping both created phantom extra nominations (2026-07 bug fix).
         """
         seen: set[tuple] = set()        # (canon, year, nominee_name, won) for acting
         seen_non_acting: set[tuple] = set()  # (canon, year, nominee_name) for non-acting
@@ -596,14 +598,14 @@ def main():
             won  = row["won"]
             year = row.get("year")
 
-            if canon in ACTING_CATEGORIES:
-                # For acting: dedup includes won-status so a win + a nom are kept separately
+            if canon in ACTING_CATEGORIES and nominee_name:
+                # Named acting rows: win + nom may be different people — keep separately
                 key = (canon, year, nominee_name, won)
                 if key not in seen:
                     seen.add(key)
                     result.append((canon, won, year, nominee_name))
             else:
-                # For non-acting: dedup on (canon, year, nominee_name); upgrade to win
+                # Unnamed rows (acting included): dedup on (canon, year, nominee_name); upgrade to win
                 key = (canon, year, nominee_name)
                 if key in seen_non_acting:
                     if won:
