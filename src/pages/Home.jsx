@@ -126,7 +126,7 @@ export default function Home() {
 
         {/* Top Six carousel */}
         <div className="bg-night-950 border-t border-white/[0.06] px-6 sm:px-10 py-6
-                        grid grid-cols-[auto_1fr] gap-8 items-center">
+                        grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-5 sm:gap-8 items-center">
           <div>
             <div className="kicker-dim">The Canon · {moviesData?.latestEvent?.year ?? '—'} Edition</div>
             <div className="font-display text-4xl text-white tracking-wide mt-1">
@@ -137,7 +137,7 @@ export default function Home() {
               Combined list →
             </Link>
           </div>
-          <div className="grid grid-cols-6 gap-2.5">
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2.5">
             {loading || !moviesData
               ? Array.from({length: 6}).map((_, i) => (
                   <div key={i} className="aspect-[2/3] rounded-md bg-night-800/60 animate-pulse" />

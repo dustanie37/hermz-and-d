@@ -402,7 +402,7 @@ export default function MovieDetail() {
     <div>
       {/* ── HERO ─────────────────────────────────────────────────────────── */}
       <FilmStill title={film.title}
-                 className="w-full h-[300px] sm:h-[340px]">
+                 className="w-full h-[400px] sm:h-[340px]">
         <div className="absolute inset-0 scrim-bottom" />
 
         {/* Top: back link + admin */}
@@ -451,8 +451,8 @@ export default function MovieDetail() {
         </div>
 
         {/* Bottom: title + meta + rank */}
-        <div className="absolute inset-x-0 bottom-0 px-6 sm:px-10 pb-7 z-10
-                        flex flex-col md:flex-row md:items-end gap-8 md:gap-10">
+        <div className="absolute inset-x-0 bottom-0 px-6 sm:px-10 pb-5 sm:pb-7 z-10
+                        flex flex-col md:flex-row md:items-end gap-4 sm:gap-8 md:gap-10">
 
           {/* Poster thumbnail */}
           {film.poster_url && (
@@ -466,16 +466,16 @@ export default function MovieDetail() {
           )}
 
           <div className="flex-1 min-w-0">
-            <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl text-white tracking-wide leading-[0.92]">
+            <h1 className="font-display text-4xl sm:text-6xl lg:text-7xl text-white tracking-wide leading-[0.92]">
               {film.title?.toUpperCase()}
             </h1>
-            <p className="font-serif italic text-lg sm:text-xl text-gray-300 mt-3">
+            <p className="font-serif italic text-base sm:text-xl text-gray-300 mt-2 sm:mt-3">
               {film.director && <>Directed by <span className="text-white">{film.director}</span> · </>}
               {film.release_year}
               {film.writer && <span className="text-gray-400"> · Written by {film.writer}</span>}
             </p>
             {genres.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 mt-4">
+              <div className="hidden sm:flex flex-wrap gap-1.5 mt-4">
                 {genres.map(g => (
                   <span key={g} className="font-mono text-[11px] tracking-kicker uppercase
                                            px-2.5 py-1 rounded-full bg-white/[0.08] border border-white/[0.12] text-gray-200">

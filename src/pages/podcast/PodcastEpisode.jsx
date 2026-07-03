@@ -635,7 +635,7 @@ export default function PodcastEpisode() {
             <p className="text-gray-600 text-sm italic">No ranking data found.</p>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full min-w-[480px] text-sm">
                 <thead>
                   <tr className="border-b border-white/[0.06]">
                     <th className="text-left font-mono text-[10px] tracking-kicker text-gray-600 pb-3 uppercase">Edition</th>
@@ -762,7 +762,7 @@ export default function PodcastEpisode() {
           <div className="card p-6">
             <SectionHeader label="SCORE BREAKDOWN" sub={`${LATEST} Edition`} />
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full min-w-[420px] text-sm">
                 <thead>
                   <tr className="border-b border-white/[0.06]">
                     <th className="text-left font-mono text-[10px] tracking-kicker text-gray-600 pb-3 uppercase">Category</th>

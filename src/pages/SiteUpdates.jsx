@@ -5,6 +5,11 @@ const UPDATES = [
     date: 'July 3, 2026',
     entries: [
       {
+        tag: 'Mobile',
+        color: 'cinema',
+        text: 'Mobile QA pass at phone width (390px), tested live in-browser. Fixed: Oscar Stats accuracy bars were completely invisible on phones (fixed-width labels left no room — now they shrink and the bars render); the Category Heatmap gained a "swipe for more years" hint; the Stats bump chart now scrolls horizontally instead of squeezing unreadably; film page hero no longer collides with the Fix Info/Watchlist buttons (taller mobile hero, tighter type, genre pills move below); Home\'s Top Six posters are now a proper 3×2 grid on phones instead of six tiny thumbnails; Cinematrix episode tables scroll instead of cramming. Verified clean: ceremony pages, tiebreaker panel, rankings, watchlist, Data Health.',
+      },
+      {
         tag: 'Films',
         color: 'film',
         text: 'Oscar nomination data fix — 27 films were showing a phantom extra acting nomination (e.g. The Silence of the Lambs listed 9 nominations instead of 7). Wikidata stores both a "nominated" and a "won" record for the same winner, and the import kept both. 30 phantom rows and 8 duplicate rows with missing ceremony years were removed, each verified against actual Oscar history. Legitimate double nominations (Amadeus, Bullets Over Broadway, Chicago) preserved. The backfill tools were corrected so re-running them can\'t reintroduce the bug.',

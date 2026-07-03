@@ -390,6 +390,9 @@ function BumpChart({ allTimeData }) {
       {filteredFilms.length === 0 ? (
         <p className="text-gray-500 text-sm text-center py-8 italic">No films match.</p>
       ) : (
+        // min-w wrapper keeps the chart readable on phones — swipe horizontally (mobile QA 2026-07-03)
+        <div className="overflow-x-auto">
+        <div className="min-w-[560px]">
         <ResponsiveContainer width="100%" height={Math.min(650, Math.max(320, filteredFilms.length * 14 + 80))}>
           <LineChart data={chartData} margin={{ left: 12, right: 24, top: 16, bottom: 4 }}>
             <CartesianGrid strokeDasharray="3 3" stroke={GRID} />
@@ -412,7 +415,12 @@ function BumpChart({ allTimeData }) {
             })}
           </LineChart>
         </ResponsiveContainer>
+        </div>
+        </div>
       )}
+      <p className="sm:hidden font-mono text-[10px] tracking-kicker text-gray-500 mt-2 text-center uppercase">
+        Swipe chart → to explore
+      </p>
       <p className="font-mono text-xs tracking-kicker text-gray-500 mt-3 text-center uppercase">
         Combined list only · rank 1 at top · gap = not on that event's combined list
       </p>

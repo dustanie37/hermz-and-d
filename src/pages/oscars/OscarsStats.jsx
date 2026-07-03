@@ -120,15 +120,15 @@ function ChartDot(props) {
 function MiniBar({ h, d }) {
   const hL = h > d, dL = d > h
   return (
-    <div className="flex items-center gap-2 flex-1">
-      <span className="font-mono text-[10px] w-9 text-right" style={{ color: HC, opacity: hL ? 1 : 0.55 }}>{h}%</span>
+    <div className="flex items-center gap-1.5 sm:gap-2 flex-1 min-w-0">
+      <span className="font-mono text-[10px] w-8 sm:w-9 text-right flex-shrink-0" style={{ color: HC, opacity: hL ? 1 : 0.55 }}>{h}%</span>
       <div className="flex-1 h-2.5 bg-night-700 rounded-l-sm overflow-hidden">
         <div className="h-full rounded-l-sm transition-all" style={{ width: `${h}%`, backgroundColor: HC, opacity: hL ? 0.95 : 0.35 }} />
       </div>
       <div className="flex-1 h-2.5 bg-night-700 rounded-r-sm overflow-hidden flex flex-row-reverse">
         <div className="h-full rounded-r-sm transition-all" style={{ width: `${d}%`, backgroundColor: DC, opacity: dL ? 0.95 : 0.35 }} />
       </div>
-      <span className="font-mono text-[10px] w-9" style={{ color: DC, opacity: dL ? 1 : 0.55 }}>{d}%</span>
+      <span className="font-mono text-[10px] w-8 sm:w-9 flex-shrink-0" style={{ color: DC, opacity: dL ? 1 : 0.55 }}>{d}%</span>
     </div>
   )
 }
@@ -206,6 +206,10 @@ function CategoryHeatmap({ catData, sorted }) {
   let lastGroup = null
 
   return (
+    <>
+    <p className="sm:hidden font-mono text-[10px] tracking-kicker text-gray-500 uppercase mb-2">
+      Swipe grid → for more years
+    </p>
     <div className="overflow-x-auto -mx-1">
       <div style={{ minWidth: LABEL_W + years.length * CELL + 16, paddingRight: 8 }}>
         {/* Year column headers */}
@@ -302,6 +306,7 @@ function CategoryHeatmap({ catData, sorted }) {
         </div>
       </div>
     </div>
+    </>
   )
 }
 
@@ -1058,16 +1063,16 @@ function CategoryRow({ cat, view, expanded, onToggle }) {
     <>
       <div
         onClick={onToggle}
-        className={`flex items-center gap-3 rounded-lg px-3 py-2 cursor-pointer transition-colors ${
+        className={`flex items-center gap-2 sm:gap-3 rounded-lg px-2 sm:px-3 py-2 cursor-pointer transition-colors ${
           expanded ? 'bg-night-700/60' : 'hover:bg-night-700/30'
         }`}
         style={{ opacity: labelOpacity }}
       >
-        <div className="w-44 flex-shrink-0 text-right">
-          <span className="text-xs text-gray-300 leading-tight">{cat.name.replace('Best ', '')}</span>
+        <div className="w-24 sm:w-44 flex-shrink-0 text-right">
+          <span className="text-xs text-gray-300 leading-tight block truncate">{cat.name.replace('Best ', '')}</span>
         </div>
         {view === 'accuracy' ? <MiniBar h={h} d={d} /> : <SplitBar h={h} d={d} />}
-        <div className="w-14 flex-shrink-0 text-xs font-semibold text-right" style={{ color: edgeColor }}>
+        <div className="hidden sm:block w-14 flex-shrink-0 text-xs font-semibold text-right" style={{ color: edgeColor }}>
           {edgeLabel}
         </div>
         <div className={`text-gray-500 text-xs transition-transform ${expanded ? 'rotate-180' : ''}`}>▼</div>
