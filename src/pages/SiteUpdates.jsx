@@ -2,6 +2,16 @@
 
 const UPDATES = [
   {
+    date: 'July 7, 2026',
+    entries: [
+      {
+        tag: 'Films',
+        color: 'film',
+        text: 'Scoring correction — Superman: The Movie (2026 Edition): Dustin\'s acclaim score was recorded as 8, but the jointly agreed acclaim was 7. Corrected, with the full ripple applied: Dustin\'s total drops 84→83, moving Superman from #39 to #40 on his list (it stays ahead of Avengers: Infinity War on the nines tiebreaker; Good Will Hunting moves up to #39). On the combined list, Superman\'s average rank moves to 24.00, so Indiana Jones and the Last Crusade takes #16 and Superman is now #17. Both lists verified with no duplicate ranks.',
+      },
+    ],
+  },
+  {
     date: 'July 3, 2026',
     entries: [
       {
