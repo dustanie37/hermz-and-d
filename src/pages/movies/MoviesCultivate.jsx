@@ -6,10 +6,12 @@
 // reveal shows the two lists side by side (titles only; no ranks exist yet).
 // One-for-one swaps after lock arrive with 12c.
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
+import { searchFilmsByQuery } from '../../lib/omdb'
+import { createAndEnrichFilm } from '../../lib/filmEnrich'
 import FilmStill from '../../components/FilmStill'
 import { sortTitle } from '../../lib/helpers'
 import { TestBadge } from './MoviesEventAdmin'
@@ -48,7 +50,7 @@ function BucketButtons({ row, onBucket }) {
 
 // ── Roster column (post-lock reveal) ──────────────────────────────────────────
 
-function RosterColumn({ title, accent, films, sharedIds }) {
+function RosterColumn({ title, accent, films, sharedIds, onSwap }) {
   return (
     <div className={`card p-5 border-t-2 ${accent === 'film' ? 'border-t-film-500' : 'border-t-gold-500'}`}>
       <p className={`font-display text-xl tracking-wide leading-none mb-4 ${accent === 'film' ? 'text-film-300' : 'text-gold-300'}`}>
@@ -56,16 +58,141 @@ function RosterColumn({ title, accent, films, sharedIds }) {
       </p>
       <ol className="space-y-1.5">
         {films.map(f => (
-          <li key={f.id} className="flex items-baseline gap-2 text-sm">
+          <li key={f.id} className="group flex items-baseline gap-2 text-sm">
             <span className="text-gray-200">{f.title}</span>
             <span className="font-mono text-[10px] tracking-kicker text-gray-500">{f.release_year ?? ''}</span>
             {sharedIds.has(f.id) && (
               <span className="font-mono text-[9px] tracking-cinema uppercase px-1.5 py-px rounded
                                bg-cinema-500/10 border border-cinema-500/30 text-cinema-300">both</span>
             )}
+            {onSwap && (
+              <button onClick={() => onSwap(f)}
+                      title="One-for-one swap"
+                      className="ml-auto font-mono text-[10px] tracking-kicker uppercase text-gray-600
+                                 opacity-0 group-hover:opacity-100 hover:text-gold-400 transition-all">
+                ⇄ swap
+              </button>
+            )}
           </li>
         ))}
       </ol>
+    </div>
+  )
+}
+
+// ── One-for-one swap modal (post-lock, until scoring starts) ──────────────────
+
+function SwapModal({ outFilm, poolCandidates, onClose, onSwap }) {
+  const [tab, setTab]           = useState(poolCandidates.length > 0 ? 'pool' : 'search')
+  const [query, setQuery]       = useState('')
+  const [results, setResults]   = useState([])
+  const [searching, setSearching] = useState(false)
+  const [busyId, setBusyId]     = useState(null)
+  const inputRef = useRef(null)
+
+  useEffect(() => { if (tab === 'search') inputRef.current?.focus() }, [tab])
+
+  async function handleSearch(e) {
+    e.preventDefault()
+    if (!query.trim()) return
+    setSearching(true); setResults([])
+    try { setResults(await searchFilmsByQuery(query.trim())) }
+    catch { /* noop */ }
+    setSearching(false)
+  }
+
+  async function pick(kind, item) {
+    const key = kind === 'pool' ? `p${item.id}` : `s${item.imdbId}`
+    if (busyId) return
+    if (!window.confirm(`Swap out “${outFilm.title}” for “${kind === 'pool' ? item.films?.title : item.title}”?`)) return
+    setBusyId(key)
+    await onSwap(kind, item)
+    setBusyId(null)
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-night-950/80 backdrop-blur-md" onClick={onClose} />
+      <div className="relative z-10 w-full max-w-lg bg-night-900 border border-white/[0.1]
+                      rounded-2xl shadow-still-lg flex flex-col max-h-[85vh]"
+           onClick={e => e.stopPropagation()}>
+
+        <div className="flex items-center justify-between p-5 border-b border-night-700/60">
+          <div>
+            <span className="kicker">One-for-one swap</span>
+            <h2 className="font-display text-2xl text-white tracking-wide leading-none mt-1.5">
+              OUT: {outFilm.title?.toUpperCase()}
+            </h2>
+          </div>
+          <button onClick={onClose}
+                  className="text-gray-500 hover:text-gray-200 transition-colors text-xl leading-none w-8 h-8
+                             flex items-center justify-center rounded-full hover:bg-white/5">✕</button>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex border-b border-night-700/60">
+          <button onClick={() => setTab('pool')}
+            className={`flex-1 py-3 font-display text-sm tracking-wide transition-all
+              ${tab === 'pool' ? 'text-film-300 border-b-2 border-film-400' : 'text-gray-500 hover:text-gray-300'}`}>
+            FROM YOUR POOL ({poolCandidates.length})
+          </button>
+          <button onClick={() => setTab('search')}
+            className={`flex-1 py-3 font-display text-sm tracking-wide transition-all
+              ${tab === 'search' ? 'text-gold-300 border-b-2 border-gold-400' : 'text-gray-500 hover:text-gray-300'}`}>
+            SEARCH
+          </button>
+        </div>
+
+        {tab === 'search' && (
+          <div className="p-4 border-b border-night-700/60">
+            <form onSubmit={handleSearch} className="flex gap-2">
+              <input ref={inputRef} type="text" value={query} onChange={e => setQuery(e.target.value)}
+                     placeholder="Search any film…" className="input flex-1 text-sm" />
+              <button type="submit" disabled={searching || !query.trim()}
+                      className="btn-gold text-sm px-4 disabled:opacity-50">{searching ? '…' : 'Search'}</button>
+            </form>
+          </div>
+        )}
+
+        <div className="overflow-y-auto flex-1 p-2">
+          {tab === 'pool' && poolCandidates.map(row => (
+            <div key={row.id} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-night-700/40 transition-colors">
+              <FilmStill src={row.films?.poster_url} title={row.films?.title ?? ''}
+                         className="w-10 h-14 rounded border border-white/10 flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-white truncate">{row.films?.title}</p>
+                <p className="font-mono text-[10px] tracking-kicker text-gray-500 uppercase mt-0.5">
+                  {row.films?.release_year ?? '—'} · was {row.bucket}
+                </p>
+              </div>
+              <button onClick={() => pick('pool', row)} disabled={!!busyId}
+                      className="btn-film text-xs px-3 py-1.5 disabled:opacity-50 whitespace-nowrap">
+                {busyId === `p${row.id}` ? '…' : '⇄ Swap in'}
+              </button>
+            </div>
+          ))}
+          {tab === 'pool' && poolCandidates.length === 0 && (
+            <p className="text-sm text-gray-500 text-center py-8 italic">No leftover pool films — use Search.</p>
+          )}
+          {tab === 'search' && results.map(item => (
+            <div key={item.imdbId} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-night-700/40 transition-colors">
+              <FilmStill src={item.posterUrl} title={item.title}
+                         className="w-10 h-14 rounded border border-white/10 flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-white truncate">{item.title}</p>
+                <p className="font-mono text-[10px] tracking-kicker text-gray-500 uppercase mt-0.5">{item.year}</p>
+              </div>
+              <button onClick={() => pick('search', item)} disabled={!!busyId}
+                      className="btn-gold text-xs px-3 py-1.5 disabled:opacity-50 whitespace-nowrap">
+                {busyId === `s${item.imdbId}` ? 'Adding…' : '⇄ Swap in'}
+              </button>
+            </div>
+          ))}
+          {tab === 'search' && results.length === 0 && !searching && (
+            <p className="text-sm text-gray-500 text-center py-8 italic">Search for the incoming film.</p>
+          )}
+        </div>
+      </div>
     </div>
   )
 }
@@ -85,6 +212,7 @@ export default function MoviesCultivate() {
   const [error, setError]         = useState(null)
   const [tab, setTab]             = useState('unsorted')
   const [locking, setLocking]     = useState(false)
+  const [swapOut, setSwapOut]     = useState(null)   // outgoing pool row during a swap
 
   async function load() {
     setLoading(true); setError(null)
@@ -184,6 +312,47 @@ export default function MoviesCultivate() {
   const sortedRoster = films => [...films].sort((a, b) => sortTitle(a.title).localeCompare(sortTitle(b.title)))
 
   const cultivating = event?.status === 'pooling' && me && !iAmLocked
+  const canSwap     = me?.state === 'cultivated'   // swaps close once scoring starts
+  const poolCandidates = useMemo(
+    () => [...byBucket.maybe, ...byBucket.out, ...byBucket.unsorted]
+      .sort((a, b) => sortTitle(a.films?.title ?? '').localeCompare(sortTitle(b.films?.title ?? ''))),
+    [byBucket],
+  )
+
+  function openSwap(film) {
+    const row = byBucket.in.find(r => r.films?.id === film.id)
+    if (row) setSwapOut(row)
+  }
+
+  async function performSwap(kind, item) {
+    if (!swapOut) return
+    setError(null)
+    try {
+      // 1. Incoming film goes IN
+      if (kind === 'pool') {
+        const { error } = await supabase
+          .from('event_pool').update({ bucket: 'in' }).eq('id', item.id).eq('user_id', user.id)
+        if (error) throw error
+      } else {
+        const res = await createAndEnrichFilm(item.imdbId)
+        const { error } = await supabase.from('event_pool').upsert(
+          { event_id: event.id, user_id: user.id, film_id: res.filmId, source: 'manual', bucket: 'in' },
+          { onConflict: 'event_id,user_id,film_id' },
+        )
+        if (error) throw error
+      }
+      // 2. Outgoing film leaves
+      const { error: outErr } = await supabase
+        .from('event_pool').update({ bucket: 'out' }).eq('id', swapOut.id).eq('user_id', user.id)
+      if (outErr) throw outErr
+      setSwapOut(null)
+      await load()
+    } catch (err) {
+      setError(`Swap failed: ${err.message} — check your list count.`)
+      setSwapOut(null)
+      await load()
+    }
+  }
 
   return (
     <div>
@@ -342,6 +511,11 @@ export default function MoviesCultivate() {
         )}
 
         {/* ── LOCKED / ROSTER REVEAL ───────────────────────────────────── */}
+        {!loading && event && iAmLocked && canSwap && myInFilms.length !== listSize && (
+          <div className="mb-6 p-4 rounded-xl border border-amber-500/40 bg-amber-500/10 text-sm text-amber-300">
+            Your list is at {myInFilms.length} of {listSize} — an unfinished swap, most likely. Swap a film in or out to get back to exactly {listSize}.
+          </div>
+        )}
         {!loading && event && iAmLocked && (
           otherLocked && otherIn ? (
             <>
@@ -358,16 +532,24 @@ export default function MoviesCultivate() {
                   accent="film"
                   films={sortedRoster(isDustin ? myInFilms : otherIn)}
                   sharedIds={sharedIds}
+                  onSwap={isDustin && canSwap ? openSwap : undefined}
                 />
                 <RosterColumn
                   title={`${!isDustin ? 'Matt' : otherProf?.display_name ?? 'Matt'}'s ${listSize}`}
                   accent="gold"
                   films={sortedRoster(!isDustin ? myInFilms : otherIn)}
                   sharedIds={sharedIds}
+                  onSwap={!isDustin && canSwap ? openSwap : undefined}
                 />
               </div>
-              <p className="font-serif italic text-sm text-gray-500 mt-6 text-center">
-                Next: agree the acclaim sources, then acclaim — one-for-one swaps stay open until scoring begins.
+              <div className="mt-8 flex items-center justify-center gap-4 flex-wrap">
+                <Link to="/movies/acclaim-sources" className="btn-ghost text-xs">Acclaim Sources</Link>
+                <Link to="/movies/event-acclaim" className="btn-gold text-xs">Acclaim Workspace →</Link>
+              </div>
+              <p className="font-serif italic text-sm text-gray-500 mt-4 text-center">
+                {canSwap
+                  ? 'Hover your own list to make a one-for-one swap — open until scoring begins.'
+                  : 'Swaps are closed — scoring has begun.'}
               </p>
             </>
           ) : (
@@ -381,21 +563,42 @@ export default function MoviesCultivate() {
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                 {sortedRoster(myInFilms).map(f => (
-                  <FilmStill key={f.id} src={byBucket.in.find(r => r.films?.id === f.id)?.films?.poster_url}
-                             title={f.title}
-                             className="aspect-[2/3] rounded-lg border border-emerald-500/25">
-                    <div className="absolute inset-x-0 bottom-0 p-2.5 pointer-events-none"
-                         style={{ background: 'linear-gradient(180deg, transparent 25%, rgba(0,0,0,0.93) 100%)' }}>
-                      <p className="font-mono text-[10px] tracking-kicker text-white/60 uppercase">{f.release_year ?? '—'}</p>
-                      <p className="font-display text-sm text-white tracking-wide leading-tight line-clamp-2">
-                        {f.title?.toUpperCase()}
-                      </p>
-                    </div>
-                  </FilmStill>
+                  <div key={f.id} className="group relative">
+                    <FilmStill src={byBucket.in.find(r => r.films?.id === f.id)?.films?.poster_url}
+                               title={f.title}
+                               className="aspect-[2/3] rounded-lg border border-emerald-500/25">
+                      <div className="absolute inset-x-0 bottom-0 p-2.5 pointer-events-none"
+                           style={{ background: 'linear-gradient(180deg, transparent 25%, rgba(0,0,0,0.93) 100%)' }}>
+                        <p className="font-mono text-[10px] tracking-kicker text-white/60 uppercase">{f.release_year ?? '—'}</p>
+                        <p className="font-display text-sm text-white tracking-wide leading-tight line-clamp-2">
+                          {f.title?.toUpperCase()}
+                        </p>
+                      </div>
+                      {canSwap && (
+                        <button onClick={() => openSwap(f)}
+                                title="One-for-one swap"
+                                className="absolute top-2 right-2 px-2 py-1 rounded-full bg-night-950/80 border border-white/20
+                                           font-mono text-[10px] tracking-kicker text-gray-300 uppercase
+                                           hover:bg-gold-500/80 hover:text-night-950 hover:border-gold-500
+                                           transition-all opacity-0 group-hover:opacity-100">
+                          ⇄ swap
+                        </button>
+                      )}
+                    </FilmStill>
+                  </div>
                 ))}
               </div>
             </>
           )
+        )}
+
+        {swapOut && (
+          <SwapModal
+            outFilm={swapOut.films ?? {}}
+            poolCandidates={poolCandidates}
+            onClose={() => setSwapOut(null)}
+            onSwap={performSwap}
+          />
         )}
       </div>
     </div>

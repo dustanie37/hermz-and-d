@@ -34,6 +34,8 @@ import MoviesWatchlist     from './pages/movies/MoviesWatchlist'
 import MoviesEventAdmin    from './pages/movies/MoviesEventAdmin'
 import MoviesPool          from './pages/movies/MoviesPool'
 import MoviesCultivate     from './pages/movies/MoviesCultivate'
+import MoviesAcclaimSources from './pages/movies/MoviesAcclaimSources'
+import MoviesEventAcclaim   from './pages/movies/MoviesEventAcclaim'
 
 /** Redirect to /login if not authenticated */
 function Protected({ children }) {
@@ -82,6 +84,8 @@ function AppRoutes() {
         <Route path="/movies/event-admin"     element={<Protected><MoviesEventAdmin /></Protected>} />
         <Route path="/movies/pool"            element={<Protected><MoviesPool /></Protected>} />
         <Route path="/movies/cultivate"       element={<Protected><MoviesCultivate /></Protected>} />
+        <Route path="/movies/acclaim-sources" element={<Protected><MoviesAcclaimSources /></Protected>} />
+        <Route path="/movies/event-acclaim"   element={<Protected><MoviesEventAcclaim /></Protected>} />
         <Route path="/movies/:filmId"   element={<Protected><MovieDetail /></Protected>} />
 
         {/* Fallback */}

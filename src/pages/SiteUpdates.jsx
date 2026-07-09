@@ -7,6 +7,11 @@ const UPDATES = [
       {
         tag: 'Films',
         color: 'film',
+        text: 'Phase 12c — Acclaim, together. Two new stages after the roster reveal. Acclaim Sources: agree which external lists count for this event (AFI, Sight & Sound, IMDB Top 250, and the rest) — confirming freezes a snapshot of each list\'s data so every film is judged against identical evidence, even if a list gets re-imported later. Acclaim Workspace: the union of both locked lists, each film carrying a "Both lists / D only / Hermz only" badge, its appearances on the confirmed sources (with rank), and its Oscar record — with the jointly-agreed score (/10) editable inline. Plus: one-for-one swaps are live on the cultivation page — hover your locked list, swap a film out for one from your leftover pool or a fresh search, open until scoring begins. Auto-suggested acclaim scores arrive once the rules questionnaire is settled.',
+      },
+      {
+        tag: 'Films',
+        color: 'film',
         text: 'Phase 12b — Cultivation. The pool builder\'s companion is here: sort every candidate into In, Maybe, or Out with one tap, watch the live counter ("In: 8/10 · 2 spots left"), and the Lock button only arms when In hits the event\'s exact list size. After locking, your list is read-only and hidden; the moment both players lock, the roster reveal shows the two lists side by side — titles only, shared films flagged, no ranks in existence yet. One-for-one swaps arrive with the acclaim stage.',
       },
       {
