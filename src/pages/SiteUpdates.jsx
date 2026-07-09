@@ -7,6 +7,11 @@ const UPDATES = [
       {
         tag: 'Films',
         color: 'film',
+        text: 'Phase 12b — Cultivation. The pool builder\'s companion is here: sort every candidate into In, Maybe, or Out with one tap, watch the live counter ("In: 8/10 · 2 spots left"), and the Lock button only arms when In hits the event\'s exact list size. After locking, your list is read-only and hidden; the moment both players lock, the roster reveal shows the two lists side by side — titles only, shared films flagged, no ranks in existence yet. One-for-one swaps arrive with the acclaim stage.',
+      },
+      {
+        tag: 'Films',
+        color: 'film',
         text: 'Ranking events now carry their own target list size. Real editions default to the traditional 125; the Test Run is set to just 10 films, so the whole workflow — pooling, cultivating, scoring, the reveal — can be proven end-to-end in an evening instead of a marathon. The size is set when creating an event and shows on the event card.',
       },
       {

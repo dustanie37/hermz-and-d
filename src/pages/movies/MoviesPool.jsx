@@ -75,6 +75,7 @@ export default function MoviesPool() {
   const user = session?.user
 
   const [event, setEvent]       = useState(undefined)  // undefined = loading, null = none
+  const [myState, setMyState]   = useState(null)       // event_players.state for me
   const [pool, setPool]         = useState([])
   const [prior, setPrior]       = useState([])          // [{ film, years: [] }]
   const [watch, setWatch]       = useState([])
@@ -108,7 +109,7 @@ export default function MoviesPool() {
       setEvent(ev)
       if (!ev) { setLoading(false); return }
 
-      const [poolRes, ranksRes, eventsRes, watchRes] = await Promise.all([
+      const [poolRes, ranksRes, eventsRes, watchRes, meRes] = await Promise.all([
         supabase.from('event_pool')
           .select('*, films (id, title, release_year, poster_url)')
           .eq('event_id', ev.id).eq('user_id', user.id),
@@ -117,9 +118,11 @@ export default function MoviesPool() {
           .eq('user_id', user.id),
         supabase.from('ranking_events').select('id, year').eq('status', 'published'),
         supabase.from('watchlist').select('*').eq('user_id', user.id),
+        supabase.from('event_players').select('state').eq('event_id', ev.id).eq('user_id', user.id).maybeSingle(),
       ])
       const err = poolRes.error || ranksRes.error || eventsRes.error || watchRes.error
       if (err) { setError(err.message); setLoading(false); return }
+      setMyState(meRes.data?.state ?? null)
 
       setPool(poolRes.data || [])
 
@@ -287,13 +290,23 @@ export default function MoviesPool() {
 
   // ── Gates ───────────────────────────────────────────────────────────────
 
-  const poolingOpen = event && event.status === 'pooling'
+  const iAmLocked   = ['cultivated', 'scoring', 'locked'].includes(myState)
+  const poolingOpen = event && event.status === 'pooling' && !iAmLocked
 
   return (
     <div>
       {/* ── HERO ─────────────────────────────────────────────────────────── */}
       <FilmStill title="Pool Building" hue={222} mood="cool" className="w-full h-[300px] sm:h-[340px]">
         <div className="absolute inset-0 scrim-bottom" />
+
+        {/* Cultivate — top right */}
+        {!loading && poolingOpen && pool.length > 0 && (
+          <div className="absolute top-6 right-6 sm:right-10 z-10">
+            <Link to="/movies/cultivate" className="btn-gold text-xs">
+              Cultivate to {event?.list_size ?? 125} →
+            </Link>
+          </div>
+        )}
         <div className="absolute inset-x-0 bottom-0 px-6 sm:px-10 pb-7 z-10">
           <div className="flex items-center gap-3 mb-3">
             <Link to="/movies" className="font-mono text-[11px] tracking-kicker text-film-400 hover:text-film-300 transition-colors">
@@ -350,7 +363,17 @@ export default function MoviesPool() {
           </div>
         )}
 
-        {!loading && event && !poolingOpen && event.status !== 'setup' && (
+        {!loading && event && event.status === 'pooling' && iAmLocked && (
+          <div className="card text-center py-16 space-y-4">
+            <p className="font-display text-2xl text-white tracking-wide leading-none">YOUR LIST IS LOCKED</p>
+            <p className="font-serif italic text-base text-gray-500 max-w-sm mx-auto">
+              You've cultivated your {event.list_size ?? 125} — the pool is frozen.
+            </p>
+            <Link to="/movies/cultivate" className="btn-gold text-sm inline-block mt-2">View your list →</Link>
+          </div>
+        )}
+
+        {!loading && event && event.status !== 'pooling' && event.status !== 'setup' && (
           <div className="card text-center py-16 space-y-4">
             <p className="font-display text-2xl text-white tracking-wide leading-none">POOLING IS CLOSED</p>
             <p className="font-serif italic text-base text-gray-500 max-w-sm mx-auto">
