@@ -68,7 +68,7 @@ export default function MoviesLists() {
       ] = await Promise.all([
         supabase.from('combined_rankings').select('film_id, event_id, combined_rank'),
         supabase.from('individual_rankings').select('film_id, event_id, user_id, rank'),
-        supabase.from('ranking_events').select('id, year'),
+        supabase.from('ranking_events').select('id, year').eq('status', 'published'),
         supabase.from('profiles').select('id, username'),
       ])
       const eventYearMap = {}

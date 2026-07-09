@@ -7,6 +7,11 @@ const UPDATES = [
       {
         tag: 'Films',
         color: 'film',
+        text: 'Fix: unpublished ranking events no longer leak into the public pages. Creating the test event revealed that the Films home, Rankings, Stats, All Films, External Lists, Acclaim, film detail, and site Home all listed every ranking event — including unpublished ones — so a brand-new event showed up as a phantom empty edition. All eight pages now show published editions only; in-progress and test events stay behind the curtain until publish.',
+      },
+      {
+        tag: 'Films',
+        color: 'film',
         text: 'Test runs — the ranking-event workflow now has a sandbox mode. When creating an event, Dustin can choose "Test Run" instead of "The Real Thing": a test event runs through the exact same pages and rules (pooling, cultivation, scoring, the reveal) but wears an amber TEST badge everywhere, can never be published to the site, and can be deleted along with all of its data at any time. Perfect for trying out each new stage of the workflow as it\'s built, without any risk to the real Canon.',
       },
       {

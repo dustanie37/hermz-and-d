@@ -261,7 +261,7 @@ export default function MovieDetail() {
         { data: nomData },
       ] = await Promise.all([
         supabase.from('films').select('*').eq('id', id).single(),
-        supabase.from('ranking_events').select('id,year,label').order('year'),
+        supabase.from('ranking_events').select('id,year,label').eq('status', 'published').order('year'),
         supabase.from('individual_rankings').select(`*, profiles(username), ranking_events(year)`).eq('film_id', id),
         supabase.from('combined_rankings').select(`*, ranking_events(year)`).eq('film_id', id),
         supabase.from('film_oscar_noms').select('*').eq('film_id', id).order('is_winner', { ascending: false }).order('category_name'),

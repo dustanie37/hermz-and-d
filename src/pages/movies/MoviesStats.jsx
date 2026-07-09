@@ -1519,7 +1519,7 @@ export default function MoviesStats() {
   useEffect(() => {
     async function loadMeta() {
       const [{ data: evData }, { data: profData }] = await Promise.all([
-        supabase.from('ranking_events').select('id,year,label').order('year'),
+        supabase.from('ranking_events').select('id,year,label').eq('status', 'published').order('year'),
         supabase.from('profiles').select('id,username'),
       ])
       setEvents(evData || [])

@@ -30,7 +30,7 @@ export default function Home() {
       { count: filmCount },
     ] = await Promise.all([
       supabase.from('v_oscar_year_summary').select('*').order('year', { ascending: false }),
-      supabase.from('ranking_events').select('id, year, label').order('year', { ascending: false }),
+      supabase.from('ranking_events').select('id, year, label').eq('status', 'published').order('year', { ascending: false }),
       supabase.from('films').select('*', { count: 'exact', head: true }),
     ])
 

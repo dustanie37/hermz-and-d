@@ -29,7 +29,7 @@ export default function MoviesHome() {
         { data: topCombined },
         { data: topIndividual },
       ] = await Promise.all([
-        supabase.from('ranking_events').select('id, year, label').order('year', { ascending: false }),
+        supabase.from('ranking_events').select('id, year, label').eq('status', 'published').order('year', { ascending: false }),
         supabase.from('combined_rankings').select('event_id'),
         supabase.from('films').select('*', { count: 'exact', head: true }),
         supabase.from('combined_rankings')

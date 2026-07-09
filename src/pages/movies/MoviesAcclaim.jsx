@@ -178,7 +178,7 @@ export default function MoviesAcclaim() {
         supabase.from('films').select('*').order('title'),
         supabase.from('individual_rankings').select('film_id, rank, ranking_events(year), profiles(username)'),
         supabase.from('combined_rankings').select('film_id, combined_rank, ranking_events(year)'),
-        supabase.from('ranking_events').select('id,year').order('year'),
+        supabase.from('ranking_events').select('id,year').eq('status', 'published').order('year'),
       ])
       if (fe) throw fe; if (ie) throw ie; if (ce) throw ce; if (ee) throw ee
 
