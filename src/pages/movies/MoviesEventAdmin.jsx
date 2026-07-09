@@ -36,6 +36,15 @@ function StatusBadge({ status }) {
   )
 }
 
+export function TestBadge() {
+  return (
+    <span className="font-mono text-[9px] tracking-cinema uppercase px-1.5 py-px rounded
+                     bg-amber-500/15 border border-amber-500/40 text-amber-300">
+      Test
+    </span>
+  )
+}
+
 // ── Status stepper for the active event ───────────────────────────────────────
 
 function StatusStepper({ status }) {
@@ -79,6 +88,7 @@ export default function MoviesEventAdmin() {
   const [showCreate, setShowCreate] = useState(false)
   const [newLabel, setNewLabel]     = useState('')
   const [newYear, setNewYear]       = useState(String(new Date().getFullYear()))
+  const [newIsTest, setNewIsTest]   = useState(false)
 
   async function load() {
     const [evRes, plRes, prRes] = await Promise.all([
@@ -118,9 +128,20 @@ export default function MoviesEventAdmin() {
     setBusy(true); setError(null)
     const { error } = await supabase
       .from('ranking_events')
-      .insert({ label: newLabel.trim(), year, status: 'setup' })
+      .insert({ label: newLabel.trim(), year, status: 'setup', is_test: newIsTest })
     if (error) setError(error.message)
-    else { setShowCreate(false); setNewLabel(''); await load() }
+    else { setShowCreate(false); setNewLabel(''); setNewIsTest(false); await load() }
+    setBusy(false)
+  }
+
+  async function deleteTestEvent(event) {
+    if (!event.is_test) return
+    if (!window.confirm(`Delete “${event.label}” and ALL its test data (pools, scores, player progress)?\n\nThis cannot be undone — but it's a test, that's the point.`)) return
+    setBusy(true); setError(null)
+    const { error } = await supabase
+      .from('ranking_events').delete().eq('id', event.id).eq('is_test', true)
+    if (error) setError(error.message)
+    else await load()
     setBusy(false)
   }
 
@@ -207,11 +228,12 @@ export default function MoviesEventAdmin() {
           <div className="card p-6 space-y-6">
             <div className="flex items-start justify-between gap-4 flex-wrap">
               <div>
-                <p className="font-display text-3xl text-white tracking-wide leading-none">
+                <p className="font-display text-3xl text-white tracking-wide leading-none flex items-center gap-2.5">
                   {activeEvent.label.toUpperCase()}
+                  {activeEvent.is_test && <TestBadge />}
                 </p>
                 <p className="font-mono text-[11px] tracking-kicker text-gray-500 uppercase mt-2">
-                  {activeEvent.year} Edition
+                  {activeEvent.year} Edition{activeEvent.is_test && ' · sandbox — never publishes'}
                 </p>
               </div>
               <StatusBadge status={activeEvent.status} />
@@ -245,18 +267,30 @@ export default function MoviesEventAdmin() {
               </div>
             )}
 
-            {/* Controls */}
+            {/* Controls — test events stop at Revealed; publishing is for real editions only */}
             <div className="flex items-center gap-3 flex-wrap border-t border-night-700/60 pt-5">
-              {currentIdx < STATUS_FLOW.length - 1 && (
+              {currentIdx < STATUS_FLOW.length - 1 &&
+               !(activeEvent.is_test && STATUS_FLOW[currentIdx + 1] === 'published') && (
                 <button onClick={() => advanceStatus(activeEvent, 1)} disabled={busy}
                         className="btn-gold text-xs disabled:opacity-50">
                   Advance → {STATUS_META[STATUS_FLOW[currentIdx + 1]].label}
                 </button>
               )}
+              {activeEvent.is_test && activeEvent.status === 'revealed' && (
+                <span className="font-mono text-[10px] tracking-kicker text-amber-300 uppercase">
+                  End of the line — test events never publish
+                </span>
+              )}
               {currentIdx > 0 && (
                 <button onClick={() => advanceStatus(activeEvent, -1)} disabled={busy}
                         className="btn-ghost text-xs disabled:opacity-50">
                   ← Back to {STATUS_META[STATUS_FLOW[currentIdx - 1]].label}
+                </button>
+              )}
+              {activeEvent.is_test && (
+                <button onClick={() => deleteTestEvent(activeEvent)} disabled={busy}
+                        className="font-mono text-[11px] tracking-kicker text-gray-500 hover:text-red-400 uppercase transition-colors disabled:opacity-50">
+                  ✕ Delete test event
                 </button>
               )}
               {activeEvent.status !== 'setup' && (
@@ -270,6 +304,27 @@ export default function MoviesEventAdmin() {
         ) : showCreate ? (
           <form onSubmit={handleCreate} className="card p-6 space-y-4">
             <p className="font-display text-2xl text-white tracking-wide leading-none">NEW EDITION</p>
+
+            {/* Real vs. test */}
+            <div className="grid grid-cols-2 gap-2">
+              <button type="button" onClick={() => setNewIsTest(false)}
+                className={`rounded-xl px-3 py-2.5 text-left border transition-all
+                  ${!newIsTest
+                    ? 'bg-gold-500/10 border-gold-500/50 text-gold-300'
+                    : 'border-white/10 text-gray-500 hover:border-white/20 hover:text-gray-300'}`}>
+                <p className="font-display text-xs tracking-wide leading-none">THE REAL THING</p>
+                <p className="font-mono text-[11px] tracking-kicker text-current/70 mt-1 leading-tight">The next Canon edition</p>
+              </button>
+              <button type="button" onClick={() => { setNewIsTest(true); if (!newLabel.trim()) setNewLabel('Test Run') }}
+                className={`rounded-xl px-3 py-2.5 text-left border transition-all
+                  ${newIsTest
+                    ? 'bg-amber-500/10 border-amber-500/50 text-amber-300'
+                    : 'border-white/10 text-gray-500 hover:border-white/20 hover:text-gray-300'}`}>
+                <p className="font-display text-xs tracking-wide leading-none">TEST RUN</p>
+                <p className="font-mono text-[11px] tracking-kicker text-current/70 mt-1 leading-tight">Sandbox — never publishes, delete anytime</p>
+              </button>
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="sm:col-span-2">
                 <label className="font-mono text-[11px] tracking-kicker text-gray-500 uppercase block mb-1.5">Label</label>
@@ -293,7 +348,9 @@ export default function MoviesEventAdmin() {
               </button>
             </div>
             <p className="font-serif italic text-xs text-gray-500">
-              The event starts in Setup — nothing is visible to players until you advance it to Pooling.
+              {newIsTest
+                ? 'A test run works exactly like the real workflow — same pages, same rules — but wears a TEST badge, can never be published, and can be deleted (with all its data) at any time.'
+                : 'The event starts in Setup — nothing is visible to players until you advance it to Pooling.'}
             </p>
           </form>
         ) : (

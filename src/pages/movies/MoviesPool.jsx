@@ -13,6 +13,7 @@ import { searchFilmsByQuery } from '../../lib/omdb'
 import { createAndEnrichFilm } from '../../lib/filmEnrich'
 import FilmStill from '../../components/FilmStill'
 import { sortTitle } from '../../lib/helpers'
+import { TestBadge } from './MoviesEventAdmin'
 
 const SOURCE_META = {
   prior:     { label: 'Prior Edition', color: 'text-film-400',   chip: 'bg-film-500/15 text-film-300 border-film-500/30' },
@@ -299,8 +300,9 @@ export default function MoviesPool() {
               ← FILMS
             </Link>
             <span className="text-gray-700">/</span>
-            <span className="font-mono text-[11px] tracking-kicker text-white uppercase">
+            <span className="font-mono text-[11px] tracking-kicker text-white uppercase inline-flex items-center gap-2">
               {event?.label ?? 'Next Edition'}
+              {event?.is_test && <TestBadge />}
             </span>
           </div>
           <h1 className="font-display text-5xl sm:text-6xl text-white tracking-wide leading-none">

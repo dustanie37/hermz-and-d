@@ -7,6 +7,11 @@ const UPDATES = [
       {
         tag: 'Films',
         color: 'film',
+        text: 'Test runs — the ranking-event workflow now has a sandbox mode. When creating an event, Dustin can choose "Test Run" instead of "The Real Thing": a test event runs through the exact same pages and rules (pooling, cultivation, scoring, the reveal) but wears an amber TEST badge everywhere, can never be published to the site, and can be deleted along with all of its data at any time. Perfect for trying out each new stage of the workflow as it\'s built, without any risk to the real Canon.',
+      },
+      {
+        tag: 'Films',
+        color: 'film',
         text: 'The next Canon edition begins — Phase 12a of the new ranking-event workflow is live. Dustin can now create a ranking event and open pooling (Settings → Ranking Events), and each player gets a private Pool Builder (Films → Next Edition, appears once pooling opens) with three ways to gather candidates: pull every film from your own past editions in one click, import from your Future Consideration watchlist, or search OMDB for anything new. Films added by search or watchlist that aren\'t in the database yet are created and fully enriched on the spot — poster and credits, full 10-actor cast, and complete Oscar record — so no cleanup debt later. Pools are fully private: neither player can see the other\'s candidates. Next up: cultivating the pool down to exactly 125 (triage buckets).',
       },
     ],
