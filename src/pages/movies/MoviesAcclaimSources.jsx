@@ -43,15 +43,22 @@ export default function MoviesAcclaimSources() {
     setEvent(ev)
     if (!ev) { setLoading(false); return }
 
-    const [entriesRes, sourcesRes] = await Promise.all([
-      supabase.from('external_list_entries').select('list_name, film_id'),
-      supabase.from('event_list_sources').select('*').eq('event_id', ev.id),
-    ])
-    const err = entriesRes.error || sourcesRes.error
-    if (err) { setError(err.message); setLoading(false); return }
+    // Page through ALL entries — a single select caps at 1,000 rows and the
+    // lists total ~1,600 (the NFR alone is 900+), which silently undercounts.
+    const allEntries = []
+    for (let from = 0; ; from += 1000) {
+      const { data, error: pageErr } = await supabase
+        .from('external_list_entries').select('list_name, film_id')
+        .range(from, from + 999)
+      if (pageErr) { setError(pageErr.message); setLoading(false); return }
+      allEntries.push(...(data || []))
+      if (!data || data.length < 1000) break
+    }
+    const sourcesRes = await supabase.from('event_list_sources').select('*').eq('event_id', ev.id)
+    if (sourcesRes.error) { setError(sourcesRes.error.message); setLoading(false); return }
 
     const agg = {}
-    for (const row of entriesRes.data || []) {
+    for (const row of allEntries) {
       if (!agg[row.list_name]) agg[row.list_name] = { list_name: row.list_name, entries: 0, linked: 0 }
       agg[row.list_name].entries++
       if (row.film_id != null) agg[row.list_name].linked++
@@ -101,12 +108,19 @@ export default function MoviesAcclaimSources() {
       if (srcErr) throw srcErr
 
       // Freeze the evidence: copy film-linked rows for each confirmed list
-      const { data: entries, error: entErr } = await supabase
-        .from('external_list_entries')
-        .select('list_name, film_id, rank')
-        .in('list_name', [...selected])
-        .not('film_id', 'is', null)
-      if (entErr) throw entErr
+      // (paged — same 1,000-row cap caution as the counts above)
+      const entries = []
+      for (let from = 0; ; from += 1000) {
+        const { data, error: entErr } = await supabase
+          .from('external_list_entries')
+          .select('list_name, film_id, rank')
+          .in('list_name', [...selected])
+          .not('film_id', 'is', null)
+          .range(from, from + 999)
+        if (entErr) throw entErr
+        entries.push(...(data || []))
+        if (!data || data.length < 1000) break
+      }
       const snapRows = (entries || []).map(e => ({
         event_id: event.id, list_name: e.list_name, film_id: e.film_id, rank: e.rank,
       }))
