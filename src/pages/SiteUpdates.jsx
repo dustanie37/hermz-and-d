@@ -2,6 +2,16 @@
 
 const UPDATES = [
   {
+    date: 'July 9, 2026',
+    entries: [
+      {
+        tag: 'Films',
+        color: 'film',
+        text: 'The next Canon edition begins — Phase 12a of the new ranking-event workflow is live. Dustin can now create a ranking event and open pooling (Settings → Ranking Events), and each player gets a private Pool Builder (Films → Next Edition, appears once pooling opens) with three ways to gather candidates: pull every film from your own past editions in one click, import from your Future Consideration watchlist, or search OMDB for anything new. Films added by search or watchlist that aren\'t in the database yet are created and fully enriched on the spot — poster and credits, full 10-actor cast, and complete Oscar record — so no cleanup debt later. Pools are fully private: neither player can see the other\'s candidates. Next up: cultivating the pool down to exactly 125 (triage buckets).',
+      },
+    ],
+  },
+  {
     date: 'July 7, 2026',
     entries: [
       {

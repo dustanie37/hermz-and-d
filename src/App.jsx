@@ -31,6 +31,8 @@ import MoviesBackfill      from './pages/movies/MoviesBackfill'
 import MoviesOscarBackfill from './pages/movies/MoviesOscarBackfill'
 import MoviesDataHealth    from './pages/movies/MoviesDataHealth'
 import MoviesWatchlist     from './pages/movies/MoviesWatchlist'
+import MoviesEventAdmin    from './pages/movies/MoviesEventAdmin'
+import MoviesPool          from './pages/movies/MoviesPool'
 
 /** Redirect to /login if not authenticated */
 function Protected({ children }) {
@@ -76,6 +78,8 @@ function AppRoutes() {
         <Route path="/movies/backfill"        element={<Protected><MoviesBackfill /></Protected>} />
         <Route path="/movies/oscar-backfill"  element={<Protected><MoviesOscarBackfill /></Protected>} />
         <Route path="/movies/data-health"     element={<Protected><MoviesDataHealth /></Protected>} />
+        <Route path="/movies/event-admin"     element={<Protected><MoviesEventAdmin /></Protected>} />
+        <Route path="/movies/pool"            element={<Protected><MoviesPool /></Protected>} />
         <Route path="/movies/:filmId"   element={<Protected><MovieDetail /></Protected>} />
 
         {/* Fallback */}

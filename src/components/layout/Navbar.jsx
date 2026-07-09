@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { supabase } from '../../lib/supabase'
 
 
 const OSCARS_LINKS = [
@@ -24,6 +25,17 @@ export default function Navbar() {
   const navigate = useNavigate()
   const location = useLocation()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [hasActiveEvent, setHasActiveEvent] = useState(false)
+
+  // "Next Edition" sub-nav item appears once a ranking event opens (Phase 12a)
+  useEffect(() => {
+    if (!isAuthenticated) { setHasActiveEvent(false); return }
+    supabase
+      .from('ranking_events').select('id')
+      .in('status', ['pooling', 'scoring', 'locked', 'revealed'])
+      .limit(1)
+      .then(({ data }) => setHasActiveEvent((data?.length ?? 0) > 0))
+  }, [isAuthenticated])
 
   useEffect(() => { setMobileOpen(false) }, [location.pathname])
 
@@ -41,7 +53,10 @@ export default function Navbar() {
   const inFilms   = location.pathname.startsWith('/movies')
   const inPodcast = location.pathname.startsWith('/podcast')
 
-  const subLinks  = inOscars ? OSCARS_LINKS : inFilms ? FILMS_LINKS : inPodcast ? PODCAST_LINKS : null
+  const filmsLinks = hasActiveEvent
+    ? [...FILMS_LINKS, { to: '/movies/pool', label: 'Next Edition' }]
+    : FILMS_LINKS
+  const subLinks  = inOscars ? OSCARS_LINKS : inFilms ? filmsLinks : inPodcast ? PODCAST_LINKS : null
   const subAccent = inOscars ? 'gold' : inPodcast ? 'cinema' : 'blue'
 
   const activeSubStyle = (active) =>
@@ -286,7 +301,7 @@ export default function Navbar() {
 
             {/* Films */}
             <div className="px-4 py-2 font-mono text-[10px] tracking-kicker text-gray-600 uppercase">Films</div>
-            {FILMS_LINKS.map(({ to, label }) => (
+            {filmsLinks.map(({ to, label }) => (
               <NavLink key={to} to={to}
                 className={({ isActive }) =>
                   `flex items-center px-4 py-3 rounded-xl text-sm transition-colors ${

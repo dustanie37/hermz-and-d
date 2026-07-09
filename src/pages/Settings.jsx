@@ -82,6 +82,13 @@ export default function Settings() {
       {isDustin && (
         <Section title="Admin Tools">
           <ToolCard
+            to="/movies/event-admin"
+            title="Ranking Events"
+            description="Create the next Canon edition and drive it through pooling, scoring, the reveal ceremony, and publication."
+            tag="The Canon"
+            accent="film"
+          />
+          <ToolCard
             to="/movies/backfill"
             title="TMDb Actor Backfill"
             description="Fetch up to 10 cast members per film from The Movie Database and save to Supabase. Run once after adding the actor_6–10 columns."

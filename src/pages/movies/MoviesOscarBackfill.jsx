@@ -2,51 +2,18 @@ import { useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { ACTING_CATEGORIES, normalizeCategory } from '../../lib/oscarCategories'
+import { buildFilmPageQuery, queryWikidata, parseFilmPageBindings, processRows } from '../../lib/filmEnrich'
 
-const WIKIDATA_URL = 'https://query.wikidata.org/sparql'
 const BATCH_SIZE          = 10
 const CEREMONY_BATCH_SIZE = 5
 const DELAY_MS            = 2500
 
 /* Category normalisation moved to src/lib/oscarCategories.js (2026-07-03) —
-   shared with OscarsNewYear.jsx. Edit it THERE, never inline. */
-// ── SPARQL query builders ──────────────────────────────────────────────────────
-
-function buildFilmPageQuery(imdbIds) {
-  const values = imdbIds.map(id => `"${id}"`).join(' ')
-  return `
-SELECT ?imdbId ?awardUri ?awardLabel ?won ?year ?nomineeName WHERE {
-  VALUES ?imdbId { ${values} }
-  ?film wdt:P345 ?imdbId .
-  {
-    ?film p:P166 ?stmt .
-    ?stmt ps:P166 ?award .
-    BIND(true AS ?won)
-  } UNION {
-    ?film p:P1411 ?stmt .
-    ?stmt ps:P1411 ?award .
-    BIND(false AS ?won)
-  }
-  ?award wdt:P31 wd:Q19020 .
-  BIND(str(?award) AS ?awardUri)
-  SERVICE wikibase:label {
-    bd:serviceParam wikibase:language "en" .
-    ?award rdfs:label ?awardLabel .
-  }
-  OPTIONAL {
-    ?stmt pq:P585 ?date .
-    BIND(YEAR(?date) AS ?year)
-  }
-  OPTIONAL {
-    ?stmt pq:P1706 ?nomineeEntity .
-    SERVICE wikibase:label {
-      bd:serviceParam wikibase:language "en" .
-      ?nomineeEntity rdfs:label ?nomineeName .
-    }
-  }
-}
-`
-}
+   shared with OscarsNewYear.jsx. Edit it THERE, never inline.
+   Film-page SPARQL + Wikidata fetch + row dedup moved to src/lib/filmEnrich.js
+   (2026-07-09, Phase 12a) — shared with the pool-building add-film pipeline.
+   Edit them THERE, never inline. */
+// ── SPARQL query builders (ceremony pass only — film-page query is in lib) ────
 
 function buildCeremonyPageQuery(ceremonyYear, imdbIds) {
   const values = imdbIds.map(id => `"${id}"`).join(' ')
@@ -125,72 +92,7 @@ SELECT ?filmImdbId ?awardUri ?awardLabel ?won ?actorName WHERE {
 `
 }
 
-// ── Row processing ─────────────────────────────────────────────────────────────
-
-function processRows(rows, imdbIdKey = 'imdbId', nomineeKey = 'nomineeName') {
-  const seenActing = new Set()
-  const seenOther  = new Set()
-  const result     = []
-
-  for (const row of rows) {
-    const rawLabel    = row.awardLabel   || ''
-    const awardUri    = row.awardUri     || ''
-    const nomineeName = row[nomineeKey]  || null
-    const canon       = normalizeCategory(rawLabel, awardUri)
-    if (!canon) continue
-    const won  = row.won === true || row.won === 'true'
-    const year = row.year != null ? parseInt(row.year) : null
-
-    if (ACTING_CATEGORIES.has(canon) && nomineeName) {
-      // Named acting rows: different people may hold a win and a nomination in the
-      // same category (e.g. Amadeus — Abraham won, Hulce nominated). Keep separately.
-      const key = `${canon}|${year}|${nomineeName}|${won}`
-      if (!seenActing.has(key)) { seenActing.add(key); result.push({ category_name: canon, is_winner: won, ceremony_year: year, nominee_name: nomineeName }) }
-    } else {
-      // Unnamed rows (acting included): Wikidata film pages often carry BOTH a
-      // "nominated for" and an "award received" statement for the SAME winner.
-      // Keeping both created phantom extra nominations (2026-07 bug fix) —
-      // collapse to a single row where a win beats a nomination.
-      const key = `${canon}|${year}|${nomineeName}`
-      if (seenOther.has(key)) {
-        if (won) {
-          const idx = result.findIndex(r => r.category_name === canon && r.ceremony_year === year && r.nominee_name === nomineeName)
-          if (idx >= 0) result[idx].is_winner = true
-        }
-      } else {
-        seenOther.add(key)
-        result.push({ category_name: canon, is_winner: won, ceremony_year: year, nominee_name: nomineeName })
-      }
-    }
-  }
-  return result
-}
-
-// ── Wikidata fetch ─────────────────────────────────────────────────────────────
-
-async function queryWikidata(sparql) {
-  const url  = `${WIKIDATA_URL}?query=${encodeURIComponent(sparql)}&format=json`
-  const resp = await fetch(url, {
-    headers: {
-      'Accept':     'application/sparql-results+json',
-      'User-Agent': 'HermzAndDMoviesApp/2.0 (film ranking app; contact: bard37@gmail.com)',
-    },
-  })
-  if (!resp.ok) throw new Error(`Wikidata ${resp.status} — ${resp.statusText}`)
-  const data = await resp.json()
-  return data?.results?.bindings || []
-}
-
-function parseFilmPageBindings(bindings) {
-  return bindings.map(b => ({
-    imdbId:      b.imdbId?.value      || '',
-    awardUri:    b.awardUri?.value    || '',
-    awardLabel:  b.awardLabel?.value  || '',
-    won:         b.won?.value === 'true',
-    year:        b.year ? parseInt(b.year.value) : null,
-    nomineeName: b.nomineeName?.value || null,
-  }))
-}
+// ── Row processing + Wikidata fetch: imported from lib/filmEnrich.js ──────────
 
 function parseCeremonyBindings(bindings, imdbIdKey = 'filmImdbId', nomineeKey = 'nomineeName') {
   return bindings.map(b => ({
