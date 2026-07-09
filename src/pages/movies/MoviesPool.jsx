@@ -309,7 +309,7 @@ export default function MoviesPool() {
             BUILD YOUR POOL
           </h1>
           <p className="font-serif italic text-base text-gray-400 mt-3">
-            Gather every candidate worth considering — you'll cultivate down to exactly 125 next.
+            Gather every candidate worth considering — you'll cultivate down to exactly {event?.list_size ?? 125} next.
             {!loading && poolingOpen && (
               <span className="text-gray-300 ml-2">· {pool.length} in your pool</span>
             )}

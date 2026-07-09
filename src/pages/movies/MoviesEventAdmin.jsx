@@ -89,6 +89,7 @@ export default function MoviesEventAdmin() {
   const [newLabel, setNewLabel]     = useState('')
   const [newYear, setNewYear]       = useState(String(new Date().getFullYear()))
   const [newIsTest, setNewIsTest]   = useState(false)
+  const [newListSize, setNewListSize] = useState('125')
 
   async function load() {
     const [evRes, plRes, prRes] = await Promise.all([
@@ -124,13 +125,14 @@ export default function MoviesEventAdmin() {
     e.preventDefault()
     if (activeEvent) return
     const year = parseInt(newYear, 10)
-    if (!newLabel.trim() || !year) return
+    const listSize = parseInt(newListSize, 10)
+    if (!newLabel.trim() || !year || !listSize || listSize < 1) return
     setBusy(true); setError(null)
     const { error } = await supabase
       .from('ranking_events')
-      .insert({ label: newLabel.trim(), year, status: 'setup', is_test: newIsTest })
+      .insert({ label: newLabel.trim(), year, status: 'setup', is_test: newIsTest, list_size: listSize })
     if (error) setError(error.message)
-    else { setShowCreate(false); setNewLabel(''); setNewIsTest(false); await load() }
+    else { setShowCreate(false); setNewLabel(''); setNewIsTest(false); setNewListSize('125'); await load() }
     setBusy(false)
   }
 
@@ -233,7 +235,8 @@ export default function MoviesEventAdmin() {
                   {activeEvent.is_test && <TestBadge />}
                 </p>
                 <p className="font-mono text-[11px] tracking-kicker text-gray-500 uppercase mt-2">
-                  {activeEvent.year} Edition{activeEvent.is_test && ' · sandbox — never publishes'}
+                  {activeEvent.year} Edition · top {activeEvent.list_size ?? 125}
+                  {activeEvent.is_test && ' · sandbox — never publishes'}
                 </p>
               </div>
               <StatusBadge status={activeEvent.status} />
@@ -307,7 +310,7 @@ export default function MoviesEventAdmin() {
 
             {/* Real vs. test */}
             <div className="grid grid-cols-2 gap-2">
-              <button type="button" onClick={() => setNewIsTest(false)}
+              <button type="button" onClick={() => { setNewIsTest(false); setNewListSize('125') }}
                 className={`rounded-xl px-3 py-2.5 text-left border transition-all
                   ${!newIsTest
                     ? 'bg-gold-500/10 border-gold-500/50 text-gold-300'
@@ -315,7 +318,7 @@ export default function MoviesEventAdmin() {
                 <p className="font-display text-xs tracking-wide leading-none">THE REAL THING</p>
                 <p className="font-mono text-[11px] tracking-kicker text-current/70 mt-1 leading-tight">The next Canon edition</p>
               </button>
-              <button type="button" onClick={() => { setNewIsTest(true); if (!newLabel.trim()) setNewLabel('Test Run') }}
+              <button type="button" onClick={() => { setNewIsTest(true); setNewListSize('10'); if (!newLabel.trim()) setNewLabel('Test Run') }}
                 className={`rounded-xl px-3 py-2.5 text-left border transition-all
                   ${newIsTest
                     ? 'bg-amber-500/10 border-amber-500/50 text-amber-300'
@@ -325,7 +328,7 @@ export default function MoviesEventAdmin() {
               </button>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
               <div className="sm:col-span-2">
                 <label className="font-mono text-[11px] tracking-kicker text-gray-500 uppercase block mb-1.5">Label</label>
                 <input type="text" value={newLabel} onChange={e => setNewLabel(e.target.value)}
@@ -334,6 +337,11 @@ export default function MoviesEventAdmin() {
               <div>
                 <label className="font-mono text-[11px] tracking-kicker text-gray-500 uppercase block mb-1.5">Year</label>
                 <input type="number" value={newYear} onChange={e => setNewYear(e.target.value)}
+                       className="input w-full text-sm" />
+              </div>
+              <div>
+                <label className="font-mono text-[11px] tracking-kicker text-gray-500 uppercase block mb-1.5">List size</label>
+                <input type="number" min="1" value={newListSize} onChange={e => setNewListSize(e.target.value)}
                        className="input w-full text-sm" />
               </div>
             </div>

@@ -7,6 +7,11 @@ const UPDATES = [
       {
         tag: 'Films',
         color: 'film',
+        text: 'Ranking events now carry their own target list size. Real editions default to the traditional 125; the Test Run is set to just 10 films, so the whole workflow — pooling, cultivating, scoring, the reveal — can be proven end-to-end in an evening instead of a marathon. The size is set when creating an event and shows on the event card.',
+      },
+      {
+        tag: 'Films',
+        color: 'film',
         text: 'Fix: unpublished ranking events no longer leak into the public pages. Creating the test event revealed that the Films home, Rankings, Stats, All Films, External Lists, Acclaim, film detail, and site Home all listed every ranking event — including unpublished ones — so a brand-new event showed up as a phantom empty edition. All eight pages now show published editions only; in-progress and test events stay behind the curtain until publish.',
       },
       {
