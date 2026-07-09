@@ -256,6 +256,17 @@ export default function MoviesEventAcclaim() {
               out and the verdict is yours.
             </p>
 
+            {/* Frozen-queue warning (12d): once a player begins scoring, their
+                queue carries the acclaim values as they were at that moment */}
+            {players.some(p => ['scoring', 'locked'].includes(p.state)) && (
+              <div className="mb-6 p-4 rounded-xl border border-amber-500/40 bg-amber-500/10 text-sm text-amber-300">
+                {players.filter(p => ['scoring', 'locked'].includes(p.state))
+                  .map(p => profiles.find(pr => pr.id === p.user_id)?.username === 'dustin' ? 'Dustin' : 'Matt')
+                  .join(' and ')} already began scoring — their queue froze the acclaim values as they were.
+                Changes here won't reach a queue that already exists, so late edits need to be agreed before anyone starts.
+              </div>
+            )}
+
             {/* Rows */}
             <div className="flex flex-col gap-3">
               {filtered.map(film => (

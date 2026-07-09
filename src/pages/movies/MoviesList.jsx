@@ -3,6 +3,7 @@ import { Link, useSearchParams, useLocation } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import FilmStill from '../../components/FilmStill'
 import { DC, HC, CC, sortTitle } from '../../lib/helpers'
+import { useEventState } from '../../lib/useEventState'
 
 // ── view-mode icons ─────────────────────────────────────────────────────────
 function ListViewIcon() {
@@ -53,6 +54,7 @@ function PriorYearCell({ currentRank, filmId, priorMap }) {
 export default function MoviesList() {
   const [searchParams, setSearchParams] = useSearchParams()
   const location = useLocation()
+  const { blackout } = useEventState()
 
   const eventYear = Number(searchParams.get('event')) || 2026
   const view      = searchParams.get('view') || 'combined'
@@ -204,6 +206,22 @@ export default function MoviesList() {
       { value: 'matt_rank',   label: "Hermz's Rank" },
     ] : []),
   ]
+
+  // ── blackout (Phase 12d): while THIS player is scoring, prior-edition
+  // rankings stay dark for them — no anchoring, no peeking ─────────────────
+  if (blackout) {
+    return (
+      <div className="max-w-2xl mx-auto px-6 sm:px-10 py-24 text-center space-y-5">
+        <p className="font-display text-6xl text-gray-700 leading-none">🎬</p>
+        <h1 className="font-display text-4xl text-white tracking-wide leading-none">THE VAULT IS SEALED</h1>
+        <p className="font-serif italic text-base text-gray-400 max-w-md mx-auto">
+          You're mid-scoring — past rankings stay hidden so every film gets judged fresh.
+          They return the moment your list is locked.
+        </p>
+        <Link to="/movies/score" className="btn-gold text-sm inline-block">Back to Scoring →</Link>
+      </div>
+    )
+  }
 
   // ── render ─────────────────────────────────────────────────────────────
   return (

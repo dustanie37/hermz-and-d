@@ -379,6 +379,9 @@ export default function MoviesPool() {
             <p className="font-serif italic text-base text-gray-500 max-w-sm mx-auto">
               {event.label} has moved on to the {event.status} stage.
             </p>
+            {event.status === 'scoring' && (
+              <Link to="/movies/score" className="btn-gold text-sm inline-block mt-2">Go to Scoring →</Link>
+            )}
           </div>
         )}
 

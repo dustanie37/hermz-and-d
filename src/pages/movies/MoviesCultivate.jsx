@@ -544,7 +544,12 @@ export default function MoviesCultivate() {
               </div>
               <div className="mt-8 flex items-center justify-center gap-4 flex-wrap">
                 <Link to="/movies/acclaim-sources" className="btn-ghost text-xs">Acclaim Sources</Link>
-                <Link to="/movies/event-acclaim" className="btn-gold text-xs">Acclaim Workspace →</Link>
+                <Link to="/movies/event-acclaim" className="btn-ghost text-xs">Acclaim Workspace</Link>
+                {event.status === 'scoring' && (
+                  <Link to="/movies/score" className="btn-gold text-xs">
+                    {me?.state === 'cultivated' ? 'Begin Scoring →' : 'Scoring →'}
+                  </Link>
+                )}
               </div>
               <p className="font-serif italic text-sm text-gray-500 mt-4 text-center">
                 {canSwap

@@ -10,6 +10,7 @@ import {
 } from 'recharts'
 import FilmStill from '../../components/FilmStill'
 import { DC, HC, CC, sortTitle } from '../../lib/helpers'
+import { useEventState } from '../../lib/useEventState'
 
 // ── constants ───────────────────────────────────────────────────────────────
 const EVENTS = [2001, 2007, 2016, 2026]
@@ -175,6 +176,7 @@ function OscarNomsList({ noms }) {
 
 // ── main component ──────────────────────────────────────────────────────────
 export default function MovieDetail() {
+  const { blackout } = useEventState()
   const { filmId } = useParams()
   const location   = useLocation()
   const navigate   = useNavigate()
@@ -486,15 +488,17 @@ export default function MovieDetail() {
             )}
           </div>
 
-          {/* Floating rank stats */}
-          <div className="flex gap-4 items-center bg-night-950/70 backdrop-blur-md
-                          border border-white/[0.12] rounded-2xl px-5 py-4 shadow-still-lg flex-shrink-0">
-            <RankBig who="dustin"   rank={latestYear && dustinRows[latestYear]?.rank} />
-            <span className="w-px h-14 bg-white/10" />
-            <RankBig who="matt"     rank={latestYear && mattRows[latestYear]?.rank} />
-            <span className="w-px h-14 bg-white/10" />
-            <RankBig who="combined" rank={latestYear && combined[latestYear]?.combined_rank} />
-          </div>
+          {/* Floating rank stats — hidden during scoring blackout */}
+          {!blackout && (
+            <div className="flex gap-4 items-center bg-night-950/70 backdrop-blur-md
+                            border border-white/[0.12] rounded-2xl px-5 py-4 shadow-still-lg flex-shrink-0">
+              <RankBig who="dustin"   rank={latestYear && dustinRows[latestYear]?.rank} />
+              <span className="w-px h-14 bg-white/10" />
+              <RankBig who="matt"     rank={latestYear && mattRows[latestYear]?.rank} />
+              <span className="w-px h-14 bg-white/10" />
+              <RankBig who="combined" rank={latestYear && combined[latestYear]?.combined_rank} />
+            </div>
+          )}
         </div>
       </FilmStill>
 
@@ -640,8 +644,18 @@ export default function MovieDetail() {
           </div>
         </div>
 
+        {/* Blackout notice (Phase 12d) */}
+        {blackout && (
+          <div className="card text-center py-8">
+            <p className="font-serif italic text-sm text-gray-500">
+              Ranking history is hidden while you're scoring — every film gets judged fresh.
+              It returns when your list is locked.
+            </p>
+          </div>
+        )}
+
         {/* Rank History Table */}
-        {appearsIn.length > 0 && (
+        {!blackout && appearsIn.length > 0 && (
           <div className="card p-0 overflow-hidden">
             <div className="px-6 pt-5 pb-3 border-b border-night-700">
               <h2 className="font-display text-2xl text-white tracking-wide leading-none mb-1">RANK HISTORY</h2>
@@ -717,7 +731,7 @@ export default function MovieDetail() {
         )}
 
         {/* Rank Movement Chart */}
-        {appearsIn.length > 1 && (
+        {!blackout && appearsIn.length > 1 && (
           <div className="card">
             <h2 className="font-display text-2xl text-white tracking-wide leading-none mb-1">RANK MOVEMENT</h2>
             <p className="text-sm text-gray-500 mb-5">Personal and combined rank across editions (lower = better).</p>
@@ -738,18 +752,22 @@ export default function MovieDetail() {
         )}
 
         {/* Score History — chart / table toggle */}
-        {appearsIn.length > 0 && (
+        {!blackout && appearsIn.length > 0 && (
           <ScoreSection dustinRows={dustinRows} mattRows={mattRows} activeCats={activeCats} />
         )}
 
         {/* Fun Facts */}
-        <FunFacts film={film} dustinRows={dustinRows} mattRows={mattRows}
-                  combined={combined} oscarNoms={oscarNoms} />
+        {!blackout && (
+          <FunFacts film={film} dustinRows={dustinRows} mattRows={mattRows}
+                    combined={combined} oscarNoms={oscarNoms} />
+        )}
 
         {/* Director & Year Peers */}
-        <FilmPeers film={film} directorFilms={directorFilms} yearPeers={yearPeers} />
+        {!blackout && (
+          <FilmPeers film={film} directorFilms={directorFilms} yearPeers={yearPeers} />
+        )}
 
-        {appearsIn.length === 0 && (
+        {!blackout && appearsIn.length === 0 && (
           <div className="card text-center py-10">
             <p className="text-gray-500 text-sm italic">This film has not appeared on any ranking list.</p>
           </div>

@@ -7,6 +7,11 @@ const UPDATES = [
       {
         tag: 'Films',
         color: 'film',
+        text: 'Phase 12d — Scoring, the centerpiece. When the event advances to Scoring, each player presses Begin — the list becomes truly final and gets shuffled into a personal random order that never changes (leave and come back any day). One film at a time: poster, title, director, top cast, and nothing historical. Seven categories plus Influence scored 0–10 with tap-pills, Personal Impact 0–20, and Acclaim rides along pre-filled and locked from the agreed value. Every tap saves instantly; Skip sends a film to the back of the queue. And the blackout: while you\'re mid-scoring, the Rankings pages seal shut and film pages hide their ranking history — for you only — so every film gets judged fresh. After the last film: your full ranked list with the classic tiebreakers (Impact, then most 10s, most 9s…), tap any film to adjust, then Lock. Next up: the post-lock stats room, then the reveal ceremony.',
+      },
+      {
+        tag: 'Films',
+        color: 'film',
         text: 'Phase 12c — Acclaim, together. Two new stages after the roster reveal. Acclaim Sources: agree which external lists count for this event (AFI, Sight & Sound, IMDB Top 250, and the rest) — confirming freezes a snapshot of each list\'s data so every film is judged against identical evidence, even if a list gets re-imported later. Acclaim Workspace: the union of both locked lists, each film carrying a "Both lists / D only / Hermz only" badge, its appearances on the confirmed sources (with rank), and its Oscar record — with the jointly-agreed score (/10) editable inline. Plus: one-for-one swaps are live on the cultivation page — hover your locked list, swap a film out for one from your leftover pool or a fresh search, open until scoring begins. Auto-suggested acclaim scores arrive once the rules questionnaire is settled.',
       },
       {
