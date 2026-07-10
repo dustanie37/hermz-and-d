@@ -210,7 +210,9 @@ function TalkingPointsCard({ ep, setEp }) {
 
       {points.length === 0 && (
         <p className="text-gray-600 text-sm italic mb-4">
-          Nothing yet — add points below, or pull ideas in from the generated insights above.
+          {ep.type === 'film'
+            ? 'Nothing yet — add points below, or pull ideas in from the generated insights above.'
+            : 'Nothing yet — add the first talking point below.'}
         </p>
       )}
 
