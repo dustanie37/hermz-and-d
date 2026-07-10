@@ -65,7 +65,7 @@ function EpisodeCard({ ep, filmEpCount }) {
       <div className="flex-1 min-w-0">
         {isIntro ? (
           <>
-            <p className="font-mono text-xs tracking-kicker text-gray-500 mb-0.5 uppercase">
+            <p className="font-mono text-xs tracking-kicker text-gray-400 mb-0.5 uppercase">
               Episode 0 · Introduction
             </p>
             <h3 className="font-display text-2xl text-white leading-tight">
@@ -77,7 +77,7 @@ function EpisodeCard({ ep, filmEpCount }) {
           </>
         ) : (
           <>
-            <p className="font-mono text-xs tracking-kicker text-gray-500 mb-0.5 uppercase">
+            <p className="font-mono text-xs tracking-kicker text-gray-400 mb-0.5 uppercase">
               Ep {String(ep.episode_num).padStart(2, '0')} · 2026 Combined #{combinedRank}
             </p>
             <h3 className="font-display text-2xl text-white group-hover:text-cinema-400 transition-colors leading-tight truncate">
@@ -129,7 +129,7 @@ function Dashboard({ episodes }) {
             )}
           </div>
           <div className="min-w-0">
-            <p className="font-mono text-xs tracking-kicker text-gray-500 uppercase mb-0.5">Next up</p>
+            <p className="font-mono text-xs tracking-kicker text-gray-400 uppercase mb-0.5">Next up</p>
             {nextUp ? (
               <>
                 <Link to={`/podcast/${nextUp.episode_num}`}
@@ -150,16 +150,16 @@ function Dashboard({ episodes }) {
         <div className="flex items-center gap-6 sm:gap-8 shrink-0">
           <div>
             <p className="font-display text-3xl text-white leading-none">{recorded}<span className="text-gray-600 text-xl">/{total}</span></p>
-            <p className="font-mono text-xs tracking-kicker text-gray-500 uppercase mt-1">Recorded</p>
+            <p className="font-mono text-xs tracking-kicker text-gray-400 uppercase mt-1">Recorded</p>
           </div>
           <div>
             <p className="font-display text-3xl text-emerald-400 leading-none">{published}</p>
-            <p className="font-mono text-xs tracking-kicker text-gray-500 uppercase mt-1">Published</p>
+            <p className="font-mono text-xs tracking-kicker text-gray-400 uppercase mt-1">Published</p>
           </div>
           {lastRec && (
             <div className="hidden md:block">
               <p className="font-mono text-base text-gray-300 leading-none mt-1.5">{lastRec.record_date}</p>
-              <p className="font-mono text-xs tracking-kicker text-gray-500 uppercase mt-2">Last recorded</p>
+              <p className="font-mono text-xs tracking-kicker text-gray-400 uppercase mt-2">Last recorded</p>
             </div>
           )}
         </div>
@@ -170,7 +170,7 @@ function Dashboard({ episodes }) {
         <div className="absolute inset-y-0 left-0 h-px bg-gold-500 shadow-[0_0_8px_rgba(245,158,11,0.6)]"
              style={{ width: `${pct}%` }} />
       </div>
-      <p className="font-mono text-xs tracking-kicker text-gray-500 uppercase mt-2 text-right">{pct}% of the canon covered</p>
+      <p className="font-mono text-xs tracking-kicker text-gray-400 uppercase mt-2 text-right">{pct}% of the canon covered</p>
     </div>
   )
 }
@@ -232,7 +232,7 @@ export default function PodcastHome() {
             {PODCAST_TAGLINE}
           </p>
           {!loading && episodes.length > 0 && (
-            <p className="font-mono text-xs tracking-kicker text-gray-500 mt-3 uppercase">
+            <p className="font-mono text-xs tracking-kicker text-gray-400 mt-3 uppercase">
               {episodes.length} Episodes · Starting with 2026 #{filmEpCount} · Ending at #1
             </p>
           )}
@@ -253,7 +253,7 @@ export default function PodcastHome() {
               {/* Episode 0 — pinned intro */}
               {intro && (
                 <div className="mb-8">
-                  <p className="font-mono text-xs tracking-kicker text-gray-500 mb-3 uppercase">
+                  <p className="font-mono text-xs tracking-kicker text-gray-400 mb-3 uppercase">
                     Where It All Begins
                   </p>
                   <EpisodeCard ep={intro} filmEpCount={filmEpCount} />
@@ -261,7 +261,7 @@ export default function PodcastHome() {
               )}
 
               {/* Film episodes — countdown order */}
-              <p className="font-mono text-xs tracking-kicker text-gray-500 mb-3 uppercase">
+              <p className="font-mono text-xs tracking-kicker text-gray-400 mb-3 uppercase">
                 The Canon · 2026 Edition
               </p>
               {filmEps.map(ep => (

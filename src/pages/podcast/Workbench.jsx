@@ -13,7 +13,7 @@ function SectionHeader({ label, sub }) {
   return (
     <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-4">
       <h2 className="font-display text-2xl text-white tracking-wide whitespace-nowrap">{label}</h2>
-      {sub && <span className="font-mono text-xs tracking-kicker text-gray-500 uppercase">{sub}</span>}
+      {sub && <span className="font-mono text-xs tracking-kicker text-gray-400 uppercase">{sub}</span>}
     </div>
   )
 }
@@ -102,7 +102,7 @@ function LogisticsCard({ ep, setEp }) {
                   ? 'bg-gold-500 border-gold-500 text-night-950 font-semibold'
                   : past
                     ? 'bg-night-700/60 border-night-600 text-gray-300'
-                    : 'bg-night-900/40 border-white/[0.06] text-gray-600 hover:text-gray-400 hover:border-white/[0.12]'}`}
+                    : 'bg-night-900/40 border-white/[0.06] text-gray-400 hover:text-gray-200 hover:border-white/[0.12]'}`}
             >
               <span className={`w-1.5 h-1.5 rounded-full ${active ? 'bg-night-950' : meta.dot}`} />
               {meta.label}
@@ -118,17 +118,17 @@ function LogisticsCard({ ep, setEp }) {
       {/* Fields */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
         <label className="block">
-          <span className="font-mono text-xs tracking-kicker text-gray-500 uppercase block mb-1.5">Record date</span>
+          <span className="font-mono text-xs tracking-kicker text-gray-300 uppercase block mb-1.5">Record date</span>
           <input type="date" className="input w-full" value={form.record_date}
                  onChange={e => setForm(f => ({ ...f, record_date: e.target.value }))} />
         </label>
         <label className="block">
-          <span className="font-mono text-xs tracking-kicker text-gray-500 uppercase block mb-1.5">Publish date</span>
+          <span className="font-mono text-xs tracking-kicker text-gray-300 uppercase block mb-1.5">Publish date</span>
           <input type="date" className="input w-full" value={form.publish_date}
                  onChange={e => setForm(f => ({ ...f, publish_date: e.target.value }))} />
         </label>
         <label className="block">
-          <span className="font-mono text-xs tracking-kicker text-gray-500 uppercase block mb-1.5">Runtime (min)</span>
+          <span className="font-mono text-xs tracking-kicker text-gray-300 uppercase block mb-1.5">Runtime (min)</span>
           <input type="number" min="0" className="input w-full" value={form.runtime_minutes}
                  onChange={e => setForm(f => ({ ...f, runtime_minutes: e.target.value }))} />
         </label>
@@ -141,7 +141,7 @@ function LogisticsCard({ ep, setEp }) {
           ['apple_url',   'Apple Podcasts'],
         ].map(([key, label]) => (
           <label key={key} className="block">
-            <span className="font-mono text-xs tracking-kicker text-gray-500 uppercase block mb-1.5">{label}</span>
+            <span className="font-mono text-xs tracking-kicker text-gray-300 uppercase block mb-1.5">{label}</span>
             <input type="url" placeholder="https://…" className="input w-full" value={form[key]}
                    onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))} />
           </label>
@@ -149,7 +149,7 @@ function LogisticsCard({ ep, setEp }) {
       </div>
 
       <label className="block mb-5">
-        <span className="font-mono text-xs tracking-kicker text-gray-500 uppercase block mb-1.5">Notes</span>
+        <span className="font-mono text-xs tracking-kicker text-gray-300 uppercase block mb-1.5">Notes</span>
         <textarea rows={3} className="input w-full resize-y"
                   placeholder="Internal notes — logistics, reminders, gear, guests…"
                   value={form.notes}
@@ -365,7 +365,7 @@ export default function Workbench({ ep, setEp, timestamps, setTimestamps }) {
     <div className="space-y-8">
       <div className="flex items-center gap-3">
         <span className="block flex-1 h-px bg-white/[0.06]" />
-        <span className="font-mono text-xs tracking-kicker text-gray-500 uppercase">Prep Workbench</span>
+        <span className="font-mono text-xs tracking-kicker text-gray-400 uppercase">Prep Workbench</span>
         <span className="block flex-1 h-px bg-white/[0.06]" />
       </div>
       <TalkingPointsCard ep={ep} setEp={setEp} />

@@ -295,12 +295,12 @@ export default function Home() {
                 EP {String(latestPod.episode_num).padStart(2, '0')} · {(latestPod.title_override || latestPod.films?.title || '').toUpperCase()}
               </div>
               {latestPod.publish_date && (
-                <div className="font-mono text-xs tracking-kicker text-gray-500 uppercase mt-1">
+                <div className="font-mono text-xs tracking-kicker text-gray-400 uppercase mt-1">
                   Published {latestPod.publish_date}
                 </div>
               )}
             </div>
-            <span className="shrink-0 font-mono text-xs tracking-kicker text-gray-500 group-hover:text-gray-300 transition-colors">
+            <span className="shrink-0 font-mono text-xs tracking-kicker text-gray-400 group-hover:text-gray-200 transition-colors">
               Watch →
             </span>
           </Link>

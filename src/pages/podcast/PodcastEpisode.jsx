@@ -198,7 +198,7 @@ function SectionHeader({ label, sub }) {
   return (
     <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-4">
       <h2 className="font-display text-2xl text-white tracking-wide whitespace-nowrap">{label}</h2>
-      {sub && <span className="font-mono text-xs tracking-kicker text-gray-500 uppercase">{sub}</span>}
+      {sub && <span className="font-mono text-xs tracking-kicker text-gray-400 uppercase">{sub}</span>}
     </div>
   )
 }
@@ -240,10 +240,10 @@ function MediaCard({ ep, timestamps }) {
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-4">
           <StatusChip status={ep.status} />
           {ep.publish_date && (
-            <span className="font-mono text-xs tracking-kicker text-gray-500 uppercase">Published {ep.publish_date}</span>
+            <span className="font-mono text-xs tracking-kicker text-gray-400 uppercase">Published {ep.publish_date}</span>
           )}
           {ep.runtime_minutes != null && (
-            <span className="font-mono text-xs tracking-kicker text-gray-500 uppercase">{ep.runtime_minutes} min</span>
+            <span className="font-mono text-xs tracking-kicker text-gray-400 uppercase">{ep.runtime_minutes} min</span>
           )}
           <span className="flex-1" />
           <span className="flex items-center gap-2">
@@ -271,7 +271,7 @@ function MediaCard({ ep, timestamps }) {
         {/* Chapters */}
         {timestamps.length > 0 && (
           <div>
-            <p className="font-mono text-xs tracking-kicker text-gray-500 uppercase mb-2">Chapters</p>
+            <p className="font-mono text-xs tracking-kicker text-gray-400 uppercase mb-2">Chapters</p>
             <div className="flex flex-wrap gap-1.5">
               {timestamps.map(t => (
                 <button key={t.id} onClick={() => seek(t.seconds)}
@@ -443,7 +443,7 @@ export default function PodcastEpisode() {
         }}/>
         <div className="relative max-w-7xl mx-auto px-5 sm:px-8 pb-10 w-full">
           <div className="flex items-center gap-3 mb-4">
-            <Link to="/podcast" className="font-mono text-xs tracking-kicker text-gray-500 hover:text-cinema-500 transition-colors uppercase">
+            <Link to="/podcast" className="font-mono text-xs tracking-kicker text-gray-400 hover:text-cinema-500 transition-colors uppercase">
               ← {PODCAST_NAME}
             </Link>
           </div>
@@ -510,19 +510,19 @@ export default function PodcastEpisode() {
 
           {/* Back + prev/next */}
           <div className="flex items-center justify-between mb-5">
-            <Link to="/podcast" className="font-mono text-xs tracking-kicker text-gray-500 hover:text-cinema-500 transition-colors uppercase">
+            <Link to="/podcast" className="font-mono text-xs tracking-kicker text-gray-400 hover:text-cinema-500 transition-colors uppercase">
               ← {PODCAST_NAME}
             </Link>
             <div className="flex items-center gap-3">
               {prevEp && (
                 <Link to={`/podcast/${prevEp.episode_num}`}
-                  className="font-mono text-xs tracking-kicker text-gray-500 hover:text-gray-400 transition-colors">
+                  className="font-mono text-xs tracking-kicker text-gray-400 hover:text-gray-400 transition-colors">
                   ← Ep {String(prevEp.episode_num).padStart(2,'0')}
                 </Link>
               )}
               {nextEp && (
                 <Link to={`/podcast/${nextEp.episode_num}`}
-                  className="font-mono text-xs tracking-kicker text-gray-500 hover:text-gray-400 transition-colors">
+                  className="font-mono text-xs tracking-kicker text-gray-400 hover:text-gray-400 transition-colors">
                   Ep {String(nextEp.episode_num).padStart(2,'0')} →
                 </Link>
               )}
@@ -573,12 +573,12 @@ export default function PodcastEpisode() {
               <table className="w-full min-w-[480px] text-sm">
                 <thead>
                   <tr className="border-b border-white/[0.06]">
-                    <th className="text-left font-mono text-xs tracking-kicker text-gray-500 pb-3 uppercase">Edition</th>
+                    <th className="text-left font-mono text-xs tracking-kicker text-gray-400 pb-3 uppercase">Edition</th>
                     <th className="text-center font-mono text-xs tracking-kicker pb-3 uppercase" style={{ color: DC }}>Dust</th>
                     <th className="text-center font-mono text-xs tracking-kicker pb-3 uppercase" style={{ color: HC }}>Hermz</th>
                     <th className="text-center font-mono text-xs tracking-kicker pb-3 uppercase" style={{ color: CC }}>Combined</th>
-                    <th className="text-right font-mono text-xs tracking-kicker text-gray-500 pb-3 uppercase">D Score</th>
-                    <th className="text-right font-mono text-xs tracking-kicker text-gray-500 pb-3 uppercase">H Score</th>
+                    <th className="text-right font-mono text-xs tracking-kicker text-gray-400 pb-3 uppercase">D Score</th>
+                    <th className="text-right font-mono text-xs tracking-kicker text-gray-400 pb-3 uppercase">H Score</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -713,10 +713,10 @@ export default function PodcastEpisode() {
               <table className="w-full min-w-[420px] text-sm">
                 <thead>
                   <tr className="border-b border-white/[0.06]">
-                    <th className="text-left font-mono text-xs tracking-kicker text-gray-500 pb-3 uppercase">Category</th>
+                    <th className="text-left font-mono text-xs tracking-kicker text-gray-400 pb-3 uppercase">Category</th>
                     <th className="text-center font-mono text-xs tracking-kicker pb-3 uppercase" style={{ color: DC }}>Dust</th>
                     <th className="text-center font-mono text-xs tracking-kicker pb-3 uppercase" style={{ color: HC }}>Hermz</th>
-                    <th className="text-right font-mono text-xs tracking-kicker text-gray-500 pb-3 uppercase">Max</th>
+                    <th className="text-right font-mono text-xs tracking-kicker text-gray-400 pb-3 uppercase">Max</th>
                   </tr>
                 </thead>
                 <tbody>

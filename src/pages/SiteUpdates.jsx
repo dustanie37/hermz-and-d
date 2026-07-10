@@ -7,7 +7,7 @@ const UPDATES = [
       {
         tag: 'Design',
         color: 'cinema',
-        text: 'Cinematrix readability pass. The podcast section\'s tiny labels are gone — every 9–11px kicker, badge, and table header now renders at a minimum of 12px, talking points and chapter labels read at full body size (16px), episode titles on the countdown grew a step, and the dimmest gray text was brightened two shades. The whole section is now comfortably readable at a glance instead of squint-first.',
+        text: 'Cinematrix readability pass. The podcast section\'s tiny labels are gone — every 9–11px kicker, badge, and table header now renders at a minimum of 12px, talking points and chapter labels read at full body size (16px), and episode titles on the countdown grew a step. Contrast got the same treatment after a second look: form-field titles (Record Date, YouTube, Notes…) went from murky gray to light gray, section kickers and table headers came up two shades, and the Planned status chip brightened. The whole section is now comfortably readable at a glance instead of squint-first.',
       },
       {
         tag: 'Podcast',

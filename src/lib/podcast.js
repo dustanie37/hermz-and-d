@@ -9,7 +9,7 @@ export const PODCAST_TAGLINE = 'A deep dive into The Canon, one film at a time.'
 export const STATUSES = ['planned', 'prepped', 'recorded', 'published']
 
 export const STATUS_META = {
-  planned:   { label: 'Planned',   dot: 'bg-gray-500',    text: 'text-gray-500'    },
+  planned:   { label: 'Planned',   dot: 'bg-gray-400',    text: 'text-gray-400'    },
   prepped:   { label: 'Prepped',   dot: 'bg-cinema-400',  text: 'text-cinema-400'  },
   recorded:  { label: 'Recorded',  dot: 'bg-amber-300',   text: 'text-amber-300'   },
   published: { label: 'Published', dot: 'bg-emerald-400', text: 'text-emerald-400' },
