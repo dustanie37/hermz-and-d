@@ -5,6 +5,11 @@ const UPDATES = [
     date: 'July 10, 2026',
     entries: [
       {
+        tag: 'Design',
+        color: 'cinema',
+        text: 'Cinematrix readability pass. The podcast section\'s tiny labels are gone — every 9–11px kicker, badge, and table header now renders at a minimum of 12px, talking points and chapter labels read at full body size (16px), episode titles on the countdown grew a step, and the dimmest gray text was brightened two shades. The whole section is now comfortably readable at a glance instead of squint-first.',
+      },
+      {
         tag: 'Podcast',
         color: 'cinema',
         text: 'Cinematrix becomes real. The podcast section is no longer a mock-up — all 47 episodes (the intro plus the full 2026 countdown from #46 Office Space to #1 Saving Private Ryan) now live in the database with a status that travels from Planned → Prepped → Recorded → Published. The podcast home page gained a production dashboard: what\'s next up, how many episodes are recorded and published, and a progress bar across the whole Canon. Every episode page now carries a full prep workbench — editable talking points you can check off mid-recording (with a one-tap "+ point" button to pull in any of the auto-generated insights), a logistics panel for record dates, runtime, and YouTube/Spotify/Apple links, and a chapter/timestamp editor. And once an episode has a YouTube link, the video embeds right on the page with clickable chapters that jump the player. Built ahead of the August 19 video test.',
