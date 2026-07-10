@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import OscarIcon from '../components/OscarIcon'
 import FilmStill, { StillPoster } from '../components/FilmStill'
+import { PODCAST_NAME } from '../lib/podcast'
 
 function computeLeader(mattWins, dustinWins) {
   if (mattWins > dustinWins) return { who: 'matt',   lead: mattWins - dustinWins }
@@ -16,6 +17,7 @@ export default function Home() {
 
   const [oscarData,  setOscarData]  = useState(null)
   const [moviesData, setMoviesData] = useState(null)
+  const [latestPod,  setLatestPod]  = useState(null)
   const [loading,    setLoading]    = useState(true)
 
   useEffect(() => {
@@ -28,11 +30,18 @@ export default function Home() {
       { data: years },
       { data: events },
       { count: filmCount },
+      { data: podEps },
     ] = await Promise.all([
       supabase.from('v_oscar_year_summary').select('*').order('year', { ascending: false }),
       supabase.from('ranking_events').select('id, year, label').eq('status', 'published').order('year', { ascending: false }),
       supabase.from('films').select('*', { count: 'exact', head: true }),
+      supabase.from('podcast_episodes')
+        .select('episode_num, title_override, publish_date, films(title, poster_url)')
+        .eq('status', 'published')
+        .order('episode_num', { ascending: false })
+        .limit(1),
     ])
+    setLatestPod(podEps?.[0] || null)
 
     const latestEvent = events?.[0]
     let topFilms = []
@@ -267,6 +276,37 @@ export default function Home() {
         </Link>
       </section>
 
+      {/* ── LATEST EPISODE (once the podcast starts publishing) ───────────── */}
+      {latestPod && (
+        <section className="max-w-7xl mx-auto px-6 sm:px-10 pb-10 -mt-2">
+          <Link to={`/podcast/${latestPod.episode_num}`}
+                className="card-hover group flex items-center gap-5 no-underline">
+            <div className="shrink-0 w-12 h-[72px] rounded overflow-hidden bg-night-700 border border-white/[0.06]">
+              {latestPod.films?.poster_url && (
+                <img src={latestPod.films.poster_url} alt="" className="w-full h-full object-cover" />
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="font-mono text-[11px] tracking-kicker uppercase text-cinema-500">
+                {PODCAST_NAME} · Latest Episode
+              </div>
+              <div className="font-display text-2xl text-white tracking-wide mt-1 truncate
+                              group-hover:text-cinema-400 transition-colors">
+                EP {String(latestPod.episode_num).padStart(2, '0')} · {(latestPod.title_override || latestPod.films?.title || '').toUpperCase()}
+              </div>
+              {latestPod.publish_date && (
+                <div className="font-mono text-[10px] tracking-kicker text-gray-600 uppercase mt-1">
+                  Published {latestPod.publish_date}
+                </div>
+              )}
+            </div>
+            <span className="shrink-0 font-mono text-[11px] tracking-kicker text-gray-500 group-hover:text-gray-300 transition-colors">
+              Watch →
+            </span>
+          </Link>
+        </section>
+      )}
+
       {/* ── EXPLORE STRIP ──────────────────────────────────────────────────── */}
       <section className="max-w-7xl mx-auto px-6 sm:px-10 pb-12 flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap gap-2">
@@ -274,6 +314,7 @@ export default function Home() {
           <Link to="/movies/lists"      className="pill">External Lists</Link>
           <Link to="/movies/stats"      className="pill">Crossover Stats</Link>
           <Link to="/oscars/stats"      className="pill">Oscar Stats</Link>
+          <Link to="/podcast"           className="pill">{PODCAST_NAME}</Link>
         </div>
         <span className="font-mono text-[10px] tracking-cinema text-gray-600">
           EST. 1993 · HERMZ &amp; D

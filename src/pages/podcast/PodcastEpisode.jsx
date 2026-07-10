@@ -1,8 +1,10 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useParams, Link, useNavigate } from 'react-router-dom'
+import { useParams, Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { DC, HC, CC } from '../../lib/helpers'
 import { hydrateAcclaim } from '../../lib/acclaimLists'
+import { PODCAST_NAME, STATUS_META, fmtTime, youtubeId, epTitle, newTalkingPoint } from '../../lib/podcast'
+import Workbench from './Workbench'
 
 // ── constants ────────────────────────────────────────────────────────────────
 const EVENTS   = [2001, 2007, 2016, 2026]
@@ -40,7 +42,6 @@ function generateInsights(film, dustinRows, mattRows, combined, oscarNoms) {
   const mattYears   = EVENTS.filter(yr => mattRows[yr]?.rank)
   const sharedYears = EVENTS.filter(yr => dustinRows[yr]?.rank && mattRows[yr]?.rank)
   const anyYears    = EVENTS.filter(yr => dustinRows[yr]?.rank || mattRows[yr]?.rank)
-  const combYears   = EVENTS.filter(yr => combined[yr]?.combined_rank)
   const latestShared = sharedYears[sharedYears.length - 1]
   const dCurrent    = dustinRows[LATEST]?.rank ?? null
   const mCurrent    = mattRows[LATEST]?.rank   ?? null
@@ -202,9 +203,238 @@ function SectionHeader({ label, sub }) {
   )
 }
 
-// ── Episode 0 (intro) ────────────────────────────────────────────────────────
-function IntroEpisode({ total }) {
+function StatusChip({ status }) {
+  const meta = STATUS_META[status] || STATUS_META.planned
   return (
+    <span className="inline-flex items-center gap-1.5">
+      <span className={`w-1.5 h-1.5 rounded-full ${meta.dot}`} />
+      <span className={`font-mono text-[10px] tracking-kicker uppercase ${meta.text}`}>{meta.label}</span>
+    </span>
+  )
+}
+
+// ── Media card (embed + chapters + platform links) ───────────────────────────
+function MediaCard({ ep, timestamps }) {
+  const [start, setStart] = useState(0)
+  const [playKey, setPlayKey] = useState(0)
+  const vid = youtubeId(ep.youtube_url)
+  if (!vid) return null
+
+  const seek = (s) => { setStart(s); setPlayKey(k => k + 1) }
+
+  return (
+    <div className="card p-0 overflow-hidden">
+      <div className="aspect-video bg-night-900">
+        <iframe
+          key={playKey}
+          className="w-full h-full"
+          src={`https://www.youtube.com/embed/${vid}?start=${start}${playKey > 0 ? '&autoplay=1' : ''}`}
+          title={`${PODCAST_NAME} — episode video`}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+        />
+      </div>
+
+      <div className="p-5 sm:p-6">
+        {/* Meta line */}
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-4">
+          <StatusChip status={ep.status} />
+          {ep.publish_date && (
+            <span className="font-mono text-[10px] tracking-kicker text-gray-500 uppercase">Published {ep.publish_date}</span>
+          )}
+          {ep.runtime_minutes != null && (
+            <span className="font-mono text-[10px] tracking-kicker text-gray-500 uppercase">{ep.runtime_minutes} min</span>
+          )}
+          <span className="flex-1" />
+          <span className="flex items-center gap-2">
+            {ep.youtube_url && (
+              <a href={ep.youtube_url} target="_blank" rel="noreferrer"
+                 className="font-mono text-[10px] tracking-kicker uppercase px-2.5 py-1 rounded-full border border-white/[0.08] text-gray-400 hover:text-red-400 hover:border-red-400/40 transition-colors">
+                YouTube ↗
+              </a>
+            )}
+            {ep.spotify_url && (
+              <a href={ep.spotify_url} target="_blank" rel="noreferrer"
+                 className="font-mono text-[10px] tracking-kicker uppercase px-2.5 py-1 rounded-full border border-white/[0.08] text-gray-400 hover:text-emerald-400 hover:border-emerald-400/40 transition-colors">
+                Spotify ↗
+              </a>
+            )}
+            {ep.apple_url && (
+              <a href={ep.apple_url} target="_blank" rel="noreferrer"
+                 className="font-mono text-[10px] tracking-kicker uppercase px-2.5 py-1 rounded-full border border-white/[0.08] text-gray-400 hover:text-cinema-400 hover:border-cinema-400/40 transition-colors">
+                Apple ↗
+              </a>
+            )}
+          </span>
+        </div>
+
+        {/* Chapters */}
+        {timestamps.length > 0 && (
+          <div>
+            <p className="font-mono text-[10px] tracking-kicker text-gray-600 uppercase mb-2">Chapters</p>
+            <div className="flex flex-wrap gap-1.5">
+              {timestamps.map(t => (
+                <button key={t.id} onClick={() => seek(t.seconds)}
+                        className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-night-900/70 border border-white/[0.05]
+                                   hover:border-cinema-500/40 text-xs text-gray-400 hover:text-cinema-300 transition-all">
+                  <span className="font-mono text-[10px] text-cinema-500">{fmtTime(t.seconds)}</span>
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ── Main component ───────────────────────────────────────────────────────────
+export default function PodcastEpisode() {
+  const { episodeNum: episodeNumStr } = useParams()
+  const episodeNum = parseInt(episodeNumStr, 10)
+
+  const [loading,    setLoading]    = useState(true)
+  const [error,      setError]      = useState(null)
+  const [ep,         setEp]         = useState(null)   // podcast_episodes row
+  const [timestamps, setTimestamps] = useState([])
+  const [allEps,     setAllEps]     = useState([])
+  const [film,       setFilm]       = useState(null)
+  const [dustinRows, setDustinRows] = useState({})
+  const [mattRows,   setMattRows]   = useState({})
+  const [combined,   setCombined]   = useState({})
+  const [oscarNoms,  setOscarNoms]  = useState([])
+
+  useEffect(() => {
+    async function load() {
+      setLoading(true); setError(null)
+      setFilm(null); setDustinRows({}); setMattRows({}); setCombined({}); setOscarNoms([])
+
+      // 1. Episode row + full episode list (for nav)
+      const [
+        { data: epRow, error: epErr },
+        { data: eps },
+      ] = await Promise.all([
+        supabase.from('podcast_episodes').select('*').eq('episode_num', episodeNum).single(),
+        supabase.from('podcast_episodes')
+          .select('episode_num, type, status, title_override, films(title)')
+          .order('episode_num', { ascending: true }),
+      ])
+      if (epErr || !epRow) { setError('Episode not found'); setLoading(false); return }
+      setEp(epRow)
+      setAllEps(eps || [])
+
+      // 2. Timestamps
+      const { data: ts } = await supabase
+        .from('podcast_timestamps').select('*')
+        .eq('episode_id', epRow.id).order('seconds', { ascending: true })
+      setTimestamps(ts || [])
+
+      // 3. Film data (film episodes only)
+      if (epRow.type !== 'intro' && epRow.film_id) {
+        const [
+          { data: filmData,  error: fErr },
+          { data: indData,   error: iErr },
+          { data: combData,  error: cErr },
+          { data: nomData },
+        ] = await Promise.all([
+          supabase.from('films').select('*').eq('id', epRow.film_id).single(),
+          supabase.from('individual_rankings').select('*, profiles(username), ranking_events(year)').eq('film_id', epRow.film_id),
+          supabase.from('combined_rankings').select('*, ranking_events(year)').eq('film_id', epRow.film_id),
+          supabase.from('film_oscar_noms').select('*').eq('film_id', epRow.film_id).order('is_winner', { ascending: false }).order('category_name'),
+        ])
+        if (fErr || iErr || cErr) { setError('Failed to load film data'); setLoading(false); return }
+
+        setFilm(await hydrateAcclaim(filmData))
+        setOscarNoms(nomData || [])
+
+        const dRows = {}, mRows = {}
+        ;(indData || []).forEach(r => {
+          const yr = r.ranking_events?.year
+          if (!yr) return
+          if (r.profiles?.username === 'dustin') dRows[yr] = r
+          if (r.profiles?.username === 'matt')   mRows[yr] = r
+        })
+        setDustinRows(dRows); setMattRows(mRows)
+
+        const cRows = {}
+        ;(combData || []).forEach(r => { if (r.ranking_events?.year) cRows[r.ranking_events.year] = r })
+        setCombined(cRows)
+      }
+
+      setLoading(false)
+    }
+    load()
+  }, [episodeNumStr]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const insights = useMemo(
+    () => film ? generateInsights(film, dustinRows, mattRows, combined, oscarNoms) : [],
+    [film, dustinRows, mattRows, combined, oscarNoms]
+  )
+
+  // Promote a generated insight into the editable talking points
+  const pointTexts = new Set((Array.isArray(ep?.talking_points) ? ep.talking_points : []).map(p => p.text))
+  async function promote(text) {
+    if (!ep || pointTexts.has(text)) return
+    const next = [...(Array.isArray(ep.talking_points) ? ep.talking_points : []), newTalkingPoint(text, 'generated')]
+    const { data, error: uErr } = await supabase
+      .from('podcast_episodes')
+      .update({ talking_points: next, updated_at: new Date().toISOString() })
+      .eq('id', ep.id).select().single()
+    if (!uErr) setEp(data)
+  }
+
+  const idx    = allEps.findIndex(e => e.episode_num === episodeNum)
+  const prevEp = idx > 0 ? allEps[idx - 1] : null
+  const nextEp = idx >= 0 && idx < allEps.length - 1 ? allEps[idx + 1] : null
+
+  // ── Loading / error ───────────────────────────────────────────────────────
+  if (loading) return (
+    <div className="min-h-screen bg-night-950 flex items-center justify-center">
+      <span className="font-mono text-xs text-gray-600">Loading episode…</span>
+    </div>
+  )
+
+  if (error || !ep) return (
+    <div className="min-h-screen bg-night-950 flex flex-col items-center justify-center gap-4">
+      <p className="text-red-400 text-sm">{error || 'Episode not found'}</p>
+      <Link to="/podcast" className="btn-ghost text-sm">← Back to {PODCAST_NAME}</Link>
+    </div>
+  )
+
+  const isIntro = ep.type === 'intro'
+  const LATEST      = EVENTS[EVENTS.length - 1]
+  const editionsOn  = film ? EVENTS.filter(yr => dustinRows[yr]?.rank || mattRows[yr]?.rank || combined[yr]?.combined_rank) : []
+  const listApps    = film ? EXTERNAL_LISTS.filter(l => l.ranked ? film[l.key] != null : film[l.key] === true) : []
+  const oscarWins        = oscarNoms.filter(n => n.is_winner)
+  const oscarNominations = oscarNoms.filter(n => !n.is_winner)
+  const genre = film?.omdb_genres?.split(',')[0]?.trim()
+
+  const navLinks = (
+    <div className="flex items-center justify-between pt-2">
+      {prevEp ? (
+        <Link to={`/podcast/${prevEp.episode_num}`}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-night-800 border border-white/[0.06]
+                     hover:border-cinema-500/30 text-xs text-gray-400 hover:text-cinema-400 transition-all font-mono">
+          ← Ep {String(prevEp.episode_num).padStart(2,'0')}
+          <span className="hidden sm:inline text-gray-600 truncate max-w-[120px]">· {epTitle(prevEp)}</span>
+        </Link>
+      ) : <div />}
+      {nextEp ? (
+        <Link to={`/podcast/${nextEp.episode_num}`}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-night-800 border border-white/[0.06]
+                     hover:border-cinema-500/30 text-xs text-gray-400 hover:text-cinema-400 transition-all font-mono">
+          <span className="hidden sm:inline text-gray-600 truncate max-w-[120px]">{epTitle(nextEp)} ·</span>
+          Ep {String(nextEp.episode_num).padStart(2,'0')} →
+        </Link>
+      ) : (
+        <div className="text-xs text-gray-700 font-mono italic">End of The Canon</div>
+      )}
+    </div>
+  )
+
+  // ── Episode 0 — intro ─────────────────────────────────────────────────────
+  if (isIntro) return (
     <div className="min-h-screen bg-night-950">
       <section className="relative h-[300px] sm:h-[340px] overflow-hidden flex items-end">
         <div className="absolute inset-0 bg-gradient-to-br from-night-900 via-night-950 to-night-950"/>
@@ -214,24 +444,29 @@ function IntroEpisode({ total }) {
         <div className="relative max-w-7xl mx-auto px-5 sm:px-8 pb-10 w-full">
           <div className="flex items-center gap-3 mb-4">
             <Link to="/podcast" className="font-mono text-[10px] tracking-kicker text-gray-600 hover:text-cinema-500 transition-colors uppercase">
-              ← Cinematrix
+              ← {PODCAST_NAME}
             </Link>
           </div>
-          <p className="font-mono text-[11px] tracking-kicker text-cinema-500 mb-2 uppercase">Episode 00</p>
-          <h1 className="font-display text-5xl sm:text-6xl text-white leading-none">WHO WE ARE</h1>
+          <div className="flex items-center gap-4 mb-2">
+            <p className="font-mono text-[11px] tracking-kicker text-cinema-500 uppercase">Episode 00</p>
+            <StatusChip status={ep.status} />
+          </div>
+          <h1 className="font-display text-5xl sm:text-6xl text-white leading-none">{epTitle(ep).toUpperCase()}</h1>
           <p className="font-serif italic text-gray-400 text-lg mt-2">
-            The origin story — Hermz & D and The Canon they built.
+            The origin story — Hermz &amp; D and The Canon they built.
           </p>
         </div>
       </section>
 
-      <div className="max-w-3xl mx-auto px-5 sm:px-8 py-10 space-y-10">
+      <div className="max-w-3xl mx-auto px-5 sm:px-8 py-10 space-y-8">
+
+        <MediaCard ep={ep} timestamps={timestamps} />
 
         {/* About this episode */}
         <div className="card p-6">
           <SectionHeader label="ABOUT THIS EPISODE" />
           <p className="text-gray-300 leading-relaxed">
-            Before we dig into any film, the very first episode of Cinematrix is about us — who Hermz and D
+            Before we dig into any film, the very first episode of {PODCAST_NAME} is about us — who Hermz and D
             are, how we've been friends since childhood, and how this obsessive, lovingly over-engineered
             ranking system came to be.
           </p>
@@ -242,326 +477,20 @@ function IntroEpisode({ total }) {
           </p>
         </div>
 
-        {/* Show Notes scaffold */}
-        <ShowNotesScaffold episode={0} film={null} nextEpisodeNum={1} />
+        <Workbench ep={ep} setEp={setEp} timestamps={timestamps} setTimestamps={setTimestamps} />
 
-        {/* Next episode */}
-        {total > 0 && (
-          <div className="flex justify-end">
-            <Link to="/podcast/1"
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-night-800 border border-white/[0.06]
-                         hover:border-cinema-500/30 text-sm text-gray-400 hover:text-cinema-400 transition-all">
-              Episode 01 →
-            </Link>
-          </div>
-        )}
+        {navLinks}
       </div>
     </div>
   )
-}
 
-// ── Show Notes Scaffold ──────────────────────────────────────────────────────
-function ShowNotesScaffold({ episode, film, dustinRows = {}, mattRows = {}, combined = {}, oscarNoms = [], prevEpisodeNum, nextEpisodeNum }) {
-  const isIntro = episode === 0
-  const LATEST  = EVENTS[EVENTS.length - 1]
-  const dRank   = film ? dustinRows[LATEST]?.rank : null
-  const mRank   = film ? mattRows[LATEST]?.rank : null
-  const cRank   = film ? combined[LATEST]?.combined_rank : null
-  const dScore  = film ? dustinRows[LATEST]?.total_score : null
-  const mScore  = film ? mattRows[LATEST]?.total_score : null
-
-  const listAppearances = film ? EXTERNAL_LISTS.filter(l =>
-    l.ranked ? film[l.key] != null : film[l.key] === true
-  ) : []
-
-  const wins  = oscarNoms.filter(n => n.is_winner)
-  const noms  = oscarNoms.filter(n => !n.is_winner)
-
-  return (
-    <div className="card p-6 border border-white/[0.06]">
-      <div className="flex items-center justify-between mb-5">
-        <SectionHeader
-          label="SHOW NOTES"
-          sub="Template scaffold — expand with your own content"
-        />
-        <span className="font-mono text-[10px] tracking-kicker text-gray-700 uppercase">Draft</span>
-      </div>
-
-      <div className="space-y-5 text-sm">
-
-        {/* Episode header */}
-        <div className="border-b border-white/[0.06] pb-5">
-          <p className="font-mono text-[10px] tracking-kicker text-gray-600 mb-1">HEADER</p>
-          <p className="font-semibold text-white">
-            {isIntro
-              ? 'Episode 00: Who We Are — The Origin of Hermz & D and The Canon'
-              : `Episode ${String(episode).padStart(2, '0')}: ${film?.title} (${film?.release_year})`
-            }
-          </p>
-          {!isIntro && film && (
-            <p className="text-gray-500 mt-1">Directed by {film.director}{film.writer ? ` · Written by ${film.writer}` : ''}</p>
-          )}
-        </div>
-
-        {/* Synopsis / Overview */}
-        <div className="border-b border-white/[0.06] pb-5">
-          <p className="font-mono text-[10px] tracking-kicker text-gray-600 mb-2">SYNOPSIS / OVERVIEW</p>
-          {isIntro ? (
-            <p className="text-gray-500 italic">
-              [Write a 1–2 sentence description of the episode here.]
-            </p>
-          ) : (
-            <p className="text-gray-500 italic">
-              [Add a 1–2 sentence synopsis of {film?.title} here — what it's about, why it matters.]
-            </p>
-          )}
-        </div>
-
-        {/* Key stats (auto-populated for film episodes) */}
-        {!isIntro && film && (
-          <div className="border-b border-white/[0.06] pb-5">
-            <p className="font-mono text-[10px] tracking-kicker text-gray-600 mb-3">KEY STATS</p>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {cRank != null && (
-                <div className="bg-night-900 rounded-lg px-3 py-2.5 border border-white/[0.04]">
-                  <p className="font-mono text-[9px] tracking-kicker text-gray-600 mb-1">2026 COMBINED</p>
-                  <p className="font-display text-xl" style={{ color: CC }}>#{cRank}</p>
-                </div>
-              )}
-              {dRank != null && (
-                <div className="bg-night-900 rounded-lg px-3 py-2.5 border border-white/[0.04]">
-                  <p className="font-mono text-[9px] tracking-kicker text-gray-600 mb-1">DUST 2026</p>
-                  <p className="font-display text-xl" style={{ color: DC }}>#{dRank}</p>
-                </div>
-              )}
-              {mRank != null && (
-                <div className="bg-night-900 rounded-lg px-3 py-2.5 border border-white/[0.04]">
-                  <p className="font-mono text-[9px] tracking-kicker text-gray-600 mb-1">HERMZ 2026</p>
-                  <p className="font-display text-xl" style={{ color: HC }}>#{mRank}</p>
-                </div>
-              )}
-              {film.oscar_wins > 0 && (
-                <div className="bg-night-900 rounded-lg px-3 py-2.5 border border-white/[0.04]">
-                  <p className="font-mono text-[9px] tracking-kicker text-gray-600 mb-1">OSCAR WINS</p>
-                  <p className="font-display text-xl text-gold-500">🏆 {film.oscar_wins}</p>
-                </div>
-              )}
-              {film.acclaim_score != null && (
-                <div className="bg-night-900 rounded-lg px-3 py-2.5 border border-white/[0.04]">
-                  <p className="font-mono text-[9px] tracking-kicker text-gray-600 mb-1">ACCLAIM SCORE</p>
-                  <p className="font-display text-xl text-white">{film.acclaim_score}/10</p>
-                </div>
-              )}
-              {listAppearances.length > 0 && (
-                <div className="bg-night-900 rounded-lg px-3 py-2.5 border border-white/[0.04]">
-                  <p className="font-mono text-[9px] tracking-kicker text-gray-600 mb-1">ON LISTS</p>
-                  <p className="font-display text-xl text-white">{listAppearances.length}</p>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Talking points placeholder */}
-        <div className="border-b border-white/[0.06] pb-5">
-          <p className="font-mono text-[10px] tracking-kicker text-gray-600 mb-2">TALKING POINTS</p>
-          <div className="space-y-2 text-gray-500">
-            <div className="flex items-start gap-2">
-              <span className="mt-0.5 text-night-600">◻</span>
-              <span className="italic">[First discussion point — e.g. initial reactions, first viewing memory]</span>
-            </div>
-            <div className="flex items-start gap-2">
-              <span className="mt-0.5 text-night-600">◻</span>
-              <span className="italic">[Ranking discussion — why it landed where it did, any surprises]</span>
-            </div>
-            <div className="flex items-start gap-2">
-              <span className="mt-0.5 text-night-600">◻</span>
-              <span className="italic">[Scoring breakdown — category highlights, where scores diverged]</span>
-            </div>
-            <div className="flex items-start gap-2">
-              <span className="mt-0.5 text-night-600">◻</span>
-              <span className="italic">[Historical context — how this film fits into its era / genre]</span>
-            </div>
-            <div className="flex items-start gap-2">
-              <span className="mt-0.5 text-night-600">◻</span>
-              <span className="italic">[Final takes — what this film means to each of us]</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Timestamps placeholder */}
-        <div className="border-b border-white/[0.06] pb-5">
-          <p className="font-mono text-[10px] tracking-kicker text-gray-600 mb-2">TIMESTAMPS</p>
-          <div className="space-y-1.5 text-gray-600 font-mono text-xs">
-            <p>0:00 — Intro</p>
-            <p className="italic text-gray-700">[00:00] — [Section title]</p>
-            <p className="italic text-gray-700">[00:00] — [Section title]</p>
-            <p className="italic text-gray-700">[00:00] — [Section title]</p>
-            <p className="italic text-gray-700">[00:00] — Outro / next episode</p>
-          </div>
-        </div>
-
-        {/* Links & references */}
-        <div className="border-b border-white/[0.06] pb-5">
-          <p className="font-mono text-[10px] tracking-kicker text-gray-600 mb-2">LINKS &amp; REFERENCES</p>
-          {film ? (
-            <div className="space-y-1 font-mono text-xs text-gray-500">
-              <p>Film page: https://hermz-and-d.vercel.app/movies/{film.id}</p>
-              <p>Rankings: https://hermz-and-d.vercel.app/movies/list</p>
-              {film.omdb_id && <p>IMDB: https://imdb.com/title/{film.omdb_id}</p>}
-              <p className="italic text-gray-700">[Add any other links mentioned in the episode]</p>
-            </div>
-          ) : (
-            <p className="text-gray-600 italic font-mono text-xs">https://hermz-and-d.vercel.app</p>
-          )}
-        </div>
-
-        {/* Next episode */}
-        <div>
-          <p className="font-mono text-[10px] tracking-kicker text-gray-600 mb-2">NEXT EPISODE</p>
-          {nextEpisodeNum != null ? (
-            <p className="text-gray-500 italic">
-              Episode {String(nextEpisodeNum).padStart(2, '0')} — [Next film title and teaser line TBD]
-            </p>
-          ) : (
-            <p className="text-gray-500 italic">That's a wrap on The Canon.</p>
-          )}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ── Main component ───────────────────────────────────────────────────────────
-export default function PodcastEpisode() {
-  const { episodeNum: episodeNumStr } = useParams()
-  const navigate = useNavigate()
-  const episodeNum = parseInt(episodeNumStr, 10)
-
-  const [loading,    setLoading]    = useState(true)
-  const [error,      setError]      = useState(null)
-  const [film,       setFilm]       = useState(null)
-  const [allEps,     setAllEps]     = useState([])   // [{episodeNum, combinedRank, filmId}]
-  const [events,     setEvents]     = useState([])
-  const [dustinRows, setDustinRows] = useState({})
-  const [mattRows,   setMattRows]   = useState({})
-  const [combined,   setCombined]   = useState({})
-  const [oscarNoms,  setOscarNoms]  = useState([])
-
-  const isIntro = episodeNum === 0
-
-  useEffect(() => {
-    async function load() {
-      setLoading(true); setError(null)
-
-      // 1. Get 2026 event
-      const { data: event, error: evErr } = await supabase
-        .from('ranking_events')
-        .select('id')
-        .eq('year', 2026)
-        .single()
-      if (evErr || !event) { setError('Could not load 2026 ranking event'); setLoading(false); return }
-
-      // 2. Get all 2026 combined rankings (worst first = highest episode numbers first)
-      const { data: allCombined } = await supabase
-        .from('combined_rankings')
-        .select('combined_rank, film_id, films(id, title)')
-        .eq('event_id', event.id)
-        .order('combined_rank', { ascending: false })
-
-      const eps = (allCombined || []).map((r, i) => ({
-        episodeNum:   i + 1,
-        combinedRank: r.combined_rank,
-        filmId:       r.film_id,
-        title:        r.films?.title,
-      }))
-      setAllEps(eps)
-
-      if (isIntro) { setLoading(false); return }
-
-      // 3. Find film for this episode
-      const epData = eps[episodeNum - 1]
-      if (!epData) { setError('Episode not found'); setLoading(false); return }
-
-      const filmId = epData.filmId
-
-      // 4. Parallel fetch: film data, ranking events, individual rankings, combined rankings, Oscar noms
-      const [
-        { data: filmData,  error: fErr },
-        { data: evData,    error: eErr },
-        { data: indData,   error: iErr },
-        { data: combData,  error: cErr },
-        { data: nomData },
-      ] = await Promise.all([
-        supabase.from('films').select('*').eq('id', filmId).single(),
-        supabase.from('ranking_events').select('id, year, label').order('year'),
-        supabase.from('individual_rankings').select('*, profiles(username), ranking_events(year)').eq('film_id', filmId),
-        supabase.from('combined_rankings').select('*, ranking_events(year)').eq('film_id', filmId),
-        supabase.from('film_oscar_noms').select('*').eq('film_id', filmId).order('is_winner', { ascending: false }).order('category_name'),
-      ])
-
-      if (fErr || eErr || iErr || cErr) {
-        setError('Failed to load film data'); setLoading(false); return
-      }
-
-      setFilm(await hydrateAcclaim(filmData))
-      setEvents(evData || [])
-      setOscarNoms(nomData || [])
-
-      const dRows = {}, mRows = {}
-      ;(indData || []).forEach(r => {
-        const yr = r.ranking_events?.year
-        if (!yr) return
-        if (r.profiles?.username === 'dustin') dRows[yr] = r
-        if (r.profiles?.username === 'matt')   mRows[yr] = r
-      })
-      setDustinRows(dRows); setMattRows(mRows)
-
-      const cRows = {}
-      ;(combData || []).forEach(r => { if (r.ranking_events?.year) cRows[r.ranking_events.year] = r })
-      setCombined(cRows)
-
-      setLoading(false)
-    }
-    load()
-  }, [episodeNumStr])
-
-  const insights = useMemo(
-    () => film ? generateInsights(film, dustinRows, mattRows, combined, oscarNoms) : [],
-    [film, dustinRows, mattRows, combined, oscarNoms]
-  )
-
-  const prevEp = episodeNum > 0 ? episodeNum - 1 : null
-  const nextEp = episodeNum < allEps.length ? episodeNum + 1 : null
-
-  const prevTitle = prevEp === 0 ? 'WHO WE ARE' : allEps[prevEp - 1]?.title
-  const nextTitle = nextEp ? allEps[nextEp - 1]?.title : null
-
-  // ── Episode 0 — intro ─────────────────────────────────────────────────────
-  if (!loading && isIntro) return <IntroEpisode total={allEps.length} />
-
-  // ── Loading ───────────────────────────────────────────────────────────────
-  if (loading) return (
-    <div className="min-h-screen bg-night-950 flex items-center justify-center">
-      <span className="font-mono text-xs text-gray-600">Loading episode…</span>
-    </div>
-  )
-
-  // ── Error ─────────────────────────────────────────────────────────────────
-  if (error || !film) return (
+  // ── Film episode ──────────────────────────────────────────────────────────
+  if (!film) return (
     <div className="min-h-screen bg-night-950 flex flex-col items-center justify-center gap-4">
-      <p className="text-red-400 text-sm">{error || 'Episode not found'}</p>
-      <Link to="/podcast" className="btn-ghost text-sm">← Back to Cinematrix</Link>
+      <p className="text-red-400 text-sm">Film data missing for this episode</p>
+      <Link to="/podcast" className="btn-ghost text-sm">← Back to {PODCAST_NAME}</Link>
     </div>
   )
-
-  const LATEST      = EVENTS[EVENTS.length - 1]
-  const editionsOn  = EVENTS.filter(yr => dustinRows[yr]?.rank || mattRows[yr]?.rank || combined[yr]?.combined_rank)
-  const listApps    = EXTERNAL_LISTS.filter(l => l.ranked ? film[l.key] != null : film[l.key] === true)
-  const oscarWins   = oscarNoms.filter(n => n.is_winner)
-  const oscarNominations = oscarNoms.filter(n => !n.is_winner)
-  const actors      = [1,2,3,4,5].map(i => film[`actor_${i}`]).filter(Boolean)
-  const genre       = film.omdb_genres?.split(',')[0]?.trim()
 
   return (
     <div className="min-h-screen bg-night-950">
@@ -582,19 +511,19 @@ export default function PodcastEpisode() {
           {/* Back + prev/next */}
           <div className="flex items-center justify-between mb-5">
             <Link to="/podcast" className="font-mono text-[10px] tracking-kicker text-gray-600 hover:text-cinema-500 transition-colors uppercase">
-              ← Cinematrix
+              ← {PODCAST_NAME}
             </Link>
             <div className="flex items-center gap-3">
-              {prevEp != null && (
-                <Link to={`/podcast/${prevEp}`}
+              {prevEp && (
+                <Link to={`/podcast/${prevEp.episode_num}`}
                   className="font-mono text-[10px] tracking-kicker text-gray-600 hover:text-gray-400 transition-colors">
-                  ← Ep {String(prevEp).padStart(2,'0')}
+                  ← Ep {String(prevEp.episode_num).padStart(2,'0')}
                 </Link>
               )}
-              {nextEp != null && (
-                <Link to={`/podcast/${nextEp}`}
+              {nextEp && (
+                <Link to={`/podcast/${nextEp.episode_num}`}
                   className="font-mono text-[10px] tracking-kicker text-gray-600 hover:text-gray-400 transition-colors">
-                  Ep {String(nextEp).padStart(2,'0')} →
+                  Ep {String(nextEp.episode_num).padStart(2,'0')} →
                 </Link>
               )}
             </div>
@@ -610,9 +539,12 @@ export default function PodcastEpisode() {
               />
             )}
             <div>
-              <p className="font-mono text-[11px] tracking-kicker text-cinema-500 mb-1.5 uppercase">
-                Episode {String(episodeNum).padStart(2,'0')} · Cinematrix
-              </p>
+              <div className="flex items-center gap-4 mb-1.5">
+                <p className="font-mono text-[11px] tracking-kicker text-cinema-500 uppercase">
+                  Episode {String(ep.episode_num).padStart(2,'0')} · {PODCAST_NAME}
+                </p>
+                <StatusChip status={ep.status} />
+              </div>
               <h1 className="font-display text-4xl sm:text-5xl text-white leading-tight">
                 {film.title.toUpperCase()}
               </h1>
@@ -628,6 +560,8 @@ export default function PodcastEpisode() {
 
       {/* ── Body ─────────────────────────────────────────────────── */}
       <div className="max-w-3xl mx-auto px-5 sm:px-8 py-10 space-y-8">
+
+        <MediaCard ep={ep} timestamps={timestamps} />
 
         {/* ── In The Canon ── */}
         <div className="card p-6">
@@ -681,19 +615,32 @@ export default function PodcastEpisode() {
           )}
         </div>
 
-        {/* ── Talking Points (Insights) ── */}
+        {/* ── Generated Insights ── */}
         {insights.length > 0 && (
           <div className="card p-6">
-            <SectionHeader label="TALKING POINTS" sub="Generated from ranking data" />
+            <SectionHeader label="GENERATED INSIGHTS" sub="From ranking data — pull the good ones into talking points" />
             <div className="space-y-3">
-              {insights.map((text, i) => (
-                <div key={i} className="flex gap-3 items-start">
-                  <div className="shrink-0 mt-1 w-5 h-5 rounded-full bg-cinema-500/10 border border-cinema-500/30 flex items-center justify-center">
-                    <span className="font-mono text-[9px] text-cinema-500">{i + 1}</span>
+              {insights.map((text, i) => {
+                const added = pointTexts.has(text)
+                return (
+                  <div key={i} className="flex gap-3 items-start">
+                    <div className="shrink-0 mt-1 w-5 h-5 rounded-full bg-cinema-500/10 border border-cinema-500/30 flex items-center justify-center">
+                      <span className="font-mono text-[9px] text-cinema-500">{i + 1}</span>
+                    </div>
+                    <p className="flex-1 text-gray-300 text-sm leading-relaxed">{text}</p>
+                    <button
+                      onClick={() => promote(text)}
+                      disabled={added}
+                      className={`shrink-0 mt-0.5 px-2 py-0.5 rounded-full border font-mono text-[9px] tracking-kicker uppercase transition-all
+                        ${added
+                          ? 'border-emerald-500/30 text-emerald-400/70 cursor-default'
+                          : 'border-white/[0.08] text-gray-500 hover:text-cinema-400 hover:border-cinema-500/40'}`}
+                    >
+                      {added ? '✓ added' : '+ point'}
+                    </button>
                   </div>
-                  <p className="text-gray-300 text-sm leading-relaxed">{text}</p>
-                </div>
-              ))}
+                )
+              })}
             </div>
             <Link
               to={`/movies/${film.id}`}
@@ -795,39 +742,10 @@ export default function PodcastEpisode() {
           </div>
         )}
 
-        {/* ── Show Notes ── */}
-        <ShowNotesScaffold
-          episode={episodeNum}
-          film={film}
-          dustinRows={dustinRows}
-          mattRows={mattRows}
-          combined={combined}
-          oscarNoms={oscarNoms}
-          prevEpisodeNum={prevEp}
-          nextEpisodeNum={nextEp}
-        />
+        {/* ── Prep Workbench ── */}
+        <Workbench ep={ep} setEp={setEp} timestamps={timestamps} setTimestamps={setTimestamps} />
 
-        {/* ── Prev / Next navigation ── */}
-        <div className="flex items-center justify-between pt-2">
-          {prevEp != null ? (
-            <Link to={`/podcast/${prevEp}`}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-night-800 border border-white/[0.06]
-                         hover:border-cinema-500/30 text-xs text-gray-400 hover:text-cinema-400 transition-all font-mono">
-              ← Ep {String(prevEp).padStart(2,'0')}
-              {prevTitle ? <span className="hidden sm:inline text-gray-600 truncate max-w-[120px]">· {prevTitle}</span> : null}
-            </Link>
-          ) : <div />}
-          {nextEp != null ? (
-            <Link to={`/podcast/${nextEp}`}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-night-800 border border-white/[0.06]
-                         hover:border-cinema-500/30 text-xs text-gray-400 hover:text-cinema-400 transition-all font-mono">
-              {nextTitle ? <span className="hidden sm:inline text-gray-600 truncate max-w-[120px]">{nextTitle} ·</span> : null}
-              Ep {String(nextEp).padStart(2,'0')} →
-            </Link>
-          ) : (
-            <div className="text-xs text-gray-700 font-mono italic">End of The Canon</div>
-          )}
-        </div>
+        {navLinks}
       </div>
     </div>
   )

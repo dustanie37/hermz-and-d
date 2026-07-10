@@ -5,6 +5,11 @@ const UPDATES = [
     date: 'July 10, 2026',
     entries: [
       {
+        tag: 'Podcast',
+        color: 'cinema',
+        text: 'Cinematrix becomes real. The podcast section is no longer a mock-up — all 47 episodes (the intro plus the full 2026 countdown from #46 Office Space to #1 Saving Private Ryan) now live in the database with a status that travels from Planned → Prepped → Recorded → Published. The podcast home page gained a production dashboard: what\'s next up, how many episodes are recorded and published, and a progress bar across the whole Canon. Every episode page now carries a full prep workbench — editable talking points you can check off mid-recording (with a one-tap "+ point" button to pull in any of the auto-generated insights), a logistics panel for record dates, runtime, and YouTube/Spotify/Apple links, and a chapter/timestamp editor. And once an episode has a YouTube link, the video embeds right on the page with clickable chapters that jump the player. Built ahead of the August 19 video test.',
+      },
+      {
         tag: 'Films',
         color: 'film',
         text: 'Under the hood: acclaim lists now have a single source of truth. Which external lists a film belongs to is read in one place — the External Lists data — everywhere it appears (the film page, the Acclaim scoring screen, and the podcast pages). Previously that information lived in two separate places that had to be kept in sync by hand, which is exactly why films like Star Wars went missing. Now there is nothing to keep in sync: edit a list once and every page reflects it. This quietly retires a whole class of "why isn\'t this showing up" bugs.',

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
+import { PODCAST_NAME, PODCAST_TAGLINE, STATUS_META, epTitle } from '../../lib/podcast'
 
 function MicIcon({ size = 16, className = '' }) {
   return (
@@ -14,11 +15,24 @@ function MicIcon({ size = 16, className = '' }) {
   )
 }
 
-function EpisodeCard({ ep }) {
-  const isIntro = ep.episodeNum === 0
+function StatusChip({ status }) {
+  const meta = STATUS_META[status] || STATUS_META.planned
+  return (
+    <span className="shrink-0 flex items-center gap-1.5">
+      <span className={`w-1.5 h-1.5 rounded-full ${meta.dot}`} />
+      <span className={`hidden sm:inline font-mono text-[9px] tracking-kicker uppercase ${meta.text}`}>
+        {meta.label}
+      </span>
+    </span>
+  )
+}
+
+function EpisodeCard({ ep, filmEpCount }) {
+  const isIntro = ep.type === 'intro'
+  const combinedRank = isIntro ? null : filmEpCount - ep.episode_num + 1
   return (
     <Link
-      to={`/podcast/${ep.episodeNum}`}
+      to={`/podcast/${ep.episode_num}`}
       className="group flex items-center gap-4 px-4 py-3.5 rounded-xl
                  bg-night-800/60 hover:bg-night-700/80
                  border border-white/[0.05] hover:border-cinema-500/30
@@ -27,16 +41,16 @@ function EpisodeCard({ ep }) {
       {/* Episode number */}
       <div className="shrink-0 w-12 text-right">
         <span className="font-display text-2xl text-cinema-500 leading-none">
-          {isIntro ? '00' : String(ep.episodeNum).padStart(2, '0')}
+          {String(ep.episode_num).padStart(2, '0')}
         </span>
       </div>
 
       {/* Poster */}
       <div className="shrink-0 w-9 h-[52px] rounded overflow-hidden bg-night-700 border border-white/[0.06]">
-        {ep.film?.poster_url ? (
+        {ep.films?.poster_url ? (
           <img
-            src={ep.film.poster_url}
-            alt={ep.film.title}
+            src={ep.films.poster_url}
+            alt={ep.films.title}
             className="w-full h-full object-cover"
             loading="lazy"
           />
@@ -54,28 +68,31 @@ function EpisodeCard({ ep }) {
             <p className="font-mono text-[10px] tracking-kicker text-gray-600 mb-0.5 uppercase">
               Episode 0 · Introduction
             </p>
-            <h3 className="font-display text-xl text-white leading-tight">WHO WE ARE</h3>
+            <h3 className="font-display text-xl text-white leading-tight">
+              {epTitle(ep).toUpperCase()}
+            </h3>
             <p className="text-xs text-gray-500 mt-0.5 truncate">
-              The origin story — Hermz & D and The Canon
+              The origin story — Hermz &amp; D and The Canon
             </p>
           </>
         ) : (
           <>
             <p className="font-mono text-[10px] tracking-kicker text-gray-600 mb-0.5 uppercase">
-              Ep {String(ep.episodeNum).padStart(2, '0')} · 2026 Combined #{ep.combinedRank}
+              Ep {String(ep.episode_num).padStart(2, '0')} · 2026 Combined #{combinedRank}
             </p>
             <h3 className="font-display text-xl text-white group-hover:text-cinema-400 transition-colors leading-tight truncate">
-              {ep.film?.title?.toUpperCase()}
+              {epTitle(ep).toUpperCase()}
             </h3>
             <p className="text-xs text-gray-500 mt-0.5 truncate">
-              {ep.film?.release_year}
-              {ep.film?.director ? ` · ${ep.film.director}` : ''}
+              {ep.films?.release_year}
+              {ep.films?.director ? ` · ${ep.films.director}` : ''}
             </p>
           </>
         )}
       </div>
 
-      {/* Chevron */}
+      {/* Status + chevron */}
+      <StatusChip status={ep.status} />
       <svg
         className="shrink-0 text-night-600 group-hover:text-cinema-500 transition-colors"
         width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -87,39 +104,96 @@ function EpisodeCard({ ep }) {
   )
 }
 
+// ── Progress dashboard ───────────────────────────────────────────────────────
+function Dashboard({ episodes }) {
+  const total     = episodes.length
+  const recorded  = episodes.filter(e => e.status === 'recorded' || e.status === 'published').length
+  const published = episodes.filter(e => e.status === 'published').length
+  const nextUp    = episodes.find(e => e.status === 'planned' || e.status === 'prepped')
+  const lastRec   = episodes
+    .filter(e => e.record_date)
+    .sort((a, b) => (b.record_date > a.record_date ? 1 : -1))[0]
+  const pct = total > 0 ? Math.round((recorded / total) * 100) : 0
+
+  return (
+    <div className="card p-5 sm:p-6 mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-5 sm:gap-8">
+
+        {/* Next up */}
+        <div className="flex items-center gap-4 flex-1 min-w-0">
+          <div className="shrink-0 w-11 h-16 rounded overflow-hidden bg-night-700 border border-white/[0.06]">
+            {nextUp?.films?.poster_url ? (
+              <img src={nextUp.films.poster_url} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-gray-600"><MicIcon size={14} /></div>
+            )}
+          </div>
+          <div className="min-w-0">
+            <p className="font-mono text-[10px] tracking-kicker text-gray-600 uppercase mb-0.5">Next up</p>
+            {nextUp ? (
+              <>
+                <Link to={`/podcast/${nextUp.episode_num}`}
+                      className="font-display text-lg text-white hover:text-cinema-400 transition-colors leading-tight block truncate">
+                  EP {String(nextUp.episode_num).padStart(2, '0')} · {epTitle(nextUp).toUpperCase()}
+                </Link>
+                <p className={`font-mono text-[10px] tracking-kicker uppercase mt-0.5 ${STATUS_META[nextUp.status].text}`}>
+                  {STATUS_META[nextUp.status].label}
+                </p>
+              </>
+            ) : (
+              <p className="font-display text-lg text-white leading-tight">ALL EPISODES RECORDED</p>
+            )}
+          </div>
+        </div>
+
+        {/* Counters */}
+        <div className="flex items-center gap-6 sm:gap-8 shrink-0">
+          <div>
+            <p className="font-display text-3xl text-white leading-none">{recorded}<span className="text-gray-600 text-xl">/{total}</span></p>
+            <p className="font-mono text-[9px] tracking-kicker text-gray-600 uppercase mt-1">Recorded</p>
+          </div>
+          <div>
+            <p className="font-display text-3xl text-emerald-400 leading-none">{published}</p>
+            <p className="font-mono text-[9px] tracking-kicker text-gray-600 uppercase mt-1">Published</p>
+          </div>
+          {lastRec && (
+            <div className="hidden md:block">
+              <p className="font-mono text-sm text-gray-300 leading-none mt-1.5">{lastRec.record_date}</p>
+              <p className="font-mono text-[9px] tracking-kicker text-gray-600 uppercase mt-2">Last recorded</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Progress bar */}
+      <div className="mt-5 h-px bg-night-700 relative overflow-visible">
+        <div className="absolute inset-y-0 left-0 h-px bg-gold-500 shadow-[0_0_8px_rgba(245,158,11,0.6)]"
+             style={{ width: `${pct}%` }} />
+      </div>
+      <p className="font-mono text-[9px] tracking-kicker text-gray-700 uppercase mt-2 text-right">{pct}% of the canon covered</p>
+    </div>
+  )
+}
+
 export default function PodcastHome() {
   const [episodes, setEpisodes] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     async function loadEpisodes() {
-      const { data: event } = await supabase
-        .from('ranking_events')
-        .select('id')
-        .eq('year', 2026)
-        .single()
-
-      if (!event) { setLoading(false); return }
-
-      const { data: rankings } = await supabase
-        .from('combined_rankings')
-        .select('combined_rank, films(id, title, poster_url, release_year, director)')
-        .eq('event_id', event.id)
-        .order('combined_rank', { ascending: false })
-
-      const mapped = (rankings || []).map((r, i) => ({
-        episodeNum:   i + 1,           // ep 1 = last-ranked film
-        combinedRank: r.combined_rank, // rank on the 2026 combined list
-        film:         r.films,
-      }))
-
-      setEpisodes(mapped)
+      const { data } = await supabase
+        .from('podcast_episodes')
+        .select('id, episode_num, type, status, record_date, title_override, films(id, title, poster_url, release_year, director)')
+        .order('episode_num', { ascending: true })
+      setEpisodes(data || [])
       setLoading(false)
     }
     loadEpisodes()
   }, [])
 
-  const total = episodes.length
+  const intro       = episodes.find(e => e.type === 'intro')
+  const filmEps     = episodes.filter(e => e.type !== 'intro')
+  const filmEpCount = filmEps.length
 
   return (
     <div className="min-h-screen bg-night-950">
@@ -152,44 +226,49 @@ export default function PodcastHome() {
             Hermz &amp; D · Podcast
           </p>
           <h1 className="font-display text-[70px] sm:text-[88px] text-white leading-none tracking-wide">
-            CINEMATRIX
+            {PODCAST_NAME.toUpperCase()}
           </h1>
           <p className="font-serif italic text-gray-400 text-lg mt-1.5">
-            A deep dive into The Canon, one film at a time.
+            {PODCAST_TAGLINE}
           </p>
-          {!loading && total > 0 && (
+          {!loading && episodes.length > 0 && (
             <p className="font-mono text-[10px] tracking-kicker text-gray-700 mt-3 uppercase">
-              {total + 1} Episodes · Starting with 2026 #{total} · Ending at #1
+              {episodes.length} Episodes · Starting with 2026 #{filmEpCount} · Ending at #1
             </p>
           )}
         </div>
       </section>
 
-      {/* ── Episode list ────────────────────────────────────────────── */}
+      {/* ── Body ────────────────────────────────────────────────────── */}
       <div className="max-w-3xl mx-auto px-5 sm:px-8 py-10">
         {loading ? (
           <div className="flex items-center justify-center py-24">
             <span className="font-mono text-xs text-gray-600">Loading episodes…</span>
           </div>
         ) : (
-          <div className="space-y-1.5">
+          <>
+            <Dashboard episodes={episodes} />
 
-            {/* Episode 0 — pinned intro */}
-            <div className="mb-8">
+            <div className="space-y-1.5">
+              {/* Episode 0 — pinned intro */}
+              {intro && (
+                <div className="mb-8">
+                  <p className="font-mono text-[10px] tracking-kicker text-gray-600 mb-3 uppercase">
+                    Where It All Begins
+                  </p>
+                  <EpisodeCard ep={intro} filmEpCount={filmEpCount} />
+                </div>
+              )}
+
+              {/* Film episodes — countdown order */}
               <p className="font-mono text-[10px] tracking-kicker text-gray-600 mb-3 uppercase">
-                Where It All Begins
+                The Canon · 2026 Edition
               </p>
-              <EpisodeCard ep={{ episodeNum: 0, film: null }} />
+              {filmEps.map(ep => (
+                <EpisodeCard key={ep.id} ep={ep} filmEpCount={filmEpCount} />
+              ))}
             </div>
-
-            {/* Film episodes — 2026 combined, lowest rank first */}
-            <p className="font-mono text-[10px] tracking-kicker text-gray-600 mb-3 uppercase">
-              The Canon · 2026 Edition
-            </p>
-            {episodes.map(ep => (
-              <EpisodeCard key={ep.episodeNum} ep={ep} />
-            ))}
-          </div>
+          </>
         )}
       </div>
     </div>

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
+import { PODCAST_NAME } from '../../lib/podcast'
 
 
 const OSCARS_LINKS = [
@@ -129,7 +130,7 @@ export default function Navbar() {
                 }`
               }
             >
-              Cinematrix
+              {PODCAST_NAME}
             </NavLink>
 
           </nav>
@@ -327,7 +328,7 @@ export default function Navbar() {
             <div className="border-t border-white/[0.06] my-4" />
 
             {/* Cinematrix / Podcast */}
-            <div className="px-4 py-2 font-mono text-[10px] tracking-kicker text-gray-600 uppercase">Cinematrix</div>
+            <div className="px-4 py-2 font-mono text-[10px] tracking-kicker text-gray-600 uppercase">{PODCAST_NAME}</div>
             <NavLink to="/podcast"
               end
               className={({ isActive }) =>
