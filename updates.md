@@ -296,6 +296,8 @@ Status key: 🔲 Pending · 🔄 In Progress · ✅ Complete
 
 ## Minor Updates Log
 
+ - **2026-07-10** Rankings grid — removed film-title overlay that had reappeared over posters in the grid view (`MoviesList.jsx`); kept rank badge, movement arrow, year/score line, softened gradient. SiteUpdates entry added.
+
 - **2026-06-10** Watchlist — Add Film modal no longer closes unexpectedly while searching. Fixed fragile `e.target === e.currentTarget` pattern on outer wrapper; replaced with `onClick={onClose}` on the backdrop div + `stopPropagation()` on the modal panel.
 
 - **2026-05-30** Oscar Stats — Category Streaks section added (`OscarsStats.jsx`). Three sub-sections: Currently Hot (active correct streaks ≥3 on live categories), Currently Cold (active miss streaks ≥3), All-Time Records (longest correct streaks ever, top 12). `buildCatStreaks()` computes current and all-time streaks with year ranges for each category × person pair.

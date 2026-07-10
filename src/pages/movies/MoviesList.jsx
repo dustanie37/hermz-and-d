@@ -429,13 +429,10 @@ export default function MoviesList() {
                         {move > 0 ? `↑${move}` : `↓${Math.abs(move)}`}
                       </div>
                     )}
-                    {/* Title + score overlay */}
+                    {/* Score overlay */}
                     <div className="absolute inset-x-0 bottom-0 p-3 pointer-events-none"
-                         style={{ background: 'linear-gradient(180deg, transparent 35%, rgba(0,0,0,0.92) 100%)' }}>
-                      <div className="font-display text-[17px] text-white tracking-wide leading-tight line-clamp-2">
-                        {f.title?.toUpperCase()}
-                      </div>
-                      <div className="flex items-center gap-2 mt-1.5">
+                         style={{ background: 'linear-gradient(180deg, transparent 55%, rgba(0,0,0,0.85) 100%)' }}>
+                      <div className="flex items-center gap-2">
                         {f.release_year && (
                           <span className="font-mono text-[11px] tracking-kicker text-white/55">{f.release_year}</span>
                         )}

@@ -6,6 +6,11 @@ const UPDATES = [
     entries: [
       {
         tag: 'Design',
+        color: 'film',
+        text: 'Rankings grid tidy-up. On the Films rankings page, the grid view had film titles printed back over the bottom of each poster. Those are gone again \u2014 posters now show just the rank badge, movement arrow, and the year/score line, letting the artwork breathe.',
+      },
+      {
+        tag: 'Design',
         color: 'cinema',
         text: 'Cinematrix readability pass. The podcast section\'s tiny labels are gone — every 9–11px kicker, badge, and table header now renders at a minimum of 12px, talking points and chapter labels read at full body size (16px), and episode titles on the countdown grew a step. Contrast got the same treatment after a second look: form-field titles (Record Date, YouTube, Notes…) went from murky gray to light gray, section kickers and table headers came up two shades, and the Planned status chip brightened. The whole section is now comfortably readable at a glance instead of squint-first.',
       },
