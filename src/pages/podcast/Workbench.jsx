@@ -13,7 +13,7 @@ function SectionHeader({ label, sub }) {
   return (
     <div className="flex items-baseline gap-3 mb-4">
       <h2 className="font-display text-2xl text-white tracking-wide">{label}</h2>
-      {sub && <span className="font-mono text-[10px] tracking-kicker text-gray-600 uppercase">{sub}</span>}
+      {sub && <span className="font-mono text-xs tracking-kicker text-gray-500 uppercase">{sub}</span>}
     </div>
   )
 }
@@ -97,7 +97,7 @@ function LogisticsCard({ ep, setEp }) {
               key={s}
               onClick={() => setStatus(s)}
               disabled={saving}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border font-mono text-[10px] tracking-kicker uppercase transition-all
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border font-mono text-xs tracking-kicker uppercase transition-all
                 ${active
                   ? 'bg-gold-500 border-gold-500 text-night-950 font-semibold'
                   : past
@@ -112,23 +112,23 @@ function LogisticsCard({ ep, setEp }) {
       </div>
 
       {warn && (
-        <p className="mb-4 text-xs text-amber-300 font-mono">{warn}</p>
+        <p className="mb-4 text-sm text-amber-300 font-mono">{warn}</p>
       )}
 
       {/* Fields */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
         <label className="block">
-          <span className="font-mono text-[10px] tracking-kicker text-gray-600 uppercase block mb-1.5">Record date</span>
+          <span className="font-mono text-xs tracking-kicker text-gray-500 uppercase block mb-1.5">Record date</span>
           <input type="date" className="input w-full" value={form.record_date}
                  onChange={e => setForm(f => ({ ...f, record_date: e.target.value }))} />
         </label>
         <label className="block">
-          <span className="font-mono text-[10px] tracking-kicker text-gray-600 uppercase block mb-1.5">Publish date</span>
+          <span className="font-mono text-xs tracking-kicker text-gray-500 uppercase block mb-1.5">Publish date</span>
           <input type="date" className="input w-full" value={form.publish_date}
                  onChange={e => setForm(f => ({ ...f, publish_date: e.target.value }))} />
         </label>
         <label className="block">
-          <span className="font-mono text-[10px] tracking-kicker text-gray-600 uppercase block mb-1.5">Runtime (min)</span>
+          <span className="font-mono text-xs tracking-kicker text-gray-500 uppercase block mb-1.5">Runtime (min)</span>
           <input type="number" min="0" className="input w-full" value={form.runtime_minutes}
                  onChange={e => setForm(f => ({ ...f, runtime_minutes: e.target.value }))} />
         </label>
@@ -141,7 +141,7 @@ function LogisticsCard({ ep, setEp }) {
           ['apple_url',   'Apple Podcasts'],
         ].map(([key, label]) => (
           <label key={key} className="block">
-            <span className="font-mono text-[10px] tracking-kicker text-gray-600 uppercase block mb-1.5">{label}</span>
+            <span className="font-mono text-xs tracking-kicker text-gray-500 uppercase block mb-1.5">{label}</span>
             <input type="url" placeholder="https://…" className="input w-full" value={form[key]}
                    onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))} />
           </label>
@@ -149,7 +149,7 @@ function LogisticsCard({ ep, setEp }) {
       </div>
 
       <label className="block mb-5">
-        <span className="font-mono text-[10px] tracking-kicker text-gray-600 uppercase block mb-1.5">Notes</span>
+        <span className="font-mono text-xs tracking-kicker text-gray-500 uppercase block mb-1.5">Notes</span>
         <textarea rows={3} className="input w-full resize-y"
                   placeholder="Internal notes — logistics, reminders, gear, guests…"
                   value={form.notes}
@@ -161,7 +161,7 @@ function LogisticsCard({ ep, setEp }) {
           {saving ? 'Saving…' : 'Save'}
         </button>
         {dirty && !saving && (
-          <span className="font-mono text-[10px] tracking-kicker text-amber-300 uppercase">Unsaved changes</span>
+          <span className="font-mono text-xs tracking-kicker text-amber-300 uppercase">Unsaved changes</span>
         )}
       </div>
     </div>
@@ -209,7 +209,7 @@ function TalkingPointsCard({ ep, setEp }) {
       <SectionHeader label="TALKING POINTS" sub={points.length ? `${points.filter(p => p.done).length}/${points.length} covered` : 'Build the conversation'} />
 
       {points.length === 0 && (
-        <p className="text-gray-600 text-sm italic mb-4">
+        <p className="text-gray-500 text-base italic mb-4">
           {ep.type === 'film'
             ? 'Nothing yet — add points below, or pull ideas in from the generated insights above.'
             : 'Nothing yet — add the first talking point below.'}
@@ -236,7 +236,7 @@ function TalkingPointsCard({ ep, setEp }) {
             {editingId === p.id ? (
               <div className="flex-1">
                 <textarea
-                  autoFocus rows={2} className="input w-full text-sm resize-y"
+                  autoFocus rows={2} className="input w-full text-base resize-y"
                   value={editText}
                   onChange={e => setEditText(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); commitEdit() } if (e.key === 'Escape') setEditingId(null) }}
@@ -247,10 +247,10 @@ function TalkingPointsCard({ ep, setEp }) {
                 </div>
               </div>
             ) : (
-              <p className={`flex-1 text-sm leading-relaxed ${p.done ? 'text-gray-600 line-through' : 'text-gray-300'}`}>
+              <p className={`flex-1 text-base leading-relaxed ${p.done ? 'text-gray-500 line-through' : 'text-gray-200'}`}>
                 {p.text}
                 {p.source === 'generated' && (
-                  <span className="ml-2 align-middle font-mono text-[9px] tracking-kicker uppercase text-cinema-500/70 border border-cinema-500/25 rounded-full px-1.5 py-px">auto</span>
+                  <span className="ml-2 align-middle font-mono text-[11px] tracking-kicker uppercase text-cinema-400 border border-cinema-500/30 rounded-full px-1.5 py-px">auto</span>
                 )}
               </p>
             )}
@@ -275,7 +275,7 @@ function TalkingPointsCard({ ep, setEp }) {
       {/* add */}
       <div className="flex gap-2">
         <textarea
-          rows={1} className="input flex-1 text-sm resize-none"
+          rows={1} className="input flex-1 text-base resize-none"
           placeholder="Add a talking point…"
           value={draft}
           onChange={e => setDraft(e.target.value)}
@@ -323,15 +323,15 @@ function TimestampsCard({ ep, timestamps, setTimestamps }) {
       <SectionHeader label="TIMESTAMPS" sub="Chapters — fill in after recording" />
 
       {timestamps.length === 0 && (
-        <p className="text-gray-600 text-sm italic mb-4">No chapters yet.</p>
+        <p className="text-gray-500 text-base italic mb-4">No chapters yet.</p>
       )}
 
       {timestamps.length > 0 && (
         <div className="space-y-1.5 mb-5">
           {timestamps.map(t => (
             <div key={t.id} className="group flex items-center gap-3 rounded-lg px-2 py-1 -mx-2 hover:bg-night-900/50 transition-colors">
-              <span className="font-mono text-xs text-cinema-400 w-16 shrink-0">{fmtTime(t.seconds)}</span>
-              <span className="flex-1 text-sm text-gray-300">{t.label}</span>
+              <span className="font-mono text-sm text-cinema-400 w-20 shrink-0">{fmtTime(t.seconds)}</span>
+              <span className="flex-1 text-base text-gray-200">{t.label}</span>
               <button onClick={() => remove(t.id)} disabled={busy}
                       className="shrink-0 w-6 h-6 rounded text-gray-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
                       aria-label="Delete">×</button>
@@ -340,16 +340,16 @@ function TimestampsCard({ ep, timestamps, setTimestamps }) {
         </div>
       )}
 
-      {warn && <p className="mb-3 text-xs text-amber-300 font-mono">{warn}</p>}
+      {warn && <p className="mb-3 text-sm text-amber-300 font-mono">{warn}</p>}
 
       <div className="flex flex-wrap gap-2">
         <input
-          className="input w-24 font-mono text-sm" placeholder="12:34"
+          className="input w-28 font-mono text-base" placeholder="12:34"
           value={time} onChange={e => setTime(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter') add() }}
         />
         <input
-          className="input flex-1 min-w-[160px] text-sm" placeholder="Chapter label…"
+          className="input flex-1 min-w-[160px] text-base" placeholder="Chapter label…"
           value={label} onChange={e => setLabel(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter') add() }}
         />
@@ -365,7 +365,7 @@ export default function Workbench({ ep, setEp, timestamps, setTimestamps }) {
     <div className="space-y-8">
       <div className="flex items-center gap-3">
         <span className="block flex-1 h-px bg-white/[0.06]" />
-        <span className="font-mono text-[10px] tracking-kicker text-gray-600 uppercase">Prep Workbench</span>
+        <span className="font-mono text-xs tracking-kicker text-gray-500 uppercase">Prep Workbench</span>
         <span className="block flex-1 h-px bg-white/[0.06]" />
       </div>
       <TalkingPointsCard ep={ep} setEp={setEp} />

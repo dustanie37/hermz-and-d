@@ -189,16 +189,16 @@ function generateInsights(film, dustinRows, mattRows, combined, oscarNoms) {
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 function ScorePill({ value, max = 10 }) {
-  if (value == null) return <span className="text-gray-600 text-sm font-mono">—</span>
+  if (value == null) return <span className="text-gray-500 text-base font-mono">—</span>
   const color = value >= (max * 0.8) ? 'text-emerald-400' : value >= (max * 0.4) ? 'text-yellow-400' : 'text-red-400'
-  return <span className={`font-mono font-semibold text-sm ${color}`}>{value}</span>
+  return <span className={`font-mono font-semibold text-base ${color}`}>{value}</span>
 }
 
 function SectionHeader({ label, sub }) {
   return (
     <div className="flex items-baseline gap-3 mb-4">
       <h2 className="font-display text-2xl text-white tracking-wide">{label}</h2>
-      {sub && <span className="font-mono text-[10px] tracking-kicker text-gray-600 uppercase">{sub}</span>}
+      {sub && <span className="font-mono text-xs tracking-kicker text-gray-500 uppercase">{sub}</span>}
     </div>
   )
 }
@@ -208,7 +208,7 @@ function StatusChip({ status }) {
   return (
     <span className="inline-flex items-center gap-1.5">
       <span className={`w-1.5 h-1.5 rounded-full ${meta.dot}`} />
-      <span className={`font-mono text-[10px] tracking-kicker uppercase ${meta.text}`}>{meta.label}</span>
+      <span className={`font-mono text-xs tracking-kicker uppercase ${meta.text}`}>{meta.label}</span>
     </span>
   )
 }
@@ -240,28 +240,28 @@ function MediaCard({ ep, timestamps }) {
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-4">
           <StatusChip status={ep.status} />
           {ep.publish_date && (
-            <span className="font-mono text-[10px] tracking-kicker text-gray-500 uppercase">Published {ep.publish_date}</span>
+            <span className="font-mono text-xs tracking-kicker text-gray-500 uppercase">Published {ep.publish_date}</span>
           )}
           {ep.runtime_minutes != null && (
-            <span className="font-mono text-[10px] tracking-kicker text-gray-500 uppercase">{ep.runtime_minutes} min</span>
+            <span className="font-mono text-xs tracking-kicker text-gray-500 uppercase">{ep.runtime_minutes} min</span>
           )}
           <span className="flex-1" />
           <span className="flex items-center gap-2">
             {ep.youtube_url && (
               <a href={ep.youtube_url} target="_blank" rel="noreferrer"
-                 className="font-mono text-[10px] tracking-kicker uppercase px-2.5 py-1 rounded-full border border-white/[0.08] text-gray-400 hover:text-red-400 hover:border-red-400/40 transition-colors">
+                 className="font-mono text-xs tracking-kicker uppercase px-2.5 py-1 rounded-full border border-white/[0.08] text-gray-400 hover:text-red-400 hover:border-red-400/40 transition-colors">
                 YouTube ↗
               </a>
             )}
             {ep.spotify_url && (
               <a href={ep.spotify_url} target="_blank" rel="noreferrer"
-                 className="font-mono text-[10px] tracking-kicker uppercase px-2.5 py-1 rounded-full border border-white/[0.08] text-gray-400 hover:text-emerald-400 hover:border-emerald-400/40 transition-colors">
+                 className="font-mono text-xs tracking-kicker uppercase px-2.5 py-1 rounded-full border border-white/[0.08] text-gray-400 hover:text-emerald-400 hover:border-emerald-400/40 transition-colors">
                 Spotify ↗
               </a>
             )}
             {ep.apple_url && (
               <a href={ep.apple_url} target="_blank" rel="noreferrer"
-                 className="font-mono text-[10px] tracking-kicker uppercase px-2.5 py-1 rounded-full border border-white/[0.08] text-gray-400 hover:text-cinema-400 hover:border-cinema-400/40 transition-colors">
+                 className="font-mono text-xs tracking-kicker uppercase px-2.5 py-1 rounded-full border border-white/[0.08] text-gray-400 hover:text-cinema-400 hover:border-cinema-400/40 transition-colors">
                 Apple ↗
               </a>
             )}
@@ -271,13 +271,13 @@ function MediaCard({ ep, timestamps }) {
         {/* Chapters */}
         {timestamps.length > 0 && (
           <div>
-            <p className="font-mono text-[10px] tracking-kicker text-gray-600 uppercase mb-2">Chapters</p>
+            <p className="font-mono text-xs tracking-kicker text-gray-500 uppercase mb-2">Chapters</p>
             <div className="flex flex-wrap gap-1.5">
               {timestamps.map(t => (
                 <button key={t.id} onClick={() => seek(t.seconds)}
-                        className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-night-900/70 border border-white/[0.05]
-                                   hover:border-cinema-500/40 text-xs text-gray-400 hover:text-cinema-300 transition-all">
-                  <span className="font-mono text-[10px] text-cinema-500">{fmtTime(t.seconds)}</span>
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-night-900/70 border border-white/[0.05]
+                                   hover:border-cinema-500/40 text-sm text-gray-300 hover:text-cinema-300 transition-all">
+                  <span className="font-mono text-xs text-cinema-500">{fmtTime(t.seconds)}</span>
                   {t.label}
                 </button>
               ))}
@@ -391,7 +391,7 @@ export default function PodcastEpisode() {
   // ── Loading / error ───────────────────────────────────────────────────────
   if (loading) return (
     <div className="min-h-screen bg-night-950 flex items-center justify-center">
-      <span className="font-mono text-xs text-gray-600">Loading episode…</span>
+      <span className="font-mono text-sm text-gray-500">Loading episode…</span>
     </div>
   )
 
@@ -415,7 +415,7 @@ export default function PodcastEpisode() {
       {prevEp ? (
         <Link to={`/podcast/${prevEp.episode_num}`}
           className="flex items-center gap-2 px-4 py-2 rounded-lg bg-night-800 border border-white/[0.06]
-                     hover:border-cinema-500/30 text-xs text-gray-400 hover:text-cinema-400 transition-all font-mono">
+                     hover:border-cinema-500/30 text-sm text-gray-300 hover:text-cinema-400 transition-all font-mono">
           ← Ep {String(prevEp.episode_num).padStart(2,'0')}
           <span className="hidden sm:inline text-gray-600 truncate max-w-[120px]">· {epTitle(prevEp)}</span>
         </Link>
@@ -423,12 +423,12 @@ export default function PodcastEpisode() {
       {nextEp ? (
         <Link to={`/podcast/${nextEp.episode_num}`}
           className="flex items-center gap-2 px-4 py-2 rounded-lg bg-night-800 border border-white/[0.06]
-                     hover:border-cinema-500/30 text-xs text-gray-400 hover:text-cinema-400 transition-all font-mono">
+                     hover:border-cinema-500/30 text-sm text-gray-300 hover:text-cinema-400 transition-all font-mono">
           <span className="hidden sm:inline text-gray-600 truncate max-w-[120px]">{epTitle(nextEp)} ·</span>
           Ep {String(nextEp.episode_num).padStart(2,'0')} →
         </Link>
       ) : (
-        <div className="text-xs text-gray-700 font-mono italic">End of The Canon</div>
+        <div className="text-sm text-gray-500 font-mono italic">End of The Canon</div>
       )}
     </div>
   )
@@ -443,12 +443,12 @@ export default function PodcastEpisode() {
         }}/>
         <div className="relative max-w-7xl mx-auto px-5 sm:px-8 pb-10 w-full">
           <div className="flex items-center gap-3 mb-4">
-            <Link to="/podcast" className="font-mono text-[10px] tracking-kicker text-gray-600 hover:text-cinema-500 transition-colors uppercase">
+            <Link to="/podcast" className="font-mono text-xs tracking-kicker text-gray-500 hover:text-cinema-500 transition-colors uppercase">
               ← {PODCAST_NAME}
             </Link>
           </div>
           <div className="flex items-center gap-4 mb-2">
-            <p className="font-mono text-[11px] tracking-kicker text-cinema-500 uppercase">Episode 00</p>
+            <p className="font-mono text-xs tracking-kicker text-cinema-500 uppercase">Episode 00</p>
             <StatusChip status={ep.status} />
           </div>
           <h1 className="font-display text-5xl sm:text-6xl text-white leading-none">{epTitle(ep).toUpperCase()}</h1>
@@ -510,19 +510,19 @@ export default function PodcastEpisode() {
 
           {/* Back + prev/next */}
           <div className="flex items-center justify-between mb-5">
-            <Link to="/podcast" className="font-mono text-[10px] tracking-kicker text-gray-600 hover:text-cinema-500 transition-colors uppercase">
+            <Link to="/podcast" className="font-mono text-xs tracking-kicker text-gray-500 hover:text-cinema-500 transition-colors uppercase">
               ← {PODCAST_NAME}
             </Link>
             <div className="flex items-center gap-3">
               {prevEp && (
                 <Link to={`/podcast/${prevEp.episode_num}`}
-                  className="font-mono text-[10px] tracking-kicker text-gray-600 hover:text-gray-400 transition-colors">
+                  className="font-mono text-xs tracking-kicker text-gray-500 hover:text-gray-400 transition-colors">
                   ← Ep {String(prevEp.episode_num).padStart(2,'0')}
                 </Link>
               )}
               {nextEp && (
                 <Link to={`/podcast/${nextEp.episode_num}`}
-                  className="font-mono text-[10px] tracking-kicker text-gray-600 hover:text-gray-400 transition-colors">
+                  className="font-mono text-xs tracking-kicker text-gray-500 hover:text-gray-400 transition-colors">
                   Ep {String(nextEp.episode_num).padStart(2,'0')} →
                 </Link>
               )}
@@ -540,7 +540,7 @@ export default function PodcastEpisode() {
             )}
             <div>
               <div className="flex items-center gap-4 mb-1.5">
-                <p className="font-mono text-[11px] tracking-kicker text-cinema-500 uppercase">
+                <p className="font-mono text-xs tracking-kicker text-cinema-500 uppercase">
                   Episode {String(ep.episode_num).padStart(2,'0')} · {PODCAST_NAME}
                 </p>
                 <StatusChip status={ep.status} />
@@ -573,12 +573,12 @@ export default function PodcastEpisode() {
               <table className="w-full min-w-[480px] text-sm">
                 <thead>
                   <tr className="border-b border-white/[0.06]">
-                    <th className="text-left font-mono text-[10px] tracking-kicker text-gray-600 pb-3 uppercase">Edition</th>
-                    <th className="text-center font-mono text-[10px] tracking-kicker pb-3 uppercase" style={{ color: DC }}>Dust</th>
-                    <th className="text-center font-mono text-[10px] tracking-kicker pb-3 uppercase" style={{ color: HC }}>Hermz</th>
-                    <th className="text-center font-mono text-[10px] tracking-kicker pb-3 uppercase" style={{ color: CC }}>Combined</th>
-                    <th className="text-right font-mono text-[10px] tracking-kicker text-gray-600 pb-3 uppercase">D Score</th>
-                    <th className="text-right font-mono text-[10px] tracking-kicker text-gray-600 pb-3 uppercase">H Score</th>
+                    <th className="text-left font-mono text-xs tracking-kicker text-gray-500 pb-3 uppercase">Edition</th>
+                    <th className="text-center font-mono text-xs tracking-kicker pb-3 uppercase" style={{ color: DC }}>Dust</th>
+                    <th className="text-center font-mono text-xs tracking-kicker pb-3 uppercase" style={{ color: HC }}>Hermz</th>
+                    <th className="text-center font-mono text-xs tracking-kicker pb-3 uppercase" style={{ color: CC }}>Combined</th>
+                    <th className="text-right font-mono text-xs tracking-kicker text-gray-500 pb-3 uppercase">D Score</th>
+                    <th className="text-right font-mono text-xs tracking-kicker text-gray-500 pb-3 uppercase">H Score</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -587,18 +587,18 @@ export default function PodcastEpisode() {
                     if (!d && !m && !c) return null
                     return (
                       <tr key={yr} className="border-b border-white/[0.04] last:border-0">
-                        <td className="py-3 font-mono text-xs text-gray-400">{yr} Edition</td>
+                        <td className="py-3 font-mono text-sm text-gray-300">{yr} Edition</td>
                         <td className="py-3 text-center">
-                          {d?.rank ? <span className="font-mono font-semibold text-sm" style={{ color: DC }}>#{d.rank}</span>
-                                   : <span className="text-gray-700 text-xs">NR</span>}
+                          {d?.rank ? <span className="font-mono font-semibold text-base" style={{ color: DC }}>#{d.rank}</span>
+                                   : <span className="text-gray-500 text-sm">NR</span>}
                         </td>
                         <td className="py-3 text-center">
-                          {m?.rank ? <span className="font-mono font-semibold text-sm" style={{ color: HC }}>#{m.rank}</span>
-                                   : <span className="text-gray-700 text-xs">NR</span>}
+                          {m?.rank ? <span className="font-mono font-semibold text-base" style={{ color: HC }}>#{m.rank}</span>
+                                   : <span className="text-gray-500 text-sm">NR</span>}
                         </td>
                         <td className="py-3 text-center">
-                          {c?.combined_rank ? <span className="font-mono font-semibold text-sm" style={{ color: CC }}>#{c.combined_rank}</span>
-                                            : <span className="text-gray-700 text-xs">—</span>}
+                          {c?.combined_rank ? <span className="font-mono font-semibold text-base" style={{ color: CC }}>#{c.combined_rank}</span>
+                                            : <span className="text-gray-500 text-sm">—</span>}
                         </td>
                         <td className="py-3 text-right">
                           <ScorePill value={d?.total_score} max={90} />
@@ -624,14 +624,14 @@ export default function PodcastEpisode() {
                 const added = pointTexts.has(text)
                 return (
                   <div key={i} className="flex gap-3 items-start">
-                    <div className="shrink-0 mt-1 w-5 h-5 rounded-full bg-cinema-500/10 border border-cinema-500/30 flex items-center justify-center">
-                      <span className="font-mono text-[9px] text-cinema-500">{i + 1}</span>
+                    <div className="shrink-0 mt-1 w-6 h-6 rounded-full bg-cinema-500/10 border border-cinema-500/30 flex items-center justify-center">
+                      <span className="font-mono text-xs text-cinema-500">{i + 1}</span>
                     </div>
-                    <p className="flex-1 text-gray-300 text-sm leading-relaxed">{text}</p>
+                    <p className="flex-1 text-gray-300 text-base leading-relaxed">{text}</p>
                     <button
                       onClick={() => promote(text)}
                       disabled={added}
-                      className={`shrink-0 mt-0.5 px-2 py-0.5 rounded-full border font-mono text-[9px] tracking-kicker uppercase transition-all
+                      className={`shrink-0 mt-0.5 px-2 py-0.5 rounded-full border font-mono text-xs tracking-kicker uppercase transition-all
                         ${added
                           ? 'border-emerald-500/30 text-emerald-400/70 cursor-default'
                           : 'border-white/[0.08] text-gray-500 hover:text-cinema-400 hover:border-cinema-500/40'}`}
@@ -693,11 +693,11 @@ export default function PodcastEpisode() {
             <SectionHeader label="ON THE LISTS" sub="External critical lists" />
             <div className="flex flex-wrap gap-2">
               {listApps.map(l => (
-                <span key={l.key} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-night-800 border border-white/[0.06] text-xs text-gray-300">
+                <span key={l.key} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-night-800 border border-white/[0.06] text-sm text-gray-300">
                   <span className="w-1.5 h-1.5 rounded-full bg-cinema-500 shrink-0"/>
                   {l.label}
                   {l.ranked && film[l.key] != null ? (
-                    <span className="font-mono text-[10px] text-gray-600">#{film[l.key]}</span>
+                    <span className="font-mono text-xs text-gray-500">#{film[l.key]}</span>
                   ) : null}
                 </span>
               ))}
@@ -713,10 +713,10 @@ export default function PodcastEpisode() {
               <table className="w-full min-w-[420px] text-sm">
                 <thead>
                   <tr className="border-b border-white/[0.06]">
-                    <th className="text-left font-mono text-[10px] tracking-kicker text-gray-600 pb-3 uppercase">Category</th>
-                    <th className="text-center font-mono text-[10px] tracking-kicker pb-3 uppercase" style={{ color: DC }}>Dust</th>
-                    <th className="text-center font-mono text-[10px] tracking-kicker pb-3 uppercase" style={{ color: HC }}>Hermz</th>
-                    <th className="text-right font-mono text-[10px] tracking-kicker text-gray-600 pb-3 uppercase">Max</th>
+                    <th className="text-left font-mono text-xs tracking-kicker text-gray-500 pb-3 uppercase">Category</th>
+                    <th className="text-center font-mono text-xs tracking-kicker pb-3 uppercase" style={{ color: DC }}>Dust</th>
+                    <th className="text-center font-mono text-xs tracking-kicker pb-3 uppercase" style={{ color: HC }}>Hermz</th>
+                    <th className="text-right font-mono text-xs tracking-kicker text-gray-500 pb-3 uppercase">Max</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -729,10 +729,10 @@ export default function PodcastEpisode() {
                     const m = mattRows[LATEST]?.[cat.key]
                     return (
                       <tr key={cat.key} className="border-b border-white/[0.04] last:border-0">
-                        <td className="py-2.5 text-gray-400 text-xs">{cat.label}</td>
+                        <td className="py-2.5 text-gray-300 text-sm">{cat.label}</td>
                         <td className="py-2.5 text-center"><ScorePill value={d} max={cat.max} /></td>
                         <td className="py-2.5 text-center"><ScorePill value={m} max={cat.max} /></td>
-                        <td className="py-2.5 text-right font-mono text-xs text-gray-700">{cat.max}</td>
+                        <td className="py-2.5 text-right font-mono text-sm text-gray-500">{cat.max}</td>
                       </tr>
                     )
                   })}

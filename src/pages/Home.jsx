@@ -287,7 +287,7 @@ export default function Home() {
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="font-mono text-[11px] tracking-kicker uppercase text-cinema-500">
+              <div className="font-mono text-xs tracking-kicker uppercase text-cinema-500">
                 {PODCAST_NAME} · Latest Episode
               </div>
               <div className="font-display text-2xl text-white tracking-wide mt-1 truncate
@@ -295,12 +295,12 @@ export default function Home() {
                 EP {String(latestPod.episode_num).padStart(2, '0')} · {(latestPod.title_override || latestPod.films?.title || '').toUpperCase()}
               </div>
               {latestPod.publish_date && (
-                <div className="font-mono text-[10px] tracking-kicker text-gray-600 uppercase mt-1">
+                <div className="font-mono text-xs tracking-kicker text-gray-500 uppercase mt-1">
                   Published {latestPod.publish_date}
                 </div>
               )}
             </div>
-            <span className="shrink-0 font-mono text-[11px] tracking-kicker text-gray-500 group-hover:text-gray-300 transition-colors">
+            <span className="shrink-0 font-mono text-xs tracking-kicker text-gray-500 group-hover:text-gray-300 transition-colors">
               Watch →
             </span>
           </Link>
