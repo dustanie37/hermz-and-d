@@ -7,6 +7,11 @@ const UPDATES = [
       {
         tag: 'Films',
         color: 'film',
+        text: 'Phase 12f — The Reveal Ceremony. The page this whole build has been marching toward. Once both lists are locked, the ceremony opens: a countdown from the bottom of the list to #1, two reveals per rank, alternating who goes first. Each reveal shows the full picture — poster, all nine category scores with the /100 total, and a trajectory sparkline tracing that film\'s journey across every edition ("rising, was #31" or "★ first appearance"). Films on both lists link up on the running board the moment their second appearance lands ("⇄ also H #61"), with a flourish for the rare same-rank match. Everything writes to the database as you go: screens stay in sync in real time across devices, either player can press reveal, and the countdown survives closed tabs and multiple sittings. The Top Ten gets the glow treatment. And when #1 falls, the finale: the new combined list, generated live, seen by both of you for the very first time.',
+      },
+      {
+        tag: 'Films',
+        color: 'film',
         text: 'Phase 12e — The Waiting Room. The moment you lock your list, your own blackout lifts and a private stats room opens: your new Canon measured against your own history. Biggest risers and fallers versus your last edition, first-time appearances, films that dropped off, a score-distribution comparison (this edition vs. last), and your full ranked list with movement badges on every film. The other list stays completely sealed until the reveal ceremony — if one of you locks weeks early, this is where you pace.',
       },
       {

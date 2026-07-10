@@ -217,12 +217,31 @@ export default function MoviesScore() {
     if (!allScored || !me) return
     if (!window.confirm('Lock your list?\n\nThis is final until the reveal — your ranked list and personal stats open up, and the ceremony unlocks once both of you are in.')) return
     setLocking(true); setError(null)
-    const { error } = await supabase
-      .from('event_players')
-      .update({ state: 'locked', locked_at: new Date().toISOString() })
-      .eq('event_id', event.id).eq('user_id', user.id)
-    if (error) setError(error.message)
-    else await load()
+    try {
+      // Persist final ranks (shared comparator — the ceremony + publish read these)
+      const rankRows = ranked.map((r, i) => ({
+        id: r.id, event_id: r.event_id, user_id: r.user_id, film_id: r.film_id, rank: i + 1,
+      }))
+      const { error: rkErr } = await supabase
+        .from('event_scores').upsert(rankRows, { onConflict: 'id' })
+      if (rkErr) throw rkErr
+
+      const { error: stErr } = await supabase
+        .from('event_players')
+        .update({ state: 'locked', locked_at: new Date().toISOString() })
+        .eq('event_id', event.id).eq('user_id', user.id)
+      if (stErr) throw stErr
+
+      // Second lock closes scoring: the event advances to 'locked' → ceremony opens
+      if (other?.state === 'locked') {
+        const { error: evErr } = await supabase
+          .from('ranking_events').update({ status: 'locked' }).eq('id', event.id)
+        if (evErr) throw evErr
+      }
+      await load()
+    } catch (err) {
+      setError(err.message)
+    }
     setLocking(false)
   }
 

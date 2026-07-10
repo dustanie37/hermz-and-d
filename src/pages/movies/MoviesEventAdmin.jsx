@@ -296,6 +296,12 @@ export default function MoviesEventAdmin() {
                   ✕ Delete test event
                 </button>
               )}
+              {['locked', 'revealed'].includes(activeEvent.status) && (
+                <Link to="/movies/ceremony"
+                      className="font-mono text-[11px] tracking-kicker text-gold-400 hover:text-gold-300 uppercase transition-colors">
+                  Ceremony →
+                </Link>
+              )}
               {activeEvent.status !== 'setup' && (
                 <Link to="/movies/pool"
                       className="font-mono text-[11px] tracking-kicker text-cinema-400 hover:text-cinema-300 uppercase transition-colors ml-auto">

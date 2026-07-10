@@ -172,6 +172,9 @@ export default function MoviesMyStats() {
               ? 'Your new Canon against your own history — the ceremony can begin whenever you\'re together.'
               : 'Your new Canon against your own history. The other list stays sealed until the ceremony.'}
           </p>
+          {other?.state === 'locked' && (
+            <Link to="/movies/ceremony" className="btn-gold text-xs inline-block mt-4">To the Ceremony →</Link>
+          )}
         </div>
       </FilmStill>
 
