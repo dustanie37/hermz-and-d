@@ -7,6 +7,11 @@ const UPDATES = [
       {
         tag: 'Films',
         color: 'film',
+        text: 'Phase 12g — Publish, and the workflow is complete. After the ceremony, one gold button finalizes everything: draft scores become permanent individual rankings (with totals and tiebreaker counts computed), the combined list writes to the record books with its full column set, published films can optionally clear from Future Consideration, and the edition appears across the entire site. Under the hood, the biggest cleanup of the project: the Rankings, Stats, Films home, and site Home pages no longer hardcode "2001, 2007, 2016, 2026" anywhere — edition lists, "latest edition" defaults, movement-chart pairs, and all the copy now come straight from the database. When the next real edition publishes, every page updates itself. Test events, of course, can never publish. The Canon machine is fully built — from "create event" to a published edition, every stage now exists.',
+      },
+      {
+        tag: 'Films',
+        color: 'film',
         text: 'Phase 12f — The Reveal Ceremony. The page this whole build has been marching toward. Once both lists are locked, the ceremony opens: a countdown from the bottom of the list to #1, two reveals per rank, alternating who goes first. Each reveal shows the full picture — poster, all nine category scores with the /100 total, and a trajectory sparkline tracing that film\'s journey across every edition ("rising, was #31" or "★ first appearance"). Films on both lists link up on the running board the moment their second appearance lands ("⇄ also H #61"), with a flourish for the rare same-rank match. Everything writes to the database as you go: screens stay in sync in real time across devices, either player can press reveal, and the countdown survives closed tabs and multiple sittings. The Top Ten gets the glow treatment. And when #1 falls, the finale: the new combined list, generated live, seen by both of you for the very first time.',
       },
       {

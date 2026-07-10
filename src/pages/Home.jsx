@@ -68,7 +68,7 @@ export default function Home() {
       {/* ── HERO ───────────────────────────────────────────────────────────── */}
       <section className="relative">
         <FilmStill
-          title="Hermz and D Home 2026"
+          title="Hermz and D Home"
           mood="warm"
           hue={28}
           className="w-full h-[300px] sm:h-[340px]"

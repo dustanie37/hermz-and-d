@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
+import { totalOf, countOf, TEN_FIELDS, IMPACT } from '../../lib/eventScoring'
 
 const STATUS_FLOW = ['setup', 'pooling', 'scoring', 'locked', 'revealed', 'published']
 
@@ -77,7 +78,7 @@ function StatusStepper({ status }) {
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 export default function MoviesEventAdmin() {
-  const { isDustin } = useAuth()
+  const { isDustin, session } = useAuth()
   const [events, setEvents]     = useState(null)
   const [players, setPlayers]   = useState([])   // event_players rows joined w/ profiles
   const [profiles, setProfiles] = useState([])
@@ -159,10 +160,109 @@ export default function MoviesEventAdmin() {
     if (error) throw error
   }
 
+  // ── PUBLISH (12g): the one-way door that makes an edition official ───────
+  const [publishBusy, setPublishBusy] = useState(false)
+  const [cleanWatchlist, setCleanWatchlist] = useState(true)
+  const [publishMsg, setPublishMsg] = useState(null)
+
+  async function handlePublish(event) {
+    if (event.is_test) { setError('Test events can never publish.'); return }
+    if (event.status !== 'revealed') { setError('Publish only after the reveal.'); return }
+    if (!window.confirm(
+      `Publish ${event.label}?\n\nScores finalize into the permanent rankings and the edition appears across the whole site. This is the one-way door.`
+    )) return
+    setPublishBusy(true); setError(null); setPublishMsg(null)
+    try {
+      // Guard: never double-publish
+      const { count: existing } = await supabase
+        .from('individual_rankings').select('*', { count: 'exact', head: true })
+        .eq('event_id', event.id)
+      if (existing > 0) throw new Error(`This event already has ${existing} published ranking rows.`)
+
+      const { data: scores, error: scErr } = await supabase
+        .from('event_scores').select('*').eq('event_id', event.id)
+      if (scErr) throw scErr
+      const dId = profiles.find(p => p.username === 'dustin')?.id
+      const mId = profiles.find(p => p.username === 'matt')?.id
+      for (const uid of [dId, mId]) {
+        const mine = (scores || []).filter(s => s.user_id === uid && s.rank != null)
+        if (mine.length !== event.list_size) {
+          throw new Error(`Expected ${event.list_size} ranked films per player, found ${mine.length}. Both lists must be locked.`)
+        }
+      }
+
+      // 1. Individual rankings (with computed totals + tiebreaker counts)
+      const indivRows = (scores || []).map(s => ({
+        film_id: s.film_id, event_id: event.id, user_id: s.user_id, rank: s.rank,
+        total_score: totalOf(s),
+        score_direction: s.score_direction, score_screenplay: s.score_screenplay,
+        score_lead_performance: s.score_lead_performance, score_supp_performance: s.score_supp_performance,
+        score_cinematography: s.score_cinematography, score_production_design: s.score_production_design,
+        score_influence: s.score_influence, score_acclaim: s.score_acclaim,
+        score_personal_impact: s.score_personal_impact,
+        tb_tens: countOf(s, 10), tb_nines: countOf(s, 9), tb_eights: countOf(s, 8),
+      }))
+      for (let i = 0; i < indivRows.length; i += 100) {
+        const { error } = await supabase.from('individual_rankings').insert(indivRows.slice(i, i + 100))
+        if (error) throw error
+      }
+
+      // 2. Combined list — same math as the ceremony finale
+      const byFilm = {}
+      for (const s of scores || []) {
+        if (!byFilm[s.film_id]) byFilm[s.film_id] = {}
+        byFilm[s.film_id][s.user_id === dId ? 'd' : 'h'] = s
+      }
+      const combined = Object.entries(byFilm)
+        .filter(([, p]) => p.d && p.h)
+        .map(([filmId, p]) => ({
+          film_id: Number(filmId),
+          dustin_rank: p.d.rank, matt_rank: p.h.rank,
+          avg_rank: (p.d.rank + p.h.rank) / 2,
+          dustin_score: totalOf(p.d), matt_score: totalOf(p.h),
+          total_score: totalOf(p.d) + totalOf(p.h),
+          dustin_impact: p.d[IMPACT.key] ?? 0, matt_impact: p.h[IMPACT.key] ?? 0,
+          total_impact: (p.d[IMPACT.key] ?? 0) + (p.h[IMPACT.key] ?? 0),
+          total_tens: TEN_FIELDS.filter(k => p.d[k] === 10).length + TEN_FIELDS.filter(k => p.h[k] === 10).length,
+        }))
+        .sort((a, b) => a.avg_rank - b.avg_rank || b.total_score - a.total_score
+          || b.total_tens - a.total_tens || b.total_impact - a.total_impact)
+        .map((row, i) => ({ ...row, event_id: event.id, combined_rank: i + 1 }))
+      for (let i = 0; i < combined.length; i += 100) {
+        const { error } = await supabase.from('combined_rankings').insert(combined.slice(i, i + 100))
+        if (error) throw error
+      }
+
+      // 3. Optional: clear published films from MY Future Consideration
+      // (RLS is own-rows — the other player tidies their own list)
+      let cleaned = 0
+      if (cleanWatchlist && session?.user) {
+        const filmIds = [...new Set((scores || []).map(s => s.film_id))]
+        const { data: deleted } = await supabase
+          .from('watchlist').delete()
+          .eq('user_id', session.user.id).in('film_id', filmIds)
+          .select('id')
+        cleaned = deleted?.length ?? 0
+      }
+
+      // 4. The edition goes live everywhere
+      const { error: evErr } = await supabase
+        .from('ranking_events').update({ status: 'published' }).eq('id', event.id)
+      if (evErr) throw evErr
+
+      setPublishMsg(`Published: ${indivRows.length} individual rankings, ${combined.length} combined${cleaned ? `, ${cleaned} watchlist entries cleared` : ''}. The edition is live across the site.`)
+      await load()
+    } catch (err) {
+      setError(`Publish failed: ${err.message}`)
+    }
+    setPublishBusy(false)
+  }
+
   async function advanceStatus(event, direction = 1) {
     const idx  = STATUS_FLOW.indexOf(event.status)
     const next = STATUS_FLOW[idx + direction]
     if (!next) return
+    if (direction === 1 && next === 'published') { await handlePublish(event); return }
     const verb = direction === 1 ? `Advance to “${STATUS_META[next].label}”` : `Roll back to “${STATUS_META[next].label}”`
     if (!window.confirm(`${verb}?\n\n${STATUS_META[next].desc}.`)) return
     setBusy(true); setError(null)
@@ -270,13 +370,29 @@ export default function MoviesEventAdmin() {
               </div>
             )}
 
+            {/* Publish extras (12g) */}
+            {publishMsg && (
+              <div className="p-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-sm text-emerald-300">
+                {publishMsg}
+              </div>
+            )}
+            {activeEvent.status === 'revealed' && !activeEvent.is_test && (
+              <label className="flex items-center gap-2.5 font-mono text-[11px] tracking-kicker text-gray-400 uppercase cursor-pointer">
+                <input type="checkbox" checked={cleanWatchlist} onChange={e => setCleanWatchlist(e.target.checked)}
+                       className="accent-gold-500" />
+                Also clear published films from my Future Consideration
+              </label>
+            )}
+
             {/* Controls — test events stop at Revealed; publishing is for real editions only */}
             <div className="flex items-center gap-3 flex-wrap border-t border-night-700/60 pt-5">
               {currentIdx < STATUS_FLOW.length - 1 &&
                !(activeEvent.is_test && STATUS_FLOW[currentIdx + 1] === 'published') && (
-                <button onClick={() => advanceStatus(activeEvent, 1)} disabled={busy}
+                <button onClick={() => advanceStatus(activeEvent, 1)} disabled={busy || publishBusy}
                         className="btn-gold text-xs disabled:opacity-50">
-                  Advance → {STATUS_META[STATUS_FLOW[currentIdx + 1]].label}
+                  {STATUS_FLOW[currentIdx + 1] === 'published'
+                    ? (publishBusy ? 'Publishing…' : '🏁 Publish Edition')
+                    : `Advance → ${STATUS_META[STATUS_FLOW[currentIdx + 1]].label}`}
                 </button>
               )}
               {activeEvent.is_test && activeEvent.status === 'revealed' && (

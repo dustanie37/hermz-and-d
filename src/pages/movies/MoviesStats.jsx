@@ -8,7 +8,11 @@ import FilmStill from '../../components/FilmStill'
 import { DC, HC, CC, sortTitle } from '../../lib/helpers'
 
 // ── colour tokens ────────────────────────────────────────────────────────────
-const EVENTS_ORDER = [2001, 2007, 2016, 2026]
+// Edition years — REASSIGNED from ranking_events (published) in loadMeta before
+// any tab renders, so new editions appear automatically (12g refactor).
+// The literals are only a pre-load fallback.
+let EVENTS_ORDER = [2001, 2007, 2016, 2026]
+const latestEventYear = () => EVENTS_ORDER[EVENTS_ORDER.length - 1]
 
 const BUMP_COLORS = [
   HC, DC, '#10B981', '#F43F5E', '#A78BFA',
@@ -270,7 +274,7 @@ function computeH2HData(dustFilms, mattFilms, accessor) {
 }
 
 function TasteComparisonSection({ allH2HFilms, loading }) {
-  const [selectedYear, setSelectedYear] = useState(2026)
+  const [selectedYear, setSelectedYear] = useState(() => latestEventYear())
   const h2hFilms = allH2HFilms[selectedYear] || { dustin: [], matt: [] }
   const { dustin: dustFilms, matt: mattFilms } = h2hFilms
 
@@ -334,7 +338,7 @@ function BumpChart({ allTimeData }) {
     .filter(([, ranks]) => Object.keys(ranks).length >= 2)
     .map(([filmId, ranks]) => ({
       filmId: Number(filmId), title: filmMap[filmId]?.title || '?', ranks,
-      sortKey: ranks[2026] ?? ranks[2016] ?? ranks[2007] ?? ranks[2001] ?? 999,
+      sortKey: [...EVENTS_ORDER].reverse().reduce((acc, y) => acc ?? ranks[y], null) ?? 999,
     }))
     .sort((a, b) => a.sortKey - b.sortKey), [filmMap, byFilm])
 
@@ -456,7 +460,7 @@ function MovementCard({ items, type }) {
 // ── RANK MOVEMENTS (consecutive) ──────────────────────────────────────────────
 function RankMovementsSection({ allTimeData }) {
   const { filmMap, byFilm } = allTimeData
-  const pairs = [[2001, 2007], [2007, 2016], [2016, 2026]]
+  const pairs = EVENTS_ORDER.slice(0, -1).map((y, i) => [y, EVENTS_ORDER[i + 1]])
   const movements = useMemo(() => {
     const all = []
     pairs.forEach(([from, to]) => {
@@ -534,7 +538,7 @@ function AlwaysPresentSection({ allTimeData }) {
     <div className="card">
       <PanelHeader title="On Every Combined List" />
       <p className="font-serif italic text-base text-gray-400 mt-1 mb-4">
-        {list.length} film{list.length !== 1 ? 's' : ''} appeared on all 4 combined lists (2001, 2007, 2016, 2026)
+        {list.length} film{list.length !== 1 ? 's' : ''} appeared on all {EVENTS_ORDER.length} combined lists ({EVENTS_ORDER.join(', ')})
       </p>
       {list.length === 0 ? (
         <p className="text-gray-500 text-sm text-center py-4 italic">None found.</p>
@@ -612,7 +616,7 @@ function InAndOutSection({ allTimeData }) {
 // ── RIVALRY TAB ───────────────────────────────────────────────────────────────
 function RivalryTab({ rivalryData, allH2HFilms, allH2HLoading }) {
   const { gapsByFilm, filmMap: rivalFilmMap, dustOnly, mattOnly } = rivalryData
-  const [eventFilter, setEventFilter] = useState(2026)
+  const [eventFilter, setEventFilter] = useState(() => latestEventYear())
 
   // Gap film row
   function GapRow({ filmId, title, dustRank, mattRank, gap, direction }) {
@@ -872,7 +876,7 @@ function RivalryTab({ rivalryData, allH2HFilms, allH2HLoading }) {
       {/* Solo Picks */}
       <div>
         <h2 className="font-display text-3xl text-white tracking-wide leading-none mb-1">SOLO PICKS</h2>
-        <p className="font-serif italic text-base text-gray-400 mb-5">Films one person ranked that the other never did — across all 4 editions</p>
+        <p className="font-serif italic text-base text-gray-400 mb-5">Films one person ranked that the other never did — across all {EVENTS_ORDER.length} editions</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="card">
             <div className="flex items-center gap-2 mb-1">
@@ -914,7 +918,7 @@ function RivalryTab({ rivalryData, allH2HFilms, allH2HLoading }) {
 
 // ── SCORE ANALYSIS TAB ────────────────────────────────────────────────────────
 function ScoreAnalysisTab({ scoresData, profiles, events }) {
-  const [selectedEvent, setSelectedEvent] = useState(2026)
+  const [selectedEvent, setSelectedEvent] = useState(() => latestEventYear())
   const [expandedCat, setExpandedCat]     = useState(null)
   const [filmsCache, setFilmsCache]       = useState({})
   const [filmsLoading, setFilmsLoading]   = useState(false)
@@ -1185,14 +1189,17 @@ function ScoreAnalysisTab({ scoresData, profiles, events }) {
 function PodcastPrepTab({ allTimeData }) {
   const { filmMap, byFilm, byEvent } = allTimeData
   const navigate = useNavigate()
+  const latestYr = latestEventYear()
+  const prevYr   = EVENTS_ORDER[EVENTS_ORDER.length - 2] ?? null
+  const olderYrs = EVENTS_ORDER.slice(0, -1)
   const list2026 = useMemo(() => {
-    if (!byEvent[2026]) return []
-    return [...byEvent[2026]].sort((a, b) => a.rank - b.rank).map(({ filmId, rank }) => ({
+    if (!byEvent[latestYr]) return []
+    return [...byEvent[latestYr]].sort((a, b) => a.rank - b.rank).map(({ filmId, rank }) => ({
       filmId, rank, film: filmMap[filmId],
-      prev2016: byFilm[filmId]?.[2016] ?? null,
-      isNew: !byFilm[filmId]?.[2016] && !byFilm[filmId]?.[2007] && !byFilm[filmId]?.[2001],
+      prev2016: (prevYr != null ? byFilm[filmId]?.[prevYr] : null) ?? null,
+      isNew: olderYrs.every(y => byFilm[filmId]?.[y] == null),
     }))
-  }, [filmMap, byFilm, byEvent])
+  }, [filmMap, byFilm, byEvent])  // eslint-disable-line react-hooks/exhaustive-deps
   const top10 = list2026.slice(0, 10)
   const newFilms = list2026.filter(f => f.isNew)
   const biggestRisers2026 = useMemo(() => list2026.filter(f => f.prev2016 != null)
@@ -1200,8 +1207,8 @@ function PodcastPrepTab({ allTimeData }) {
     .sort((a, b) => b.improvement - a.improvement).slice(0, 5), [list2026])
   const alwaysPresent = useMemo(() => Object.entries(byFilm)
     .filter(([, ranks]) => EVENTS_ORDER.every(y => ranks[y] != null))
-    .map(([filmId, ranks]) => ({ filmId: Number(filmId), title: filmMap[filmId]?.title || '?', rank2026: ranks[2026] }))
-    .sort((a, b) => a.rank2026 - b.rank2026), [filmMap, byFilm])
+    .map(([filmId, ranks]) => ({ filmId: Number(filmId), title: filmMap[filmId]?.title || '?', rank2026: ranks[latestYr] }))
+    .sort((a, b) => a.rank2026 - b.rank2026), [filmMap, byFilm])  // eslint-disable-line react-hooks/exhaustive-deps
   const totalFilms = list2026.length
   const decades = {}, genres = {}
   list2026.forEach(({ film }) => {
@@ -1227,7 +1234,7 @@ function PodcastPrepTab({ allTimeData }) {
     <div>
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3 print:hidden">
         <div>
-          <PanelHeader title="2026 Combined List" subtitle="Podcast Prep" />
+          <PanelHeader title={`${latestYr} Combined List`} subtitle="Podcast Prep" />
           <p className="font-serif italic text-base text-gray-400 mt-1">
             {totalFilms} films · Top decade: {topDecade ? `${decadeLabel(Number(topDecade[0]))} (${topDecade[1]})` : '—'} · Top genre: {topGenre?.[0] ?? '—'}
           </p>
@@ -1237,7 +1244,7 @@ function PodcastPrepTab({ allTimeData }) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <div className="card lg:col-span-2">
           <PanelHeader title="Top 10" />
-          <p className="font-serif italic text-base text-gray-400 mt-1 mb-4">2026 combined list — the cream of the crop</p>
+          <p className="font-serif italic text-base text-gray-400 mt-1 mb-4">{latestYr} combined list — the cream of the crop</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {top10.map(f => (
               <FilmPill key={f.filmId} filmId={f.filmId} rank={f.rank} title={f.film?.title ?? '?'}
@@ -1274,7 +1281,7 @@ function PodcastPrepTab({ allTimeData }) {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {alwaysPresent.map(f => (
-                <FilmPill key={f.filmId} filmId={f.filmId} rank={f.rank2026} title={f.title} sub="Present in 2001, 2007, 2016 & 2026" />
+                <FilmPill key={f.filmId} filmId={f.filmId} rank={f.rank2026} title={f.title} sub={`Present in every edition (${EVENTS_ORDER.join(', ')})`} />
               ))}
             </div>
           )}
@@ -1285,7 +1292,7 @@ function PodcastPrepTab({ allTimeData }) {
 }
 
 // ── CROSSOVER TAB ─────────────────────────────────────────────────────────────
-const EVENTS_LABEL = { 2001: "'01", 2007: "'07", 2016: "'16", 2026: "'26" }
+let EVENTS_LABEL = { 2001: "'01", 2007: "'07", 2016: "'16", 2026: "'26" }  // reassigned in loadMeta (12g)
 const MAJOR_CATS = [
   { key: 'Best Picture',             label: 'Picture'           },
   { key: 'Best Director',            label: 'Director'          },
@@ -1522,6 +1529,11 @@ export default function MoviesStats() {
         supabase.from('ranking_events').select('id,year,label').eq('status', 'published').order('year'),
         supabase.from('profiles').select('id,username'),
       ])
+      // 12g: edition list is DB-driven — new published editions appear everywhere
+      if (evData?.length) {
+        EVENTS_ORDER = evData.map(e => e.year)
+        EVENTS_LABEL = Object.fromEntries(evData.map(e => [e.year, `'${String(e.year).slice(2)}`]))
+      }
       setEvents(evData || [])
       const profMap = {}
       profData?.forEach(p => { profMap[p.username] = p.id })

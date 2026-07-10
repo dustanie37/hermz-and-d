@@ -26,7 +26,7 @@ function GridViewIcon() {
   )
 }
 
-const EVENTS_ORDER = [2001, 2007, 2016, 2026]
+// Edition years come from ranking_events (published) — see `events` state (12g refactor)
 
 // One prior-year cell — shows prior rank + movement
 function PriorYearCell({ currentRank, filmId, priorMap }) {
@@ -56,7 +56,6 @@ export default function MoviesList() {
   const location = useLocation()
   const { blackout } = useEventState()
 
-  const eventYear = Number(searchParams.get('event')) || 2026
   const view      = searchParams.get('view') || 'combined'
 
   const [events,      setEvents]      = useState([])
@@ -84,12 +83,17 @@ export default function MoviesList() {
     loadMeta()
   }, [])
 
+  // ── edition years derived from the DB (12g) ──────────────────────────────
+  const eventYears = events.map(e => e.year)                      // ascending
+  const latestYear = eventYears[eventYears.length - 1] ?? null
+  const eventYear  = Number(searchParams.get('event')) || latestYear
+
   // ── list data load ───────────────────────────────────────────────────────
   useEffect(() => {
     if (Object.keys(profiles).length === 0 || events.length === 0) return
     const currentEvent = events.find(e => e.year === eventYear)
     if (!currentEvent) return
-    const priorEventYears = EVENTS_ORDER.filter(y => y < eventYear)
+    const priorEventYears = eventYears.filter(y => y < eventYear)
     const priorEvents = priorEventYears.map(py => events.find(e => e.year === py)).filter(Boolean)
 
     setLoading(true); setError(null); setRows([]); setAllPriorMaps({})
@@ -193,7 +197,7 @@ export default function MoviesList() {
   function setEvent(year) { setSearchParams({ event: year, view }); setSortBy('rank') }
   function setView(v)    { setSearchParams({ event: eventYear, view: v }); setSortBy('rank') }
 
-  const priorYears = EVENTS_ORDER.filter(y => y < eventYear)
+  const priorYears = eventYears.filter(y => y < eventYear)
   const shortYear = y => `'${String(y).slice(2)}`
 
   const sortOptions = [
@@ -296,7 +300,7 @@ export default function MoviesList() {
         {/* Event + view selectors */}
         <div className="flex flex-wrap items-center gap-3 mb-4">
           <div className="flex flex-wrap gap-1.5">
-            {EVENTS_ORDER.map(yr => (
+            {eventYears.map(yr => (
               <button key={yr} onClick={() => setEvent(yr)}
                 className={yr === eventYear ? 'pill-film' : 'pill'}>
                 {yr}

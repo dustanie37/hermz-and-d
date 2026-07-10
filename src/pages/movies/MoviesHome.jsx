@@ -3,9 +3,9 @@ import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import FilmStill from '../../components/FilmStill'
 
-const EVENTS_ORDER = [2026, 2016, 2007, 2001]
-
-// Hue per event year — gives each year card its own cinematographic tint
+// Edition cards render from ranking_events (published) — no hardcoded years (12g)
+// Hue per event year — gives each year card its own cinematographic tint;
+// unknown (future) years get a deterministic hue from the fallback formula.
 const EVENT_HUE = {
   2026: 210,
   2016: 234,
@@ -107,9 +107,8 @@ export default function MoviesHome() {
       {/* ── EVENT GRID ───────────────────────────────────────────────────── */}
       <section className="max-w-7xl mx-auto px-6 sm:px-10 py-10 space-y-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {EVENTS_ORDER.map(year => {
-            const ev = eventByYear[year]
-            if (!ev) return null
+          {events.map(ev => {
+            const year = ev.year
             const tops = topFilms[ev.id] || {}
             return (
               <div key={ev.id} className="card overflow-hidden">
@@ -138,7 +137,7 @@ export default function MoviesHome() {
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
-function hueForYear(y) { return EVENT_HUE[y] ?? 30 }
+function hueForYear(y) { return EVENT_HUE[y] ?? ((y * 47) % 360) }
 
 function Stat({ value, label }) {
   return (
