@@ -37,6 +37,7 @@ import MoviesCultivate     from './pages/movies/MoviesCultivate'
 import MoviesAcclaimSources from './pages/movies/MoviesAcclaimSources'
 import MoviesEventAcclaim   from './pages/movies/MoviesEventAcclaim'
 import MoviesScore          from './pages/movies/MoviesScore'
+import MoviesMyStats        from './pages/movies/MoviesMyStats'
 
 /** Redirect to /login if not authenticated */
 function Protected({ children }) {
@@ -88,6 +89,7 @@ function AppRoutes() {
         <Route path="/movies/acclaim-sources" element={<Protected><MoviesAcclaimSources /></Protected>} />
         <Route path="/movies/event-acclaim"   element={<Protected><MoviesEventAcclaim /></Protected>} />
         <Route path="/movies/score"           element={<Protected><MoviesScore /></Protected>} />
+        <Route path="/movies/my-stats"        element={<Protected><MoviesMyStats /></Protected>} />
         <Route path="/movies/:filmId"   element={<Protected><MovieDetail /></Protected>} />
 
         {/* Fallback */}

@@ -13,63 +13,12 @@ import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
 import FilmStill from '../../components/FilmStill'
-import { sortTitle } from '../../lib/helpers'
 import { TestBadge } from './MoviesEventAdmin'
-
-const LOCKED_STATES = ['cultivated', 'scoring', 'locked']
-
-const MANUAL_CATS = [
-  { key: 'score_direction',         label: 'Direction',              max: 10 },
-  { key: 'score_screenplay',        label: 'Screenplay',             max: 10 },
-  { key: 'score_lead_performance',  label: 'Lead Performance',       max: 10 },
-  { key: 'score_supp_performance',  label: 'Supporting Performance', max: 10 },
-  { key: 'score_cinematography',    label: 'Cinematography',         max: 10 },
-  { key: 'score_production_design', label: 'Production Design',      max: 10 },
-  { key: 'score_influence',         label: 'Influence',              max: 10 },
-]
-const IMPACT = { key: 'score_personal_impact', label: 'Personal Impact', max: 20 }
-const TEN_FIELDS = [...MANUAL_CATS.map(c => c.key), 'score_acclaim']
-const ALL_REQUIRED = [...MANUAL_CATS.map(c => c.key), IMPACT.key]
+import {
+  MANUAL_CATS, IMPACT, totalOf, isComplete, rankCompare, seededShuffle,
+} from '../../lib/eventScoring'
 
 const FILM_FIELDS = 'films (id, title, release_year, poster_url, director, actor_1, actor_2, actor_3, actor_4, actor_5)'
-
-// Deterministic shuffle (mulberry32) — belt and braces; the stored queue_pos
-// is what actually guarantees stability.
-function seededShuffle(arr, seed) {
-  let a = seed >>> 0
-  const rand = () => {
-    a = (a + 0x6D2B79F5) >>> 0
-    let t = a
-    t = Math.imul(t ^ (t >>> 15), t | 1)
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61)
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
-  }
-  const out = [...arr]
-  for (let i = out.length - 1; i > 0; i--) {
-    const j = Math.floor(rand() * (i + 1))
-    ;[out[i], out[j]] = [out[j], out[i]]
-  }
-  return out
-}
-
-function totalOf(row) {
-  return TEN_FIELDS.reduce((s, k) => s + (row[k] ?? 0), 0) + (row[IMPACT.key] ?? 0)
-}
-function isComplete(row) {
-  return ALL_REQUIRED.every(k => row[k] != null)
-}
-// Standard tiebreakers: total → Impact → most 10s → most 9s → … → most 1s
-function rankCompare(a, b) {
-  const ta = totalOf(a), tb = totalOf(b)
-  if (tb !== ta) return tb - ta
-  if ((b[IMPACT.key] ?? 0) !== (a[IMPACT.key] ?? 0)) return (b[IMPACT.key] ?? 0) - (a[IMPACT.key] ?? 0)
-  for (let v = 10; v >= 1; v--) {
-    const ca = TEN_FIELDS.filter(k => a[k] === v).length
-    const cb = TEN_FIELDS.filter(k => b[k] === v).length
-    if (cb !== ca) return cb - ca
-  }
-  return sortTitle(a.films?.title ?? '').localeCompare(sortTitle(b.films?.title ?? ''))
-}
 
 // ── Score pills ───────────────────────────────────────────────────────────────
 
@@ -431,11 +380,14 @@ export default function MoviesScore() {
                   {locking ? 'Locking…' : '🔒 Lock My List'}
                 </button>
               ) : (
-                <span className="font-mono text-[11px] tracking-kicker text-emerald-400 uppercase">
-                  Locked {me.locked_at ? new Date(me.locked_at).toLocaleDateString() : ''}
-                  {other && (other.state === 'locked'
-                    ? ' · both in — the ceremony awaits'
-                    : ' · waiting on the other list')}
+                <span className="flex items-center gap-3 flex-wrap">
+                  <span className="font-mono text-[11px] tracking-kicker text-emerald-400 uppercase">
+                    Locked {me.locked_at ? new Date(me.locked_at).toLocaleDateString() : ''}
+                    {other && (other.state === 'locked'
+                      ? ' · both in — the ceremony awaits'
+                      : ' · waiting on the other list')}
+                  </span>
+                  <Link to="/movies/my-stats" className="btn-gold text-xs">The Waiting Room →</Link>
                 </span>
               )}
             </div>

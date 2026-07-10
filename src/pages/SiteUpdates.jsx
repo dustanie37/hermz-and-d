@@ -7,6 +7,11 @@ const UPDATES = [
       {
         tag: 'Films',
         color: 'film',
+        text: 'Phase 12e — The Waiting Room. The moment you lock your list, your own blackout lifts and a private stats room opens: your new Canon measured against your own history. Biggest risers and fallers versus your last edition, first-time appearances, films that dropped off, a score-distribution comparison (this edition vs. last), and your full ranked list with movement badges on every film. The other list stays completely sealed until the reveal ceremony — if one of you locks weeks early, this is where you pace.',
+      },
+      {
+        tag: 'Films',
+        color: 'film',
         text: 'Phase 12d — Scoring, the centerpiece. When the event advances to Scoring, each player presses Begin — the list becomes truly final and gets shuffled into a personal random order that never changes (leave and come back any day). One film at a time: poster, title, director, top cast, and nothing historical. Seven categories plus Influence scored 0–10 with tap-pills, Personal Impact 0–20, and Acclaim rides along pre-filled and locked from the agreed value. Every tap saves instantly; Skip sends a film to the back of the queue. And the blackout: while you\'re mid-scoring, the Rankings pages seal shut and film pages hide their ranking history — for you only — so every film gets judged fresh. After the last film: your full ranked list with the classic tiebreakers (Impact, then most 10s, most 9s…), tap any film to adjust, then Lock. Next up: the post-lock stats room, then the reveal ceremony.',
       },
       {
