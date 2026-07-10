@@ -269,12 +269,19 @@ export default function MoviesCeremony() {
   }, [byRank, listSize])
 
   const done = event?.status === 'revealed' || currentRank === 0
+  // Pacing: hold the spotlight on a completed rank until "On to #N" —
+  // `stay` is the rank being viewed; it advances only by the button (or when
+  // another device reveals further ahead, in which case we catch up).
   const displayed = done ? 1 : Math.min(stay ?? currentRank, listSize)
 
-  // catch up if another device already moved past what we're holding
   useEffect(() => {
-    if (stay != null && currentRank < stay - 1) setStay(null)
-  }, [currentRank, stay])
+    if (!loading && stay == null && currentRank > 0) setStay(currentRank)
+  }, [loading, currentRank, stay])
+
+  useEffect(() => {
+    const lowest = picks.length ? Math.min(...picks.map(p => p.rank)) : null
+    if (stay != null && lowest != null && lowest < stay) setStay(lowest)
+  }, [picks, stay])
 
   const displayedPair = byRank.get(displayed) ?? {}
   const displayedComplete = !!(displayedPair.d && displayedPair.h)
@@ -444,7 +451,7 @@ export default function MoviesCeremony() {
             </div>
 
             <div className="text-center mb-12">
-              <button onClick={() => setStay(currentRank)} disabled={!displayedComplete}
+              <button onClick={() => setStay(Math.max(1, displayed - 1))} disabled={!displayedComplete}
                       className="btn-ghost text-sm disabled:opacity-30">
                 {displayed > 1 ? `On to #${displayed - 1} →` : 'The finale →'}
               </button>
