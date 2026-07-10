@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
 import FilmStill from '../../components/FilmStill'
+import { hydrateAcclaim } from '../../lib/acclaimLists'
 
 // ── Algorithm ─────────────────────────────────────────────────────────────────
 
@@ -199,7 +200,9 @@ export default function MoviesAcclaim() {
         ranks[r.film_id][yr].combined = r.combined_rank
       })
 
-      setFilms(filmData || [])
+      // acclaim/list membership (feeds the suggest algorithm) comes from
+      // external_list_entries — single source, no denormalized-column drift
+      setFilms(await hydrateAcclaim(filmData || []))
       setFilmRanks(ranks)
     } catch(e) {
       setError(e.message || 'Failed to load films')

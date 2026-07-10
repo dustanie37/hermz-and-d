@@ -7,6 +7,11 @@ const UPDATES = [
       {
         tag: 'Films',
         color: 'film',
+        text: 'Under the hood: acclaim lists now have a single source of truth. Which external lists a film belongs to is read in one place — the External Lists data — everywhere it appears (the film page, the Acclaim scoring screen, and the podcast pages). Previously that information lived in two separate places that had to be kept in sync by hand, which is exactly why films like Star Wars went missing. Now there is nothing to keep in sync: edit a list once and every page reflects it. This quietly retires a whole class of "why isn\'t this showing up" bugs.',
+      },
+      {
+        tag: 'Films',
+        color: 'film',
         text: 'Acclaim now shows on the film pages too. A film\'s own page (and the Acclaim overview) reads its list memberships from a separate set of fields than the External Lists browser does — so even after the linking fix, a film like Star Wars wasn\'t showing its AFI Top 100 placement on its page. Those fields are now synced from the lists across the whole library, so every film\'s Acclaim panel reflects exactly which lists it\'s on. While cleaning this up, nine duplicate entries were found in the National Film Registry list (the same film imported twice under two spellings — a straight vs. curly apostrophe in "Schindler\'s List," "WALL*E" vs "Wall-E," and a few franchise titles) and removed, so each film appears once.',
       },
       {

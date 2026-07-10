@@ -11,6 +11,7 @@ import {
 import FilmStill from '../../components/FilmStill'
 import { DC, HC, CC, sortTitle } from '../../lib/helpers'
 import { useEventState } from '../../lib/useEventState'
+import { hydrateAcclaim } from '../../lib/acclaimLists'
 
 // ── constants ───────────────────────────────────────────────────────────────
 const EVENTS = [2001, 2007, 2016, 2026]
@@ -270,7 +271,9 @@ export default function MovieDetail() {
       ])
       if (fe) throw fe; if (ee) throw ee; if (ie) throw ie; if (ce) throw ce
 
-      setFilm(filmData)
+      // list membership comes from external_list_entries (single source), not the
+      // legacy denormalized columns — so the Acclaim panel can never drift again
+      setFilm(await hydrateAcclaim(filmData))
       setEvents(evData || [])
       setOscarNoms(nomData || [])
 

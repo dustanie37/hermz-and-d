@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { DC, HC, CC } from '../../lib/helpers'
+import { hydrateAcclaim } from '../../lib/acclaimLists'
 
 // ── constants ────────────────────────────────────────────────────────────────
 const EVENTS   = [2001, 2007, 2016, 2026]
@@ -503,7 +504,7 @@ export default function PodcastEpisode() {
         setError('Failed to load film data'); setLoading(false); return
       }
 
-      setFilm(filmData)
+      setFilm(await hydrateAcclaim(filmData))
       setEvents(evData || [])
       setOscarNoms(nomData || [])
 
