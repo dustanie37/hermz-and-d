@@ -2,6 +2,16 @@
 
 const UPDATES = [
   {
+    date: 'July 10, 2026',
+    entries: [
+      {
+        tag: 'Films',
+        color: 'film',
+        text: 'External Lists polish. The acclaim/external-list tables now match the primary Canon rankings in scale — larger rank numbers, full-size posters, bigger film titles and metadata — so browsing AFI, Sight & Sound and the rest feels consistent with the rest of the Films section. Publish dates were also verified and made specific where possible: AFI Top 100 (the 10th Anniversary edition) → June 20, 2007; AFI Comedies → June 13, 2000; Sight & Sound → December 1, 2022; and Variety Comedies corrected to its actual release, November 24, 2025. The AFI Top 100 data was confirmed rank-for-rank as the correct 2007 10th Anniversary edition.',
+      },
+    ],
+  },
+  {
     date: 'July 9, 2026',
     entries: [
       {

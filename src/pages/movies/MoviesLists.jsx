@@ -7,13 +7,13 @@ import { DC, HC, CC } from '../../lib/helpers'
 // ── list definitions ──────────────────────────────────────────────────────────
 
 const LISTS = [
-  { key: 'afi_top100',       label: 'AFI Top 100',            published: '2007',              ranked: true,  hue: 14  },
-  { key: 'afi_comedies',     label: 'AFI Comedies',           published: '2000',              ranked: true,  hue: 44  },
-  { key: 'imdb_top250',      label: 'IMDB Top 250',           published: 'December 31, 2025', ranked: true,  hue: 48  },
-  { key: 'nyt_2000s',        label: 'NYT Best of 2000s',      published: 'June 23, 2025',     ranked: true,  hue: 8   },
-  { key: 'sight_sound',      label: 'Sight & Sound',          published: '2022',              ranked: true,  hue: 220 },
-  { key: 'variety_comedies', label: 'Variety Comedies',       published: '2026',              ranked: true,  hue: 280 },
-  { key: 'nfr',              label: 'National Film Registry', published: 'January 29, 2026',  ranked: false, hue: 200 },
+  { key: 'afi_top100',       label: 'AFI Top 100',            published: 'June 20, 2007',      ranked: true,  hue: 14  },
+  { key: 'afi_comedies',     label: 'AFI Comedies',           published: 'June 13, 2000',      ranked: true,  hue: 44  },
+  { key: 'imdb_top250',      label: 'IMDB Top 250',           published: 'December 31, 2025',  ranked: true,  hue: 48  },
+  { key: 'nyt_2000s',        label: 'NYT Best of 2000s',      published: 'June 23, 2025',      ranked: true,  hue: 8   },
+  { key: 'sight_sound',      label: 'Sight & Sound',          published: 'December 1, 2022',   ranked: true,  hue: 220 },
+  { key: 'variety_comedies', label: 'Variety Comedies',       published: 'November 24, 2025',  ranked: true,  hue: 280 },
+  { key: 'nfr',              label: 'National Film Registry', published: 'January 29, 2026',   ranked: false, hue: 200 },
 ]
 
 const EVENTS = [2001, 2007, 2016, 2026]
@@ -253,10 +253,10 @@ export default function MoviesLists() {
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[480px]">
+                <table className="w-full min-w-[600px]">
                   <thead>
                     <tr>
-                      <th className="table-header w-12 text-center">#</th>
+                      <th className="table-header w-14 text-center">#</th>
                       <th className="table-header">Film</th>
                       <th className="table-header text-center w-16">Acclaim</th>
                       <th className="table-header text-center w-20" style={{ color: CC }}>Combined</th>
@@ -274,25 +274,25 @@ export default function MoviesLists() {
                       return (
                         <tr key={entry.id} className={`table-row-hover ${!inDb ? 'opacity-60' : ''}`}>
                           <td className="table-cell text-center">
-                            <span className="font-display text-xl text-gray-500 tracking-wide tabular-nums leading-none">
+                            <span className="font-display text-3xl text-gray-500 tracking-wide tabular-nums leading-none">
                               {entry.rank ?? i + 1}
                             </span>
                           </td>
                           <td className="table-cell">
                             <div className="flex items-center gap-3">
                               <FilmStill src={inDb ? film.poster_url : null} title={title}
-                                         className="w-10 h-14 rounded border border-white/10 flex-shrink-0" />
+                                         className="w-14 h-20 rounded border border-white/10 flex-shrink-0" />
                               <div className="min-w-0">
                                 {inDb ? (
                                   <Link to={`/movies/${film.id}`}
-                                    className="text-sm font-semibold text-white hover:text-film-400 transition-colors leading-snug block truncate">
+                                    className="text-lg font-semibold text-white hover:text-film-400 transition-colors leading-snug block truncate">
                                     {title}
                                   </Link>
                                 ) : (
-                                  <span className="text-sm font-semibold text-gray-300 leading-snug block truncate">{title}</span>
+                                  <span className="text-lg font-semibold text-gray-300 leading-snug block truncate">{title}</span>
                                 )}
                                 <div className="flex items-center gap-2 mt-1 flex-wrap">
-                                  <span className="font-mono text-[10px] tracking-kicker text-gray-500 uppercase">
+                                  <span className="font-mono text-xs tracking-kicker text-gray-500 uppercase">
                                     {year}
                                     {director && <> · {director.split(',')[0].trim()}</>}
                                   </span>
@@ -308,7 +308,7 @@ export default function MoviesLists() {
                           </td>
                           <td className="table-cell text-center">
                             {inDb && film.acclaim_score != null ? (
-                              <span className="font-display text-xl text-gold-400 tracking-wide tabular-nums leading-none">
+                              <span className="font-display text-2xl text-gold-400 tracking-wide tabular-nums leading-none">
                                 {film.acclaim_score}
                               </span>
                             ) : (
