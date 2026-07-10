@@ -156,17 +156,7 @@ function PosterTile({ film, label, labelColor, listUrl }) {
         title={film?.title}
         className="aspect-[2/3] rounded-md border border-white/10 shadow-still
                    group-hover:border-gold-500/50 group-hover:-translate-y-0.5 transition-all"
-      >
-        {/* Bottom gradient with title */}
-        <div
-          className="absolute inset-x-0 bottom-0 p-2"
-          style={{ background: 'linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.85) 100%)' }}
-        >
-          <span className="font-display text-xs text-white leading-none tracking-wide line-clamp-2 block">
-            {film?.title?.toUpperCase()}
-          </span>
-        </div>
-      </FilmStill>
+      />
       <span className={`font-mono text-[13px] tracking-cinema uppercase text-center ${labelColor}`}>
         {label}
       </span>

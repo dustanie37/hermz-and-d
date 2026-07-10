@@ -296,6 +296,8 @@ Status key: 🔲 Pending · 🔄 In Progress · ✅ Complete
 
 ## Minor Updates Log
 
+ - **2026-07-10** Poster title overlays removed in two spots: MoviesHome `PosterTile` (top-film tiles on the landing page) and the MoviesList grid view. Titles were printed over the posters; now poster-only (labels/badges remain). SiteUpdates entry updated.
+
  - **2026-07-10** Rankings grid — removed film-title overlay that had reappeared over posters in the grid view (`MoviesList.jsx`); kept rank badge, movement arrow, year/score line, softened gradient. SiteUpdates entry added.
 
 - **2026-06-10** Watchlist — Add Film modal no longer closes unexpectedly while searching. Fixed fragile `e.target === e.currentTarget` pattern on outer wrapper; replaced with `onClick={onClose}` on the backdrop div + `stopPropagation()` on the modal panel.

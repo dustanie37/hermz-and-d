@@ -7,7 +7,7 @@ const UPDATES = [
       {
         tag: 'Design',
         color: 'film',
-        text: 'Rankings grid tidy-up. On the Films rankings page, the grid view had film titles printed back over the bottom of each poster. Those are gone again \u2014 posters now show just the rank badge, movement arrow, and the year/score line, letting the artwork breathe.',
+        text: 'Poster overlays cleaned up. Film titles that had reappeared printed over posters are gone in two places: the top-film tiles on the Films landing page (each poster now stands on its own above its Combined / Dust / Hermz label) and the grid view on the rankings page (rank badge, movement arrow, and year/score line only). Just the artwork.',
       },
       {
         tag: 'Design',
