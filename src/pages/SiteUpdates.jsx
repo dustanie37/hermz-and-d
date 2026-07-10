@@ -7,6 +7,11 @@ const UPDATES = [
       {
         tag: 'Films',
         color: 'film',
+        text: 'Acclaim now shows on the film pages too. A film\'s own page (and the Acclaim overview) reads its list memberships from a separate set of fields than the External Lists browser does — so even after the linking fix, a film like Star Wars wasn\'t showing its AFI Top 100 placement on its page. Those fields are now synced from the lists across the whole library, so every film\'s Acclaim panel reflects exactly which lists it\'s on. While cleaning this up, nine duplicate entries were found in the National Film Registry list (the same film imported twice under two spellings — a straight vs. curly apostrophe in "Schindler\'s List," "WALL*E" vs "Wall-E," and a few franchise titles) and removed, so each film appears once.',
+      },
+      {
+        tag: 'Films',
+        color: 'film',
         text: 'External Lists — films that were hiding. Many entries on the acclaim lists were showing "Not in DB" even though the film is in our database and on our own lists — the original import only matched on an exact title, so anything with a comma, colon, capitalization quirk, or subtitle slipped through (Star Wars was really "Star Wars: Episode IV – A New Hope"; "North By Northwest" vs "North by Northwest"; "WALL-E" vs "WALL*E"), along with films we added after the lists were first imported. Forty-five entries across the AFI, IMDB Top 250, NFR, NYT and Variety lists are now correctly linked, so their posters, acclaim scores, and edition dots light up.',
       },
       {
