@@ -11,8 +11,8 @@ import { STATUSES, STATUS_META, fmtTime, parseTime, newTalkingPoint } from '../.
 
 function SectionHeader({ label, sub }) {
   return (
-    <div className="flex items-baseline gap-3 mb-4">
-      <h2 className="font-display text-2xl text-white tracking-wide">{label}</h2>
+    <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-4">
+      <h2 className="font-display text-2xl text-white tracking-wide whitespace-nowrap">{label}</h2>
       {sub && <span className="font-mono text-xs tracking-kicker text-gray-500 uppercase">{sub}</span>}
     </div>
   )
