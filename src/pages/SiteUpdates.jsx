@@ -7,6 +7,11 @@ const UPDATES = [
       {
         tag: 'Films',
         color: 'film',
+        text: 'External Lists — films that were hiding. Many entries on the acclaim lists were showing "Not in DB" even though the film is in our database and on our own lists — the original import only matched on an exact title, so anything with a comma, colon, capitalization quirk, or subtitle slipped through (Star Wars was really "Star Wars: Episode IV – A New Hope"; "North By Northwest" vs "North by Northwest"; "WALL-E" vs "WALL*E"), along with films we added after the lists were first imported. Forty-five entries across the AFI, IMDB Top 250, NFR, NYT and Variety lists are now correctly linked, so their posters, acclaim scores, and edition dots light up.',
+      },
+      {
+        tag: 'Films',
+        color: 'film',
         text: 'External Lists polish. The acclaim/external-list tables now match the primary Canon rankings in scale — larger rank numbers, full-size posters, bigger film titles and metadata — so browsing AFI, Sight & Sound and the rest feels consistent with the rest of the Films section. Publish dates were also verified and made specific where possible: AFI Top 100 (the 10th Anniversary edition) → June 20, 2007; AFI Comedies → June 13, 2000; Sight & Sound → December 1, 2022; and Variety Comedies corrected to its actual release, November 24, 2025. The AFI Top 100 data was confirmed rank-for-rank as the correct 2007 10th Anniversary edition.',
       },
     ],
