@@ -9,6 +9,7 @@ import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
 import OscarIcon from '../../components/OscarIcon'
 import FilmStill from '../../components/FilmStill'
+import { fetchWikidataNominees } from '../../lib/oscarCategories'
 import {
   GROUP_META, GROUP_ORDER, groupOf, isRevealed,
   parseInterval, fmtRuntime, fmtMonologue,
@@ -42,6 +43,10 @@ export default function OscarsYear() {
   const [editMode,    setEditMode]    = useState(false)
   const [saving,      setSaving]      = useState(false)
   const [yearEdit,    setYearEdit]    = useState({})
+  // Phase 13c — nominee management (pre-reveal): re-fetch/merge + add/rename/remove
+  const [manageMode,  setManageMode]  = useState(false)
+  const [wdBusy,      setWdBusy]      = useState(false)
+  const [wdMsg,       setWdMsg]       = useState(null)
 
   useEffect(() => {
     supabase.from('oscar_years').select('year').order('year', { ascending: true })
@@ -122,6 +127,64 @@ export default function OscarsYear() {
     } finally {
       setLoading(false)
     }
+  }
+
+  // ── nominee management (Phase 13c) ──────────────────────────────────────
+  async function refetchFromWikidata() {
+    setWdBusy(true); setWdMsg(null)
+    try {
+      const byCat = await fetchWikidataNominees(yearNum)
+      let added = 0
+      for (const cat of categories) {
+        const wd = byCat[cat.category.name] || []
+        if (!wd.length) continue
+        const existing = new Set(cat.nominees.map(n => n.name.toLowerCase()))
+        const newOnes = wd.filter(n => !existing.has(n.toLowerCase()))
+        if (!newOnes.length) continue
+        const rows = newOnes.map((name, i) => ({
+          year_id: yearData.id, category_id: cat.category.id,
+          nominee_name: name, is_winner: false, display_order: cat.nominees.length + i,
+        }))
+        const { error: insErr } = await supabase.from('oscar_nominees').insert(rows)
+        if (insErr) throw insErr
+        added += newOnes.length
+      }
+      setWdMsg(added > 0
+        ? `✓ Merged ${added} new nominee${added === 1 ? '' : 's'} from Wikidata — existing entries and picks untouched.`
+        : 'No new nominees found — everything Wikidata has is already here.')
+      if (added > 0) await fetchData(yearNum)
+    } catch (err) {
+      setWdMsg(`Wikidata fetch failed: ${err.message}`)
+    } finally {
+      setWdBusy(false)
+    }
+  }
+
+  async function renameNominee(nomineeId, newName) {
+    const { error: rpcErr } = await supabase.rpc('oscar_rename_nominee', { nom_id: nomineeId, new_name: newName })
+    if (rpcErr) { alert(`Rename failed: ${rpcErr.message}`); return }
+    await fetchData(yearNum)
+  }
+
+  async function deleteNominee(nomineeId) {
+    if (!window.confirm('Remove this nominee from the field?')) return
+    const { data, error: rpcErr } = await supabase.rpc('oscar_delete_nominee', { nom_id: nomineeId })
+    if (rpcErr) { alert(`Delete failed: ${rpcErr.message}`); return }
+    if (data === 'blocked') {
+      alert('That nominee is picked on a ballot — the pick has to change before it can be removed.')
+      return
+    }
+    await fetchData(yearNum)
+  }
+
+  async function addNominee(cat, name) {
+    if (!name.trim()) return
+    const { error: insErr } = await supabase.from('oscar_nominees').insert({
+      year_id: yearData.id, category_id: cat.category.id,
+      nominee_name: name.trim(), is_winner: false, display_order: cat.nominees.length,
+    })
+    if (insErr) { alert(`Add failed: ${insErr.message}`); return }
+    await fetchData(yearNum)
   }
 
   // ── edit handlers (UNCHANGED) ────────────────────────────────────────────
@@ -379,8 +442,51 @@ export default function OscarsYear() {
                 </p>
               </div>
             </div>
-            {isAuthenticated && yearData.status === 'ballots' && (
-              <Link to="/oscars/ballot" className="btn-gold text-xs px-4">🗳 My Ballot →</Link>
+            <div className="flex items-center gap-2 flex-wrap">
+              {isAuthenticated && yearData.status === 'ballots' && (
+                <Link to="/oscars/ballot" className="btn-gold text-xs px-4">🗳 My Ballot →</Link>
+              )}
+              {isAuthenticated && (
+                <button onClick={() => setManageMode(m => !m)}
+                        className={manageMode ? 'pill-active' : 'btn-cinema text-xs'}>
+                  {manageMode ? '✓ Done Managing' : '⚙ Manage Nominees'}
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {sealed && manageMode && (
+          <div className="card mb-6">
+            <div className="flex items-start justify-between gap-4 flex-wrap">
+              <div>
+                <p className="font-display text-lg text-white tracking-wide mb-1">RE-FETCH FROM WIKIDATA</p>
+                <p className="text-xs text-gray-400 max-w-md">
+                  Merges anything new for the {yearNum} ceremony into the field below — never removes
+                  or duplicates existing nominees, and never touches picks. Run it again whenever
+                  Wikidata catches up after the nominations announcement.
+                </p>
+              </div>
+              <button type="button" onClick={refetchFromWikidata} disabled={wdBusy}
+                      className="btn-cinema text-sm flex items-center gap-2 shrink-0">
+                {wdBusy ? (
+                  <>
+                    <span className="inline-block w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                    Fetching…
+                  </>
+                ) : (<>🌐 Re-fetch & Merge</>)}
+              </button>
+            </div>
+            {wdMsg && (
+              <div className={`mt-3 px-3 py-2.5 rounded-lg text-sm border ${
+                wdMsg.startsWith('✓')
+                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/40'
+                  : wdMsg.startsWith('Wikidata fetch failed')
+                    ? 'bg-red-500/10 text-red-400 border-red-500/40'
+                    : 'bg-cinema-500/10 text-cinema-400 border-cinema-500/40'
+              }`}>
+                {wdMsg}
+              </div>
             )}
           </div>
         )}
@@ -418,9 +524,13 @@ export default function OscarsYear() {
                     key={c.category.id}
                     cat={c} idx={idx} yearNum={yearNum} editMode={editMode} posterMap={posterMap}
                     sealed={sealed} myUsername={myUsername}
+                    manageMode={sealed && manageMode}
                     onToggleNominee={ni => toggleNomineeWinner(idx, ni)}
                     onChangeMatt={n => changeGuess(idx, 'matt', n)}
                     onChangeDustin={n => changeGuess(idx, 'dustin', n)}
+                    onRenameNominee={renameNominee}
+                    onDeleteNominee={deleteNominee}
+                    onAddNominee={name => addNominee(c, name)}
                   />
                 ))}
               </div>
@@ -467,7 +577,9 @@ function YearDropdown({ current, allYears }) {
 }
 
 // ── CategoryCard — winner / hermz / dust tiles + nominee field ───────────────
-function CategoryCard({ cat, idx, yearNum, editMode, posterMap, sealed, myUsername, onToggleNominee, onChangeMatt, onChangeDustin }) {
+function CategoryCard({ cat, idx, yearNum, editMode, posterMap, sealed, myUsername, manageMode,
+                        onToggleNominee, onChangeMatt, onChangeDustin,
+                        onRenameNominee, onDeleteNominee, onAddNominee }) {
   const { category, nominees, guesses, winner } = cat
   const mattG = guesses.matt || {}
   const dustinG = guesses.dustin || {}
@@ -494,8 +606,13 @@ function CategoryCard({ cat, idx, yearNum, editMode, posterMap, sealed, myUserna
                   sealed={sealed && myUsername !== 'dustin'} />
       </div>
 
-      {/* nominee field — view OR edit */}
-      {editMode ? (
+      {/* nominee field — manage / edit / view */}
+      {manageMode ? (
+        <NomineeEditor
+          nominees={nominees}
+          onRename={onRenameNominee} onDelete={onDeleteNominee} onAdd={onAddNominee}
+        />
+      ) : editMode ? (
         <EditField
           nominees={nominees} winner={winner}
           mattGuess={mattG.guess} dustinGuess={dustinG.guess}
@@ -552,6 +669,49 @@ function PickTile({ who, name, correct, posterMap, sealed }) {
       <div className={`font-display text-lg leading-tight tracking-wide line-clamp-2 ${nameColor}`}>
         {(name || 'TBD').toUpperCase()}
       </div>
+    </div>
+  )
+}
+
+// nominee management (Phase 13c): rename / remove / add — renames cascade to
+// both players' picks via a SECURITY DEFINER fn; removes are blocked while picked.
+function NomineeEditor({ nominees, onRename, onDelete, onAdd }) {
+  const [addVal, setAddVal] = useState('')
+  return (
+    <div className="px-4 pb-4 pt-2 space-y-2 border-t border-night-700/50">
+      <div className="font-mono text-sm tracking-cinema text-cinema-400 uppercase mb-1">Edit the Field</div>
+      {nominees.map(n => (
+        <NomineeRow key={n.id} nominee={n} onRename={onRename} onDelete={onDelete} />
+      ))}
+      <div className="flex items-center gap-2 pt-1">
+        <input value={addVal} onChange={e => setAddVal(e.target.value)}
+               onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); onAdd(addVal); setAddVal('') } }}
+               placeholder="Add a nominee…" className="input text-sm py-1.5 flex-1" />
+        <button type="button" onClick={() => { onAdd(addVal); setAddVal('') }}
+                disabled={!addVal.trim()}
+                className="btn-cinema text-xs disabled:opacity-40">+ Add</button>
+      </div>
+    </div>
+  )
+}
+
+function NomineeRow({ nominee, onRename, onDelete }) {
+  const [val, setVal] = useState(nominee.name)
+  const dirty = val.trim() !== nominee.name && val.trim() !== ''
+  return (
+    <div className="flex items-center gap-2">
+      <input value={val} onChange={e => setVal(e.target.value)}
+             onKeyDown={e => { if (e.key === 'Enter' && dirty) { e.preventDefault(); onRename(nominee.id, val.trim()) } }}
+             className="input text-sm py-1.5 flex-1" />
+      {dirty && (
+        <button type="button" onClick={() => onRename(nominee.id, val.trim())}
+                className="btn-gold text-xs px-3">Save</button>
+      )}
+      <button type="button" onClick={() => onDelete(nominee.id)}
+              className="text-gray-500 hover:text-red-400 transition-colors text-sm flex-shrink-0"
+              title="Remove nominee">
+        ✕
+      </button>
     </div>
   )
 }

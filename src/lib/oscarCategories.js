@@ -103,3 +103,61 @@ export function normalizeCategory(rawLabel, awardUri = '') {
   if (CATEGORY_NORM['best ' + key]) return CATEGORY_NORM['best ' + key]
   return null
 }
+
+// ── Wikidata nominee fetch (Phase 13c — moved from OscarsNewYear so the
+//    New Year wizard and the year page's re-fetch/merge share ONE query) ──────
+const WIKIDATA_URL = 'https://query.wikidata.org/sparql'
+
+/** All nominees for a ceremony year, keyed by canonical category name. */
+export async function fetchWikidataNominees(ceremonyYear) {
+  const sparql = `
+SELECT ?entityLabel ?awardUri ?awardLabel WHERE {
+  ?ceremony wdt:P31 wd:Q4688419 .
+  ?ceremony wdt:P585 ?date .
+  FILTER(YEAR(?date) = ${ceremonyYear})
+
+  {
+    ?entity p:P166 ?stmt .
+    ?stmt ps:P166 ?award .
+    ?stmt pq:P805 ?ceremony .
+  } UNION {
+    ?entity p:P1411 ?stmt .
+    ?stmt ps:P1411 ?award .
+    ?stmt pq:P805 ?ceremony .
+  }
+
+  ?award wdt:P31 wd:Q19020 .
+  BIND(str(?award) AS ?awardUri)
+
+  SERVICE wikibase:label {
+    bd:serviceParam wikibase:language "en" .
+    ?award rdfs:label ?awardLabel .
+    ?entity rdfs:label ?entityLabel .
+  }
+}
+ORDER BY ?awardLabel ?entityLabel
+`
+  const url  = `${WIKIDATA_URL}?query=${encodeURIComponent(sparql)}&format=json`
+  const resp = await fetch(url, {
+    headers: {
+      'Accept':     'application/sparql-results+json',
+      'User-Agent': 'HermzAndDMoviesApp/2.0 (film ranking app; contact: bard37@gmail.com)',
+    },
+  })
+  if (!resp.ok) throw new Error(`Wikidata ${resp.status}: ${resp.statusText}`)
+  const data = await resp.json()
+  const results = {}
+  for (const b of (data?.results?.bindings || [])) {
+    const entityLabel = b.entityLabel?.value || ''
+    const awardLabel  = b.awardLabel?.value  || ''
+    const awardUri    = b.awardUri?.value    || ''
+    if (!entityLabel || entityLabel.startsWith('Q')) continue
+    const canon = normalizeCategory(awardLabel, awardUri)
+    if (!canon) continue
+    if (!results[canon]) results[canon] = new Set()
+    results[canon].add(entityLabel)
+  }
+  return Object.fromEntries(
+    Object.entries(results).map(([cat, names]) => [cat, [...names].sort()])
+  )
+}

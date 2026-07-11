@@ -7,6 +7,11 @@ const UPDATES = [
       {
         tag: 'Oscars',
         color: 'gold',
+        text: 'Nominees, unfrozen. The field is no longer set in stone the day a year is created. On any pre-reveal ceremony page, a new Manage Nominees mode lets you re-fetch from Wikidata at any time — it merges what\'s new and never duplicates or removes what\'s there, perfect for when Wikidata catches up a week after the nominations announcement — plus add, rename, or remove nominees by hand. Renames automatically carry through to any ballot picks that reference them (both players\', safely), and a nominee that someone has picked simply refuses to be deleted. Settings also gained an Oscar Categories admin: when the Academy debuts a category (Stunt Design lands in 2028) or retires one, it\'s a form now, not a database chore.',
+      },
+      {
+        tag: 'Oscars',
+        color: 'gold',
         text: 'Private ballots arrive. From now on, Oscar picks are truly secret: each of you fills your own ballot on the new My Ballot page (it appears in the Oscars menu whenever a ceremony has open ballots), picks save as you tap, and the tiebreaker guesses — ceremony runtime and monologue length — moved into the ballot too. Lock it when you\'re done; until the reveal, the other side shows only a 🔒 and a progress chip, and the seal is enforced by the database itself, not just the page. The New Year wizard slimmed down to two steps (ceremony + nominees) since guesses no longer belong there — saving nominees now opens both ballots automatically. Ceremony pages for an in-season year show a "ballots sealed" banner, and the season card on the Oscars home tracks the year\'s new journey: Ballots Open → Locked → Revealed → Complete.',
       },
     ],

@@ -89,6 +89,13 @@ export default function Settings() {
             accent="film"
           />
           <ToolCard
+            to="/oscars/categories"
+            title="Oscar Categories"
+            description="Add a new Academy Award category the year it debuts (Stunt Design arrives in 2028), retire discontinued ones, and adjust display order."
+            tag="Oscars"
+            accent="gold"
+          />
+          <ToolCard
             to="/movies/backfill"
             title="TMDb Actor Backfill"
             description="Fetch up to 10 cast members per film from The Movie Database and save to Supabase. Run once after adding the actor_6–10 columns."
