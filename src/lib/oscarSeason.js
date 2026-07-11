@@ -60,6 +60,27 @@ export const GROUP_META = {
 export const GROUP_ORDER = ['Major', 'Acting', 'Writing', 'Craft', 'Music', 'Shorts', 'Sound']
 export function groupOf(name) { return CAT_GROUP[name] || 'Craft' }
 
+// ── Reveal ceremony order (Phase 13d — approved 2026-07-11) ──────────────────
+// "Build to Best Picture": shorts/craft first, prestige last. Within a group,
+// reverse display_order. Director is always second-to-last, Best Picture last.
+const REVEAL_GROUP_ORDER = ['Sound', 'Shorts', 'Music', 'Craft', 'Writing', 'Acting', 'Major']
+export function revealSequence(categories) {
+  const special = { 'Best Picture': 2, 'Best Director': 1 }
+  return [...categories].sort((a, b) => {
+    const nameA = a.name ?? a.category?.name
+    const nameB = b.name ?? b.category?.name
+    const sA = special[nameA] || 0
+    const sB = special[nameB] || 0
+    if (sA !== sB) return sA - sB
+    const gA = REVEAL_GROUP_ORDER.indexOf(groupOf(nameA))
+    const gB = REVEAL_GROUP_ORDER.indexOf(groupOf(nameB))
+    if (gA !== gB) return gA - gB
+    const oA = a.display_order ?? a.category?.display_order ?? 0
+    const oB = b.display_order ?? b.category?.display_order ?? 0
+    return oB - oA
+  })
+}
+
 // ── Interval helpers (Postgres interval strings ↔ display/input) ────────────
 export function parseInterval(str) {
   if (!str) return null

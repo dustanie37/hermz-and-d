@@ -368,9 +368,14 @@ export default function OscarsBallot() {
             <p className="font-serif italic text-gray-400">
               {bothLocked ? 'Both ballots locked. See you at the reveal.' : 'Your ballot is in. No peeking allowed.'}
             </p>
-            <Link to={`/oscars/${yearRow.year}`} className="btn-ghost text-xs mt-3 inline-block">
-              View the ceremony page →
-            </Link>
+            <div className="mt-3 flex items-center justify-center gap-3">
+              {bothLocked && (
+                <Link to="/oscars/reveal" className="btn-gold text-xs px-4">🎭 The Reveal Ceremony →</Link>
+              )}
+              <Link to={`/oscars/${yearRow.year}`} className="btn-ghost text-xs">
+                View the ceremony page →
+              </Link>
+            </div>
           </div>
         )}
       </div>

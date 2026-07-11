@@ -316,6 +316,11 @@ function UpcomingCard({ year: y, isAuthenticated, deleting, onDelete, onMarkComp
           🗳 Fill My Ballot →
         </Link>
       )}
+      {y.status === 'locked' && isAuthenticated && (
+        <Link to="/oscars/reveal" className="btn-gold text-xs text-center py-2">
+          🎭 The Reveal Ceremony →
+        </Link>
+      )}
       <Link to={`/oscars/${y.year}`} className="btn-ghost text-xs text-center py-2">
         {y.status === 'revealed' ? 'View Ceremony / Set Winners →' : 'View Nominees →'}
       </Link>

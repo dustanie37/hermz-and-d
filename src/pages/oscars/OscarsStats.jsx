@@ -609,8 +609,21 @@ export default function OscarsStats() {
 
   useEffect(() => { fetchAll() }, [])
 
-  async function fetchAll() {
-    setLoading(true); setError(null)
+  // Phase 13e — ceremony night: refresh quietly whenever the tab regains focus,
+  // so category stats track winners as they're entered on the other device.
+  useEffect(() => {
+    const onFocus = () => fetchAll(true)
+    window.addEventListener('focus', onFocus)
+    document.addEventListener('visibilitychange', onFocus)
+    return () => {
+      window.removeEventListener('focus', onFocus)
+      document.removeEventListener('visibilitychange', onFocus)
+    }
+  }, [])
+
+  async function fetchAll(quiet = false) {
+    if (!quiet) setLoading(true)
+    setError(null)
     try {
       const { data: yrData, error: yrErr } = await supabase
         .from('v_oscar_year_summary').select('*').eq('status', 'complete').order('year', { ascending: true })
@@ -627,6 +640,9 @@ export default function OscarsStats() {
         const user = g.profiles?.username
         const yr   = g.oscar_years?.year
         if (!cat || (user !== 'matt' && user !== 'dustin')) continue
+        // Phase 13e — unresolved picks (no winner marked yet) don't count against
+        // accuracy; the live year's categories join the stats as winners land.
+        if (g.is_correct === null || g.is_correct === undefined) continue
         if (!catMap[cat.id]) {
           catMap[cat.id] = {
             id: cat.id, name: cat.name, order: cat.display_order,

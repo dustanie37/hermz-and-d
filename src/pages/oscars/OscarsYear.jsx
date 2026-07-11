@@ -60,9 +60,27 @@ export default function OscarsYear() {
 
   useEffect(() => { setEditMode(false) }, [yearNum])
 
-  // ── data (fetch unchanged; poster lookup added at the end) ───────────────
-  async function fetchData(yr) {
-    setLoading(true); setError(null)
+  // Phase 13e — ceremony night is live: while the year is 'revealed', winner
+  // flips and score changes made on one device push to the other in seconds.
+  useEffect(() => {
+    if (!yearData || yearData.status !== 'revealed' || editMode) return
+    const channel = supabase
+      .channel(`oscar-year-${yearData.id}`)
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'oscar_nominees', filter: `year_id=eq.${yearData.id}` },
+        () => fetchData(yearNum, true))
+      .on('postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'oscar_years', filter: `id=eq.${yearData.id}` },
+        () => fetchData(yearNum, true))
+      .subscribe()
+    const poll = setInterval(() => fetchData(yearNum, true), 15000)
+    return () => { supabase.removeChannel(channel); clearInterval(poll) }
+  }, [yearData?.id, yearData?.status, editMode])
+
+  // ── data (quiet=true refreshes in place without the loading screen) ──────
+  async function fetchData(yr, quiet = false) {
+    if (!quiet) setLoading(true)
+    setError(null)
     try {
       const { data: yrRow, error: yrErr } = await supabase
         .from('oscar_years').select('*').eq('year', yr).single()
@@ -445,6 +463,9 @@ export default function OscarsYear() {
             <div className="flex items-center gap-2 flex-wrap">
               {isAuthenticated && yearData.status === 'ballots' && (
                 <Link to="/oscars/ballot" className="btn-gold text-xs px-4">🗳 My Ballot →</Link>
+              )}
+              {isAuthenticated && yearData.status === 'locked' && (
+                <Link to="/oscars/reveal" className="btn-gold text-xs px-4">🎭 The Reveal →</Link>
               )}
               {isAuthenticated && (
                 <button onClick={() => setManageMode(m => !m)}

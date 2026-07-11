@@ -7,6 +7,16 @@ const UPDATES = [
       {
         tag: 'Oscars',
         color: 'gold',
+        text: 'The Reveal Ceremony. Once both ballots lock, a new ceremony page opens: your picks unseal one category at a time, building from the shorts and crafts up through writing, acting, and directing to Best Picture last. One tap flips both cards at once — a flourish when you picked the same, a split badge when you didn\'t — while a running board collects every category in gold and blue. It syncs live across both phones (either of you can drive), survives closed tabs, and after Best Picture the finale unseals the tiebreaker guesses: runtimes side by side, monologues beneath. Finishing the reveal is what makes all picks public and unlocks winner entry on the ceremony page.',
+      },
+      {
+        tag: 'Oscars',
+        color: 'gold',
+        text: 'Ceremony night goes live, and the stats got honest. While winners are being entered during the broadcast, the year page now updates on the other phone within seconds — no refreshing between speeches — and the Stats page refreshes itself every time you flick back to its tab. Two long-standing stats quirks fixed along the way: category accuracy no longer counts picks whose category hasn\'t been decided yet (previously a fresh year\'s ballot dragged every percentage down for weeks before the ceremony), and as each winner lands during the show, that category joins the all-time stats immediately.',
+      },
+      {
+        tag: 'Oscars',
+        color: 'gold',
         text: 'Nominees, unfrozen. The field is no longer set in stone the day a year is created. On any pre-reveal ceremony page, a new Manage Nominees mode lets you re-fetch from Wikidata at any time — it merges what\'s new and never duplicates or removes what\'s there, perfect for when Wikidata catches up a week after the nominations announcement — plus add, rename, or remove nominees by hand. Renames automatically carry through to any ballot picks that reference them (both players\', safely), and a nominee that someone has picked simply refuses to be deleted. Settings also gained an Oscar Categories admin: when the Academy debuts a category (Stunt Design lands in 2028) or retires one, it\'s a form now, not a database chore.',
       },
       {
