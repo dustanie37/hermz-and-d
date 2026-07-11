@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { normalizeCategory } from '../../lib/oscarCategories'
@@ -66,7 +66,9 @@ ORDER BY ?awardLabel ?entityLabel
 }
 
 // ── step indicator ──────────────────────────────────────────────────────────
-const STEP_LABELS = ['Ceremony Setup', 'Nominees', 'Guesses']
+// Guesses are no longer entered here (Phase 13b) — each player fills their own
+// private ballot at /oscars/ballot once nominees are saved.
+const STEP_LABELS = ['Ceremony Setup', 'Nominees']
 
 function StepIndicator({ step }) {
   return (
@@ -108,22 +110,12 @@ export default function OscarsNewYear() {
   const [yearId,       setYearId]       = useState(null)
   const [categories,   setCategories]   = useState([])
   const [nominees,     setNominees]     = useState({})
-  const [guesses,      setGuesses]      = useState({})
-  const [profiles,     setProfiles]     = useState({})
   const [saving,       setSaving]       = useState(false)
   const [error,        setError]        = useState(null)
 
   const [wdFetching, setWdFetching] = useState(false)
   const [wdResult,   setWdResult]   = useState(null)
   const [wdMessage,  setWdMessage]  = useState('')
-
-  useEffect(() => {
-    supabase.from('profiles').select('id, username').then(({ data }) => {
-      const map = {}
-      data?.forEach(p => { map[p.username] = p.id })
-      setProfiles(map)
-    })
-  }, [])
 
   async function handleCreateYear(e) {
     e.preventDefault()
@@ -161,14 +153,11 @@ export default function OscarsNewYear() {
       setCategories(activeCats)
 
       const initNoms = {}
-      const initGuesses = {}
       activeCats.forEach(c => {
         const slots = c.name === 'Best Picture' ? 10 : 5
         initNoms[c.id] = Array(slots).fill('')
-        initGuesses[c.id] = { matt: '', dustin: '' }
       })
       setNominees(initNoms)
-      setGuesses(initGuesses)
       setStep(2)
       setWdResult(null)
     } catch (err) {
@@ -235,41 +224,11 @@ export default function OscarsNewYear() {
       if (rows.length === 0) { setError('Enter at least one nominee before continuing.'); setSaving(false); return }
       const { error: insErr } = await supabase.from('oscar_nominees').insert(rows)
       if (insErr) throw insErr
-      const updatedGuesses = {}
-      categories.forEach(cat => {
-        const filled = (nominees[cat.id] || []).filter(n => n.trim())
-        updatedGuesses[cat.id] = { matt: filled[0] || '', dustin: filled[0] || '' }
-      })
-      setGuesses(updatedGuesses)
-      setStep(3)
-    } catch (err) {
-      setError(err.message)
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  function updateGuess(catId, player, value) {
-    setGuesses(prev => ({ ...prev, [catId]: { ...prev[catId], [player]: value } }))
-  }
-
-  async function handleSaveGuesses(e) {
-    e.preventDefault()
-    setError(null)
-    if (!profiles.matt || !profiles.dustin) { setError('Could not load player profiles. Refresh and try again.'); return }
-    setSaving(true)
-    try {
-      const rows = []
-      categories.forEach(cat => {
-        const g = guesses[cat.id] || {}
-        if (g.matt)   rows.push({ year_id: yearId, category_id: cat.id, user_id: profiles.matt,   guess: g.matt,   is_correct: null, locked: false })
-        if (g.dustin) rows.push({ year_id: yearId, category_id: cat.id, user_id: profiles.dustin, guess: g.dustin, is_correct: null, locked: false })
-      })
-      if (rows.length > 0) {
-        const { error: insErr } = await supabase.from('oscar_guesses').insert(rows)
-        if (insErr) throw insErr
-      }
-      navigate(`/oscars/${yearNum}`)
+      // Nominees are in — open the private ballots (Phase 13b)
+      const { error: stErr } = await supabase
+        .from('oscar_years').update({ status: 'ballots' }).eq('id', yearId)
+      if (stErr) throw stErr
+      navigate('/oscars/ballot')
     } catch (err) {
       setError(err.message)
     } finally {
@@ -297,7 +256,7 @@ export default function OscarsNewYear() {
             ADD NEW CEREMONY
           </h1>
           <p className="font-serif italic text-gray-400 mt-2 text-base">
-            Set up nominees and guesses for an upcoming Academy Awards.
+            Set up nominees for an upcoming Academy Awards — then fill your ballots privately.
           </p>
         </div>
       </FilmStill>
@@ -347,10 +306,10 @@ export default function OscarsNewYear() {
             <div className="mb-5 flex items-start justify-between flex-wrap gap-3">
               <p className="text-sm text-gray-400 max-w-lg">
                 Enter nominees for each category, or fetch them automatically from Wikidata.
-                Wikidata data is typically available 1–2 weeks after nominations are announced.
+                Saving opens both players' private ballots — you each pick on your own.
               </p>
               <button type="submit" disabled={saving} className="btn-gold text-sm px-5">
-                {saving ? 'Saving…' : 'Save Nominees →'}
+                {saving ? 'Saving…' : '🗳 Save Nominees & Open Ballots'}
               </button>
             </div>
 
@@ -399,58 +358,7 @@ export default function OscarsNewYear() {
             <div className="mt-6 flex justify-between">
               <button type="button" onClick={() => setStep(1)} className="btn-ghost text-sm">← Back</button>
               <button type="submit" disabled={saving} className="btn-gold text-sm px-5">
-                {saving ? 'Saving…' : 'Save Nominees →'}
-              </button>
-            </div>
-          </form>
-        )}
-
-        {/* Step 3 */}
-        {step === 3 && (
-          <form onSubmit={handleSaveGuesses}>
-            <div className="mb-4 flex items-center justify-between flex-wrap gap-3">
-              <p className="text-sm text-gray-400">
-                Record each player's prediction. Select "No guess" to skip a category.
-              </p>
-              <button type="submit" disabled={saving} className="btn-gold text-sm px-5">
-                {saving ? 'Saving…' : '🏆 Finish & View Year'}
-              </button>
-            </div>
-
-            <div className="card p-0 overflow-hidden overflow-x-auto">
-              <table className="w-full min-w-[480px]">
-                <thead>
-                  <tr>
-                    <th className="table-header text-left">Category</th>
-                    <th className="table-header text-gold-500 w-52">Hermz</th>
-                    <th className="table-header text-film-500 w-52">Dust</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {categories.map((cat, idx) => {
-                    const catNoms = (nominees[cat.id] || []).filter(n => n.trim())
-                    const g = guesses[cat.id] || { matt: '', dustin: '' }
-                    const stripe = idx % 2 === 0 ? 'bg-night-800/40' : 'bg-night-900/40'
-                    return (
-                      <tr key={cat.id} className={`${stripe} table-row-hover`}>
-                        <td className="table-cell py-3 px-5 text-sm font-medium text-gray-200">{cat.name}</td>
-                        <td className="table-cell py-3 px-5 w-52">
-                          <GuessSelect value={g.matt} nominees={catNoms} onChange={v => updateGuess(cat.id, 'matt', v)} color="gold" />
-                        </td>
-                        <td className="table-cell py-3 px-5 w-52">
-                          <GuessSelect value={g.dustin} nominees={catNoms} onChange={v => updateGuess(cat.id, 'dustin', v)} color="film" />
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            <div className="mt-6 flex justify-between">
-              <button type="button" onClick={() => setStep(2)} className="btn-ghost text-sm">← Back</button>
-              <button type="submit" disabled={saving} className="btn-gold text-sm px-5">
-                {saving ? 'Saving…' : '🏆 Finish & View Year'}
+                {saving ? 'Saving…' : '🗳 Save Nominees & Open Ballots'}
               </button>
             </div>
           </form>
@@ -520,13 +428,3 @@ function CategoryNomineesCard({ category, nominees, onUpdate, onAdd, onRemove })
   )
 }
 
-function GuessSelect({ value, nominees, onChange, color }) {
-  const colorClass = color === 'gold' ? 'border-gold-500/40' : 'border-film-500/40'
-  return (
-    <select value={value} onChange={e => onChange(e.target.value)}
-            className={`select text-xs py-1.5 w-full ${colorClass}`}>
-      <option value="" className="bg-night-900">— No guess —</option>
-      {nominees.map(n => <option key={n} value={n} className="bg-night-900">{n}</option>)}
-    </select>
-  )
-}

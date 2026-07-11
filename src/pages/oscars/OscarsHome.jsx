@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext'
 import { searchFilmByTitle, searchFilmsByQuery } from '../../lib/omdb'
 import OscarIcon from '../../components/OscarIcon'
 import FilmStill from '../../components/FilmStill'
+import { OSCAR_STATUS_META } from '../../lib/oscarSeason'
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -139,8 +140,9 @@ export default function OscarsHome() {
     await fetchSummary()
   }
 
-  const upcoming = years.filter(y => y.status === 'upcoming')
-  const complete = years.filter(y => y.status !== 'upcoming')
+  // Phase 13b — anything not complete (upcoming/ballots/locked/revealed) is "in season"
+  const upcoming = years.filter(y => y.status !== 'complete')
+  const complete = years.filter(y => y.status === 'complete')
 
   const mattWins    = complete.filter(y => y.winner === 'matt').length
   const dustinWins  = complete.filter(y => y.winner === 'dustin').length
@@ -289,6 +291,7 @@ function SideScore({ who, wins, total, leading }) {
 }
 
 function UpcomingCard({ year: y, isAuthenticated, deleting, onDelete, onMarkComplete }) {
+  const meta = OSCAR_STATUS_META[y.status] || OSCAR_STATUS_META.upcoming
   return (
     <div className="card border-2 border-dashed border-gold-500/40 flex flex-col gap-3">
       <div className="flex items-start justify-between">
@@ -303,29 +306,40 @@ function UpcomingCard({ year: y, isAuthenticated, deleting, onDelete, onMarkComp
             <p className="font-sans text-xs text-gray-500 mt-0.5">{formatDate(y.ceremony_name)}</p>
           )}
         </div>
-        <span className="badge-tiebreaker">Upcoming</span>
+        <span className={`font-mono text-[10px] tracking-kicker px-2 py-1 rounded-full border ${meta.chip}`}>
+          {meta.label}
+        </span>
       </div>
 
+      {y.status === 'ballots' && isAuthenticated && (
+        <Link to="/oscars/ballot" className="btn-gold text-xs text-center py-2">
+          🗳 Fill My Ballot →
+        </Link>
+      )}
       <Link to={`/oscars/${y.year}`} className="btn-ghost text-xs text-center py-2">
-        View / Edit Nominees & Guesses →
+        {y.status === 'revealed' ? 'View Ceremony / Set Winners →' : 'View Nominees →'}
       </Link>
 
       {isAuthenticated && (
         <div className="flex gap-2 pt-2 border-t border-night-700/60">
-          <button
-            onClick={onMarkComplete}
-            className="flex-1 text-xs px-3 py-1.5 rounded-lg bg-emerald-500/15 border border-emerald-500/40
-                       text-emerald-400 font-medium hover:bg-emerald-500/20 transition-colors"
-          >
-            ✓ Mark Complete
-          </button>
+          {y.status === 'revealed' && (
+            <button
+              onClick={onMarkComplete}
+              className="flex-1 text-xs px-3 py-1.5 rounded-lg bg-emerald-500/15 border border-emerald-500/40
+                         text-emerald-400 font-medium hover:bg-emerald-500/20 transition-colors"
+            >
+              ✓ Mark Complete
+            </button>
+          )}
           <button
             onClick={onDelete}
             disabled={deleting}
-            className="text-xs px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/30
-                       text-red-400 font-medium hover:bg-red-500/15 transition-colors disabled:opacity-50"
+            className={`text-xs px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/30
+                       text-red-400 font-medium hover:bg-red-500/15 transition-colors disabled:opacity-50 ${
+                         y.status === 'revealed' ? '' : 'flex-1'
+                       }`}
           >
-            🗑
+            🗑 Delete Year
           </button>
         </div>
       )}

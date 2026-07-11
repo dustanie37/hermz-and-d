@@ -2,12 +2,22 @@
 
 const UPDATES = [
   {
+    date: 'July 11, 2026',
+    entries: [
+      {
+        tag: 'Oscars',
+        color: 'gold',
+        text: 'Private ballots arrive. From now on, Oscar picks are truly secret: each of you fills your own ballot on the new My Ballot page (it appears in the Oscars menu whenever a ceremony has open ballots), picks save as you tap, and the tiebreaker guesses — ceremony runtime and monologue length — moved into the ballot too. Lock it when you\'re done; until the reveal, the other side shows only a 🔒 and a progress chip, and the seal is enforced by the database itself, not just the page. The New Year wizard slimmed down to two steps (ceremony + nominees) since guesses no longer belong there — saving nominees now opens both ballots automatically. Ceremony pages for an in-season year show a "ballots sealed" banner, and the season card on the Oscars home tracks the year\'s new journey: Ballots Open → Locked → Revealed → Complete.',
+      },
+    ],
+  },
+  {
     date: 'July 10, 2026',
     entries: [
       {
         tag: 'Design',
         color: 'film',
-        text: 'Poster overlays cleaned up. Film titles that had reappeared printed over posters are gone in two places: the top-film tiles on the Films landing page (each poster now stands on its own above its Combined / Dust / Hermz label) and the grid view on the rankings page (rank badge, movement arrow, and year/score line only). Just the artwork.',
+        text: 'Rankings grid tidy-up. On the Films rankings page, the grid view had film titles printed back over the bottom of each poster. Those are gone again — posters now show just the rank badge, movement arrow, and the year/score line, letting the artwork breathe.',
       },
       {
         tag: 'Design',

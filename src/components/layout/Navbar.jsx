@@ -27,6 +27,7 @@ export default function Navbar() {
   const location = useLocation()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [hasActiveEvent, setHasActiveEvent] = useState(false)
+  const [hasOpenBallot, setHasOpenBallot] = useState(false)
 
   // "Next Edition" sub-nav item appears once a ranking event opens (Phase 12a)
   useEffect(() => {
@@ -37,6 +38,16 @@ export default function Navbar() {
       .limit(1)
       .then(({ data }) => setHasActiveEvent((data?.length ?? 0) > 0))
   }, [isAuthenticated])
+
+  // "My Ballot" sub-nav item appears while an Oscar year has open/locked ballots (Phase 13b)
+  useEffect(() => {
+    if (!isAuthenticated) { setHasOpenBallot(false); return }
+    supabase
+      .from('oscar_years').select('id')
+      .in('status', ['ballots', 'locked'])
+      .limit(1)
+      .then(({ data }) => setHasOpenBallot((data?.length ?? 0) > 0))
+  }, [isAuthenticated, location.pathname])
 
   useEffect(() => { setMobileOpen(false) }, [location.pathname])
 
@@ -57,7 +68,10 @@ export default function Navbar() {
   const filmsLinks = hasActiveEvent
     ? [...FILMS_LINKS, { to: '/movies/pool', label: 'Next Edition' }]
     : FILMS_LINKS
-  const subLinks  = inOscars ? OSCARS_LINKS : inFilms ? filmsLinks : inPodcast ? PODCAST_LINKS : null
+  const oscarsLinks = hasOpenBallot
+    ? [...OSCARS_LINKS, { to: '/oscars/ballot', label: 'My Ballot' }]
+    : OSCARS_LINKS
+  const subLinks  = inOscars ? oscarsLinks : inFilms ? filmsLinks : inPodcast ? PODCAST_LINKS : null
   const subAccent = inOscars ? 'gold' : inPodcast ? 'cinema' : 'blue'
 
   const activeSubStyle = (active) =>
@@ -274,7 +288,7 @@ export default function Navbar() {
 
             {/* Oscars */}
             <div className="px-4 py-2 font-mono text-[10px] tracking-kicker text-gray-600 uppercase">Oscars</div>
-            {OSCARS_LINKS.map(({ to, label }) => (
+            {oscarsLinks.map(({ to, label }) => (
               <NavLink key={to} to={to}
                 end={to === '/oscars'}
                 className={({ isActive }) =>

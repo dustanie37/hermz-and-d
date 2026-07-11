@@ -9,57 +9,13 @@ import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
 import OscarIcon from '../../components/OscarIcon'
 import FilmStill from '../../components/FilmStill'
+import {
+  GROUP_META, GROUP_ORDER, groupOf, isRevealed,
+  parseInterval, fmtRuntime, fmtMonologue,
+  runtimeInputValue, monologueInputValue, toRuntimeInterval, toMonologueInterval,
+} from '../../lib/oscarSeason'
 
-// ── category groups — matches OscarsStats exactly ────────────────────────────
-const CAT_GROUP = {
-  'Best Picture':                    'Major',
-  'Best Director':                   'Major',
-  'Best Animated Feature Film':      'Major',
-  'Best International Feature Film': 'Major',
-  'Best Documentary Feature Film':   'Major',
-  'Best Actor':                      'Acting',
-  'Best Actress':                    'Acting',
-  'Best Supporting Actor':           'Acting',
-  'Best Supporting Actress':         'Acting',
-  'Best Original Screenplay':        'Writing',
-  'Best Adapted Screenplay':         'Writing',
-  'Best Production Design':          'Craft',
-  'Best Cinematography':             'Craft',
-  'Best Costume Design':             'Craft',
-  'Best Film Editing':               'Craft',
-  'Best Makeup and Hairstyling':     'Craft',
-  'Best Visual Effects':             'Craft',
-  'Best Casting':                    'Craft',
-  'Best Original Score':             'Music',
-  'Best Original Song':              'Music',
-  'Best Sound':                      'Music',
-  'Best Animated Short Film':        'Shorts',
-  'Best Documentary Short Film':     'Shorts',
-  'Best Live Action Short Film':     'Shorts',
-  'Best Sound Editing':              'Sound',
-  'Best Sound Mixing':               'Sound',
-}
-const GROUP_META = {
-  Major:   'Major Awards',
-  Acting:  'Acting',
-  Writing: 'Writing',
-  Craft:   'Craft',
-  Music:   'Music & Sound',
-  Shorts:  'Short Films',
-  Sound:   'Discontinued',
-}
-const GROUP_ORDER = ['Major', 'Acting', 'Writing', 'Craft', 'Music', 'Shorts', 'Sound']
-function groupOf(name) { return CAT_GROUP[name] || 'Craft' }
-
-// ── helpers (unchanged) ──────────────────────────────────────────────────────
-function parseInterval(str) {
-  if (!str) return null
-  const parts = str.split(':')
-  if (parts.length < 2) return null
-  return { h: parseInt(parts[0], 10), m: parseInt(parts[1], 10), s: parseInt(parts[2] || 0, 10) }
-}
-function fmtRuntime(str) { const t = parseInterval(str); return t ? `${t.h}h ${t.m}m` : '—' }
-function fmtMonologue(str) { const t = parseInterval(str); if (!t) return '—'; return t.h > 0 ? `${t.h}h ${t.m}m ${t.s}s` : `${t.m}m ${t.s}s` }
+// ── helpers ──────────────────────────────────────────────────────────────────
 function runtimeDiff(actual, guess) {
   const a = parseInterval(actual), g = parseInterval(guess)
   if (!a || !g) return null
@@ -74,7 +30,7 @@ function yearHue(y) { return ((y * 17) + 11) % 360 }
 export default function OscarsYear() {
   const { year } = useParams()
   const navigate = useNavigate()
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, profile } = useAuth()
   const yearNum = parseInt(year, 10)
 
   const [yearData,    setYearData]    = useState(null)
@@ -250,8 +206,8 @@ export default function OscarsYear() {
     if (saving) return
     setSaving(true)
     try {
-      const toRuntime = s => { if (!s) return null; const p = s.trim().split(':'); return p.length === 2 ? `${p[0]}:${p[1]}:00` : s }
-      const toMono    = s => { if (!s) return null; const p = s.trim().split(':'); return p.length === 2 ? `0:${p[0]}:${p[1]}` : s }
+      const toRuntime = toRuntimeInterval
+      const toMono    = toMonologueInterval
       const patch = {}
       if ('actual_runtime'         in yearEdit) patch.actual_runtime         = toRuntime(yearEdit.actual_runtime)
       if ('matt_runtime_guess'     in yearEdit) patch.matt_runtime_guess     = toRuntime(yearEdit.matt_runtime_guess)
@@ -323,6 +279,9 @@ export default function OscarsYear() {
   const mattWon = yearData.winner === 'matt'
   const dustinWon = yearData.winner === 'dustin'
   const tb = yearData.tiebreaker_used
+  // Phase 13b — picks stay sealed (RLS-enforced) until the reveal
+  const sealed = !isRevealed(yearData.status)
+  const myUsername = profile?.username
 
   // bucket categories into groups, preserving display_order within each group
   const groups = GROUP_ORDER
@@ -356,7 +315,7 @@ export default function OscarsYear() {
           {prevYear && <Link to={`/oscars/${prevYear}`} className="pill">← {prevYear}</Link>}
           <YearDropdown current={yearNum} allYears={allYears} />
           {nextYear && <Link to={`/oscars/${nextYear}`} className="pill">{nextYear} →</Link>}
-          {isAuthenticated && (
+          {isAuthenticated && !sealed && (
             <button onClick={() => setEditMode(m => !m)} className={editMode ? 'pill-active' : 'btn-cinema text-xs'}>
               {editMode ? (saving ? '⏳ Saving…' : '✓ Done') : '✏️ Edit'}
             </button>
@@ -386,15 +345,45 @@ export default function OscarsYear() {
 
           <div className="hidden md:flex bg-night-950/70 backdrop-blur-md border border-white/[0.12]
                           rounded-2xl px-5 py-3.5 gap-4 items-center shadow-still-lg flex-shrink-0">
-            <HeroYearScore who="matt"   score={mattTotal}   total={categories.length} winner={mattWon} tb={tb} />
-            <span className="w-px h-12 bg-white/10" />
-            <HeroYearScore who="dustin" score={dustinTotal} total={categories.length} winner={dustinWon} tb={tb} />
+            {sealed ? (
+              <div className="text-center px-2">
+                <div className="font-display text-2xl text-white tracking-wide leading-none">🔒</div>
+                <div className="font-mono text-[10px] tracking-cinema text-gold-500 mt-1.5">BALLOTS SEALED</div>
+              </div>
+            ) : (
+              <>
+                <HeroYearScore who="matt"   score={mattTotal}   total={categories.length} winner={mattWon} tb={tb} />
+                <span className="w-px h-12 bg-white/10" />
+                <HeroYearScore who="dustin" score={dustinTotal} total={categories.length} winner={dustinWon} tb={tb} />
+              </>
+            )}
           </div>
         </div>
       </FilmStill>
 
       {/* ── BODY ──────────────────────────────────────────────────────────── */}
       <div className="max-w-6xl mx-auto px-6 sm:px-10 py-8">
+
+        {sealed && (
+          <div className="mb-6 px-5 py-4 rounded-xl border border-gold-500/40 bg-gold-500/[0.06]
+                          flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex items-center gap-3">
+              <span className="text-xl">🔒</span>
+              <div>
+                <p className="text-sm text-gray-200 font-medium">
+                  {yearData.status === 'locked'
+                    ? 'Both ballots are locked. The reveal awaits.'
+                    : yearData.status === 'ballots'
+                    ? 'Ballots are open — picks stay hidden from each other until the reveal.'
+                    : 'Nominees are being set up. Ballots open once they\'re saved.'}
+                </p>
+              </div>
+            </div>
+            {isAuthenticated && yearData.status === 'ballots' && (
+              <Link to="/oscars/ballot" className="btn-gold text-xs px-4">🗳 My Ballot →</Link>
+            )}
+          </div>
+        )}
 
         {editMode && (
           <div className="mb-4 px-4 py-3 rounded-xl border border-cinema-500/40 bg-cinema-500/10
@@ -428,6 +417,7 @@ export default function OscarsYear() {
                   <CategoryCard
                     key={c.category.id}
                     cat={c} idx={idx} yearNum={yearNum} editMode={editMode} posterMap={posterMap}
+                    sealed={sealed} myUsername={myUsername}
                     onToggleNominee={ni => toggleNomineeWinner(idx, ni)}
                     onChangeMatt={n => changeGuess(idx, 'matt', n)}
                     onChangeDustin={n => changeGuess(idx, 'dustin', n)}
@@ -477,7 +467,7 @@ function YearDropdown({ current, allYears }) {
 }
 
 // ── CategoryCard — winner / hermz / dust tiles + nominee field ───────────────
-function CategoryCard({ cat, idx, yearNum, editMode, posterMap, onToggleNominee, onChangeMatt, onChangeDustin }) {
+function CategoryCard({ cat, idx, yearNum, editMode, posterMap, sealed, myUsername, onToggleNominee, onChangeMatt, onChangeDustin }) {
   const { category, nominees, guesses, winner } = cat
   const mattG = guesses.matt || {}
   const dustinG = guesses.dustin || {}
@@ -497,9 +487,11 @@ function CategoryCard({ cat, idx, yearNum, editMode, posterMap, onToggleNominee,
 
       {/* three picks */}
       <div className="grid grid-cols-3 gap-4 px-4 py-4">
-        <PickTile who="winner" name={winner} posterMap={posterMap} />
-        <PickTile who="matt"   name={mattG.guess}   correct={mattG.is_correct}   posterMap={posterMap} />
-        <PickTile who="dustin" name={dustinG.guess} correct={dustinG.is_correct} posterMap={posterMap} />
+        <PickTile who="winner" name={winner} posterMap={posterMap} sealed={sealed} />
+        <PickTile who="matt"   name={mattG.guess}   correct={mattG.is_correct}   posterMap={posterMap}
+                  sealed={sealed && myUsername !== 'matt'} />
+        <PickTile who="dustin" name={dustinG.guess} correct={dustinG.is_correct} posterMap={posterMap}
+                  sealed={sealed && myUsername !== 'dustin'} />
       </div>
 
       {/* nominee field — view OR edit */}
@@ -530,13 +522,25 @@ function CategoryCard({ cat, idx, yearNum, editMode, posterMap, onToggleNominee,
   )
 }
 
-// one tile: label + name, with ✓/✗ for the two players
-function PickTile({ who, name, correct, posterMap }) {
+// one tile: label + name, with ✓/✗ for the two players.
+// sealed (Phase 13b): the other player's pick is RLS-hidden pre-reveal — show 🔒.
+function PickTile({ who, name, correct, posterMap, sealed }) {
   const isWinner = who === 'winner'
   const labelColor = who === 'matt' ? 'text-gold-500' : who === 'dustin' ? 'text-film-500' : 'text-gold-400'
   const labelText  = who === 'matt' ? 'HERMZ' : who === 'dustin' ? 'DUST' : 'WINNER'
   const nameColor  = isWinner ? 'text-white'
     : correct === false ? 'text-gray-500 line-through' : 'text-white'
+
+  if (sealed) {
+    return (
+      <div className="min-w-0">
+        <div className={`font-mono text-sm tracking-cinema uppercase mb-1 ${labelColor}`}>{labelText}</div>
+        <div className="font-display text-lg leading-tight tracking-wide text-gray-600">
+          {isWinner ? 'TBD' : '🔒 SEALED'}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-w-0">
@@ -639,10 +643,8 @@ function TBCol({ who, value, diff, winner }) {
 }
 
 function YearDetailsEdit({ yearData, yearEdit, setYearEdit, mattTotal, dustinTotal, saving, onSave, onCalculateWinner }) {
-  function fmtForInput(s) { const t = parseInterval(s); return t ? `${t.h}:${String(t.m).padStart(2,'0')}` : '' }
-  function fmtMono(s) { const t = parseInterval(s); return t ? `${t.m}:${String(t.s).padStart(2,'0')}` : '' }
-  const runtimeVal = f => f in yearEdit ? yearEdit[f] : fmtForInput(yearData[f])
-  const monoVal    = f => f in yearEdit ? yearEdit[f] : fmtMono(yearData[f])
+  const runtimeVal = f => f in yearEdit ? yearEdit[f] : runtimeInputValue(yearData[f])
+  const monoVal    = f => f in yearEdit ? yearEdit[f] : monologueInputValue(yearData[f])
   const set = (f, v) => setYearEdit(prev => ({ ...prev, [f]: v }))
   const showMonologue = yearData.year >= 2026
 
