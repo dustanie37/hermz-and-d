@@ -2,6 +2,21 @@
 
 const UPDATES = [
   {
+    date: 'July 12, 2026',
+    entries: [
+      {
+        tag: 'Oscars',
+        color: 'gold',
+        text: 'Ceremony pages, redesigned around the field. Every category card now lists all its nominees as proper rows — the winner sits highlighted in gold with a poster beside it, and your picks appear as HERMZ/DUST badges right on the nominee each of you chose, with a chip in the corner calling the category (Both Correct, Both Missed, or Split Pick). And every nominee finally carries its film: directors and actors show what they were nominated for, songs show their movie (plus songwriters behind the scenes), screenplays name their writers, and International Feature shows the country.',
+      },
+      {
+        tag: 'Oscars',
+        color: 'gold',
+        text: 'The great nominee cleanup. All 2,280 nominee entries across 19 ceremonies were verified against the real Oscar record. 236 names were corrected — typos (Hugp → Hugo, Mosferatu → Nosferatu, Christopher → Christoph Waltz), shortcut titles expanded (HP 8, PotC, Benjamin Button ×10, PTA), accents restored (Penélope, Timothée, Tár, Emilia Pérez), and one nominee that a spreadsheet had eaten and turned into a date: "2025-09-05" is once again September 5. Every correction carried through to both players\' historical picks, and all scores were verified unchanged. Also recovered: 1917 was missing from all nine of its 2020 nominations including its three wins, the entire 2013 Production Design field was absent, and 12 (Russia) joined 2008 International Feature. One for the two of you to rule on: in 2013, Hermz picked Anna Karenina for Production Design — which actually won — but your records score it as a miss. The page now shows that contradiction; Edit mode awaits your verdict.',
+      },
+    ],
+  },
+  {
     date: 'July 11, 2026',
     entries: [
       {

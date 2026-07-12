@@ -65,19 +65,28 @@ export const CATEGORY_NORM = {
   'best sound effects editing': 'Best Sound Editing',
   'best visual effects': 'Best Visual Effects', 'best special effects': 'Best Visual Effects',
   'best special visual effects': 'Best Visual Effects',
-  'best animated feature film': 'Best Animated Feature', 'best animated feature': 'Best Animated Feature',
-  'best animated short film': 'Best Animated Short', 'best animated short': 'Best Animated Short',
-  'best documentary feature': 'Best Documentary Feature', 'best documentary feature film': 'Best Documentary Feature',
-  'best feature documentary': 'Best Documentary Feature',
-  'best documentary short film': 'Best Documentary Short', 'best documentary short subject': 'Best Documentary Short',
-  'best documentary short': 'Best Documentary Short', 'best documentary': 'Best Documentary Feature',
-  'best live action short film': 'Best Live Action Short', 'best live action short': 'Best Live Action Short',
-  'best short film, live action': 'Best Live Action Short', 'best short subject, live action': 'Best Live Action Short',
+  // ⚠️ canonical names below carry the " Film" suffix to match oscar_categories rows
+  // exactly (2026-07-12 fix — the suffixless variants never matched the DB, so these
+  // categories silently skipped auto-fill).
+  'best animated feature film': 'Best Animated Feature Film', 'best animated feature': 'Best Animated Feature Film',
+  'best animated short film': 'Best Animated Short Film', 'best animated short': 'Best Animated Short Film',
+  'best documentary feature': 'Best Documentary Feature Film', 'best documentary feature film': 'Best Documentary Feature Film',
+  'best feature documentary': 'Best Documentary Feature Film',
+  'best documentary short film': 'Best Documentary Short Film', 'best documentary short subject': 'Best Documentary Short Film',
+  'best documentary (short subject)': 'Best Documentary Short Film',
+  'best documentary short': 'Best Documentary Short Film', 'best documentary': 'Best Documentary Feature Film',
+  'best live action short film': 'Best Live Action Short Film', 'best live action short': 'Best Live Action Short Film',
+  'best short film, live action': 'Best Live Action Short Film', 'best short subject, live action': 'Best Live Action Short Film',
   'best international feature film': 'Best International Feature Film',
   'best international feature': 'Best International Feature Film',
   'best foreign language film': 'Best International Feature Film',
+  'best casting': 'Best Casting', 'achievement in casting': 'Best Casting',
   'special achievement academy award': 'Special Achievement Award', 'honorary award': 'Honorary Award',
 }
+
+export const PERSON_CATEGORIES = new Set([
+  'Best Actor', 'Best Actress', 'Best Supporting Actor', 'Best Supporting Actress', 'Best Director',
+])
 
 export const ACTING_CATEGORIES = new Set([
   'Best Actor', 'Best Actress', 'Best Supporting Actor', 'Best Supporting Actress',
@@ -89,30 +98,53 @@ export function extractQid(uri) {
   return m ? m[1] : ''
 }
 
-export function normalizeCategory(rawLabel, awardUri = '') {
+export function normalizeCategory(rawLabel, awardUri = '', ceremonyYear = null) {
   const qid = extractQid(awardUri)
-  if (qid && QID_OVERRIDE[qid]) return QID_OVERRIDE[qid]
-  const s = rawLabel.trim()
-  if (CATEGORY_NORM[s.toLowerCase()]) return CATEGORY_NORM[s.toLowerCase()]
-  let trimmed = s
-  for (const prefix of ['Academy Award for Best ', 'Academy Award for ']) {
-    if (s.toLowerCase().startsWith(prefix.toLowerCase())) { trimmed = s.slice(prefix.length); break }
+  let canon = null
+  if (qid && QID_OVERRIDE[qid]) canon = QID_OVERRIDE[qid]
+  if (!canon) {
+    const s = rawLabel.trim()
+    canon = CATEGORY_NORM[s.toLowerCase()] || null
+    if (!canon) {
+      let trimmed = s
+      for (const prefix of ['Academy Award for Best ', 'Academy Award for ']) {
+        if (s.toLowerCase().startsWith(prefix.toLowerCase())) { trimmed = s.slice(prefix.length); break }
+      }
+      const key = trimmed.toLowerCase()
+      canon = CATEGORY_NORM[key] || CATEGORY_NORM['best ' + key] || null
+    }
   }
-  const key = trimmed.toLowerCase()
-  if (CATEGORY_NORM[key]) return CATEGORY_NORM[key]
-  if (CATEGORY_NORM['best ' + key]) return CATEGORY_NORM['best ' + key]
-  return null
+  // Wikidata labels the pre-2021 mixing award plainly "Best Sound" — the split
+  // categories existed through the 2020 ceremony (year-aware, 2026-07-12).
+  if (canon === 'Best Sound' && ceremonyYear && ceremonyYear <= 2020) return 'Best Sound Mixing'
+  return canon
 }
 
 // ── Wikidata nominee fetch (Phase 13c — moved from OscarsNewYear so the
 //    New Year wizard and the year page's re-fetch/merge share ONE query) ──────
 const WIKIDATA_URL = 'https://query.wikidata.org/sparql'
 
-/** All nominees for a ceremony year, keyed by canonical category name. */
-export async function fetchWikidataNominees(ceremonyYear) {
+/**
+ * All nominees for a ceremony year, keyed by canonical category name.
+ *
+ * 2026-07-12 rewrite:
+ * - Wikidata retired the old ceremony class QID (Q4688419) — ceremonies are now
+ *   instances of Q16913666. We match BOTH so this survives another migration.
+ * - The nomination statement's P1686 ("for work") qualifier is captured: it gives
+ *   the film for person nominations and the song title for Best Original Song
+ *   (whose statements sit on the songwriters, not the song).
+ * - Person categories keep the person as nominee; song category uses the song
+ *   title; film categories use the work when the statement sits on a person.
+ *
+ * Returns { [canonicalCategory]: [names…] }.
+ * Pass { withFilms: true } to instead get { byCat, films } where films maps
+ * `${canonicalCategory}|${name}` → film title (null when Wikidata doesn't know).
+ */
+export async function fetchWikidataNominees(ceremonyYear, { withFilms = false } = {}) {
   const sparql = `
-SELECT ?entityLabel ?awardUri ?awardLabel WHERE {
-  ?ceremony wdt:P31 wd:Q4688419 .
+SELECT ?entityLabel ?awardUri ?awardLabel ?workLabel WHERE {
+  VALUES ?ceremonyClass { wd:Q16913666 wd:Q4688419 }
+  ?ceremony wdt:P31 ?ceremonyClass .
   ?ceremony wdt:P585 ?date .
   FILTER(YEAR(?date) = ${ceremonyYear})
 
@@ -126,13 +158,14 @@ SELECT ?entityLabel ?awardUri ?awardLabel WHERE {
     ?stmt pq:P805 ?ceremony .
   }
 
-  ?award wdt:P31 wd:Q19020 .
   BIND(str(?award) AS ?awardUri)
+  OPTIONAL { ?stmt pq:P1686 ?work . }
 
   SERVICE wikibase:label {
     bd:serviceParam wikibase:language "en" .
     ?award rdfs:label ?awardLabel .
     ?entity rdfs:label ?entityLabel .
+    ?work rdfs:label ?workLabel .
   }
 }
 ORDER BY ?awardLabel ?entityLabel
@@ -147,17 +180,37 @@ ORDER BY ?awardLabel ?entityLabel
   if (!resp.ok) throw new Error(`Wikidata ${resp.status}: ${resp.statusText}`)
   const data = await resp.json()
   const results = {}
+  const films = {}
   for (const b of (data?.results?.bindings || [])) {
     const entityLabel = b.entityLabel?.value || ''
     const awardLabel  = b.awardLabel?.value  || ''
     const awardUri    = b.awardUri?.value    || ''
-    if (!entityLabel || entityLabel.startsWith('Q')) continue
-    const canon = normalizeCategory(awardLabel, awardUri)
+    const workLabel   = b.workLabel?.value   || ''
+    if (!entityLabel || /^Q\d+$/.test(entityLabel)) continue
+    const canon = normalizeCategory(awardLabel, awardUri, ceremonyYear)
     if (!canon) continue
+
+    let nominee = entityLabel
+    let film = null
+    if (canon === 'Best Original Song') {
+      if (!workLabel) continue           // songwriter row without the song — useless alone
+      nominee = workLabel                // the song is the nominee
+    } else if (PERSON_CATEGORIES.has(canon)) {
+      film = workLabel || null           // person nominee, film from the qualifier
+    } else {
+      // film categories: statements on the film give the film directly; statements
+      // on craftspeople carry the film in the work qualifier
+      if (workLabel) { nominee = workLabel }
+      film = nominee
+    }
+
     if (!results[canon]) results[canon] = new Set()
-    results[canon].add(entityLabel)
+    results[canon].add(nominee)
+    const key = `${canon}|${nominee}`
+    if (film && !films[key]) films[key] = film
   }
-  return Object.fromEntries(
+  const byCat = Object.fromEntries(
     Object.entries(results).map(([cat, names]) => [cat, [...names].sort()])
   )
+  return withFilms ? { byCat, films } : byCat
 }

@@ -9,7 +9,7 @@ import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
 import OscarIcon from '../../components/OscarIcon'
 import FilmStill from '../../components/FilmStill'
-import { fetchWikidataNominees } from '../../lib/oscarCategories'
+import { fetchWikidataNominees, PERSON_CATEGORIES } from '../../lib/oscarCategories'
 import {
   GROUP_META, GROUP_ORDER, groupOf, isRevealed,
   parseInterval, fmtRuntime, fmtMonologue,
@@ -109,9 +109,10 @@ export default function OscarsYear() {
       }
       for (const n of nominees) {
         const cid = n.category_id
-        if (!catMap[cid]) catMap[cid] = { category: n.oscar_categories, nominees: [], guesses: {}, winner: null }
-        catMap[cid].nominees.push({ id: n.id, name: n.nominee_name, is_winner: n.is_winner, order: n.display_order })
-        if (n.is_winner) catMap[cid].winner = n.nominee_name
+        if (!catMap[cid]) catMap[cid] = { category: n.oscar_categories, nominees: [], guesses: {}, winner: null, winnerFilm: null }
+        catMap[cid].nominees.push({ id: n.id, name: n.nominee_name, is_winner: n.is_winner, order: n.display_order,
+                                    film: n.film_title, detail: n.detail })
+        if (n.is_winner) { catMap[cid].winner = n.nominee_name; catMap[cid].winnerFilm = n.film_title || n.nominee_name }
       }
       for (const cat of Object.values(catMap)) {
         if (!cat.winner) {
@@ -125,13 +126,12 @@ export default function OscarsYear() {
       setYearData(yrRow)
       setCategories(sorted)
 
-      // ADDITIVE: look up real posters for any title that matches a film.
+      // ADDITIVE: look up real posters — film_title gives a far better hit rate
+      // than nominee names (people/songs never matched a films row).
       const names = new Set()
       for (const cat of sorted) {
-        if (cat.winner) names.add(cat.winner)
-        for (const n of cat.nominees) names.add(n.name)
-        if (cat.guesses.matt?.guess)   names.add(cat.guesses.matt.guess)
-        if (cat.guesses.dustin?.guess) names.add(cat.guesses.dustin.guess)
+        if (cat.winnerFilm) names.add(cat.winnerFilm)
+        for (const n of cat.nominees) { names.add(n.name); if (n.film) names.add(n.film) }
       }
       if (names.size) {
         const { data: films } = await supabase
@@ -151,7 +151,7 @@ export default function OscarsYear() {
   async function refetchFromWikidata() {
     setWdBusy(true); setWdMsg(null)
     try {
-      const byCat = await fetchWikidataNominees(yearNum)
+      const { byCat, films } = await fetchWikidataNominees(yearNum, { withFilms: true })
       let added = 0
       for (const cat of categories) {
         const wd = byCat[cat.category.name] || []
@@ -162,6 +162,7 @@ export default function OscarsYear() {
         const rows = newOnes.map((name, i) => ({
           year_id: yearData.id, category_id: cat.category.id,
           nominee_name: name, is_winner: false, display_order: cat.nominees.length + i,
+          film_title: films[`${cat.category.name}|${name}`] || null,
         }))
         const { error: insErr } = await supabase.from('oscar_nominees').insert(rows)
         if (insErr) throw insErr
@@ -195,13 +196,22 @@ export default function OscarsYear() {
     await fetchData(yearNum)
   }
 
-  async function addNominee(cat, name) {
+  async function addNominee(cat, name, film = '') {
     if (!name.trim()) return
     const { error: insErr } = await supabase.from('oscar_nominees').insert({
       year_id: yearData.id, category_id: cat.category.id,
       nominee_name: name.trim(), is_winner: false, display_order: cat.nominees.length,
+      film_title: film.trim() || null,
     })
     if (insErr) { alert(`Add failed: ${insErr.message}`); return }
+    await fetchData(yearNum)
+  }
+
+  // film is display metadata only — direct update, no cascade needed
+  async function setNomineeFilm(nomineeId, film) {
+    const { error: updErr } = await supabase.from('oscar_nominees')
+      .update({ film_title: film || null }).eq('id', nomineeId)
+    if (updErr) { alert(`Film update failed: ${updErr.message}`); return }
     await fetchData(yearNum)
   }
 
@@ -551,7 +561,8 @@ export default function OscarsYear() {
                     onChangeDustin={n => changeGuess(idx, 'dustin', n)}
                     onRenameNominee={renameNominee}
                     onDeleteNominee={deleteNominee}
-                    onAddNominee={name => addNominee(c, name)}
+                    onAddNominee={(name, film) => addNominee(c, name, film)}
+                    onSetNomineeFilm={setNomineeFilm}
                   />
                 ))}
               </div>
@@ -597,118 +608,175 @@ function YearDropdown({ current, allYears }) {
   )
 }
 
-// ── CategoryCard — winner / hermz / dust tiles + nominee field ───────────────
+// ── CategoryCard — nominee list is the star (2026-07-12 redesign) ────────────
+// Every nominee is a full row (person/song + film, or film + craft detail).
+// The winner gets the gold row + a poster anchor; picks appear as HERMZ/DUST
+// badges directly on the nominee each player chose.
+const SONG_CAT = 'Best Original Song'
+
 function CategoryCard({ cat, idx, yearNum, editMode, posterMap, sealed, myUsername, manageMode,
                         onToggleNominee, onChangeMatt, onChangeDustin,
-                        onRenameNominee, onDeleteNominee, onAddNominee }) {
-  const { category, nominees, guesses, winner } = cat
+                        onRenameNominee, onDeleteNominee, onAddNominee, onSetNomineeFilm }) {
+  const { category, nominees, guesses, winner, winnerFilm } = cat
   const mattG = guesses.matt || {}
   const dustinG = guesses.dustin || {}
   const isNew = category.active_from && category.active_from > 2008 && category.active_from === yearNum
   const isRetired = category.active_until && category.active_until === yearNum
   const label = category.name.replace(/^Best\s+/i, '').toUpperCase()
 
+  // agreement chip — only meaningful once the winner is known and both picked
+  let chip = null
+  if (!sealed && winner && mattG.guess && dustinG.guess) {
+    if (mattG.guess === dustinG.guess) {
+      chip = mattG.is_correct
+        ? { text: 'BOTH CORRECT', cls: 'text-emerald-400 border-emerald-500/40 bg-emerald-500/10' }
+        : { text: 'BOTH MISSED',  cls: 'text-red-400 border-red-500/40 bg-red-500/10' }
+    } else {
+      chip = { text: 'SPLIT PICK', cls: 'text-amber-300 border-amber-500/40 bg-amber-500/10' }
+    }
+  }
+
+  const posterUrl = winnerFilm ? posterMap[winnerFilm] || posterMap[winner] : null
+
   return (
     <div className="rounded-xl border border-night-700/60 bg-night-800/40 overflow-hidden">
       {/* category header */}
-      <div className="px-4 pt-3 pb-2.5 flex items-center justify-center gap-2 flex-wrap
+      <div className="px-4 pt-3 pb-2.5 flex items-center justify-between gap-2 flex-wrap
                       border-b border-night-700/50 bg-night-900/30">
         <span className="font-mono text-base tracking-cinema text-gold-500 uppercase">{label}</span>
-        {isNew && <span className="text-sm bg-emerald-500/15 text-emerald-400 border border-emerald-500/40 px-2 py-0.5 rounded font-mono tracking-cinema">NEW</span>}
-        {isRetired && <span className="text-sm bg-gray-700 text-gray-400 border border-gray-600 px-2 py-0.5 rounded font-mono tracking-cinema">FINAL YEAR</span>}
+        <span className="flex items-center gap-2">
+          {isNew && <span className="text-xs bg-emerald-500/15 text-emerald-400 border border-emerald-500/40 px-2 py-0.5 rounded font-mono tracking-cinema">NEW</span>}
+          {isRetired && <span className="text-xs bg-gray-700 text-gray-400 border border-gray-600 px-2 py-0.5 rounded font-mono tracking-cinema">FINAL YEAR</span>}
+          {chip && <span className={`font-mono text-xs tracking-cinema px-2.5 py-0.5 rounded-full border ${chip.cls}`}>{chip.text}</span>}
+        </span>
       </div>
 
-      {/* three picks */}
-      <div className="grid grid-cols-3 gap-4 px-4 py-4">
-        <PickTile who="winner" name={winner} posterMap={posterMap} sealed={sealed} />
-        <PickTile who="matt"   name={mattG.guess}   correct={mattG.is_correct}   posterMap={posterMap}
-                  sealed={sealed && myUsername !== 'matt'} />
-        <PickTile who="dustin" name={dustinG.guess} correct={dustinG.is_correct} posterMap={posterMap}
-                  sealed={sealed && myUsername !== 'dustin'} />
+      {/* winner poster + nominee rows */}
+      <div className="flex gap-4 px-4 py-4">
+        {!sealed && winner && (
+          <div className="flex-shrink-0 w-[88px] hidden sm:block">
+            <div className="w-[88px] h-[132px] rounded-lg overflow-hidden border border-night-700/60 bg-night-700/40">
+              {posterUrl ? (
+                <img src={posterUrl} alt={winnerFilm} className="w-full h-full object-cover" loading="lazy" />
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center gap-1.5 px-1.5">
+                  <span className="text-gold-500 text-lg leading-none">★</span>
+                  <span className="font-serif text-xs text-gray-400 text-center leading-tight line-clamp-4">{winnerFilm}</span>
+                </div>
+              )}
+            </div>
+            <div className="font-mono text-xs tracking-cinema text-gold-400 text-center mt-1.5">WINNER</div>
+          </div>
+        )}
+
+        <div className="flex-1 min-w-0 flex flex-col gap-0.5">
+          {nominees.map(n => (
+            <NomineeRow key={n.id ?? n.name} nominee={n} catName={category.name}
+                        winner={winner} sealed={sealed} myUsername={myUsername}
+                        mattG={mattG} dustinG={dustinG} />
+          ))}
+          {nominees.length === 0 && (
+            <p className="font-serif italic text-sm text-gray-500 py-2">Nominees not entered yet.</p>
+          )}
+        </div>
       </div>
 
-      {/* nominee field — manage / edit / view */}
-      {manageMode ? (
+      {/* manage / edit panels below the field */}
+      {manageMode && (
         <NomineeEditor
           nominees={nominees}
           onRename={onRenameNominee} onDelete={onDeleteNominee} onAdd={onAddNominee}
+          onSetFilm={onSetNomineeFilm}
         />
-      ) : editMode ? (
+      )}
+      {!manageMode && editMode && (
         <EditField
           nominees={nominees} winner={winner}
           mattGuess={mattG.guess} dustinGuess={dustinG.guess}
           onToggleNominee={onToggleNominee} onChangeMatt={onChangeMatt} onChangeDustin={onChangeDustin}
         />
-      ) : (
-        nominees.length > 0 && (
-          <div className="px-4 pb-4 pt-1 border-t border-night-700/40">
-            <div className="font-mono text-sm tracking-cinema text-gray-500 uppercase mb-2">The Field</div>
-            <div className="flex flex-wrap gap-x-3 gap-y-1.5">
-              {nominees.map((n, i) => (
-                <span key={i} className={`text-base leading-snug ${
-                  n.is_winner ? 'text-gold-400 font-semibold' : 'text-gray-400'
-                }`}>
-                  {n.is_winner && <span className="mr-0.5">★</span>}{n.name}
-                  {i < nominees.length - 1 && <span className="text-gray-700 ml-3">·</span>}
-                </span>
-              ))}
-            </div>
-          </div>
-        )
       )}
     </div>
   )
 }
 
-// one tile: label + name, with ✓/✗ for the two players.
-// sealed (Phase 13b): the other player's pick is RLS-hidden pre-reveal — show 🔒.
-function PickTile({ who, name, correct, posterMap, sealed }) {
-  const isWinner = who === 'winner'
-  const labelColor = who === 'matt' ? 'text-gold-500' : who === 'dustin' ? 'text-film-500' : 'text-gold-400'
-  const labelText  = who === 'matt' ? 'HERMZ' : who === 'dustin' ? 'DUST' : 'WINNER'
-  const nameColor  = isWinner ? 'text-white'
-    : correct === false ? 'text-gray-500 line-through' : 'text-white'
+// one nominee row: name + film/detail, gold winner treatment, pick badges.
+// sealed (Phase 13b): only your own pick badge shows pre-reveal — the other
+// player's pick is RLS-hidden anyway, so their badge simply can't render.
+function NomineeRow({ nominee, catName, winner, sealed, myUsername, mattG, dustinG }) {
+  const isWinner = !sealed && nominee.is_winner
+  const isSong = catName === SONG_CAT
+  const personOrSong = isSong || PERSON_CATEGORIES.has(catName)
+  const secondary = personOrSong
+    ? nominee.film
+    : (nominee.detail || (nominee.film && nominee.film !== nominee.name ? nominee.film : null))
 
-  if (sealed) {
-    return (
-      <div className="min-w-0">
-        <div className={`font-mono text-sm tracking-cinema uppercase mb-1 ${labelColor}`}>{labelText}</div>
-        <div className="font-display text-lg leading-tight tracking-wide text-gray-600">
-          {isWinner ? 'TBD' : '🔒 SEALED'}
-        </div>
-      </div>
-    )
-  }
+  const mattPicked   = mattG.guess === nominee.name && (!sealed || myUsername === 'matt')
+  const dustinPicked = dustinG.guess === nominee.name && (!sealed || myUsername === 'dustin')
+  const missedHere = !isWinner && winner && (mattPicked || dustinPicked)
 
   return (
-    <div className="min-w-0">
-      <div className={`font-mono text-sm tracking-cinema uppercase mb-1 flex items-center gap-1.5 ${labelColor}`}>
-        <span>{labelText}</span>
-        {correct === true  && <span className="text-emerald-400">✓</span>}
-        {correct === false && <span className="text-red-400">✗</span>}
-      </div>
-      <div className={`font-display text-lg leading-tight tracking-wide line-clamp-2 ${nameColor}`}>
-        {(name || 'TBD').toUpperCase()}
-      </div>
+    <div className={`flex items-center gap-2.5 px-3 py-1.5 rounded-lg flex-wrap ${
+      isWinner ? 'bg-gold-500/[0.08] border-l-2 border-gold-500'
+      : missedHere ? 'bg-red-500/[0.05]' : ''
+    }`}>
+      <span className={`w-3.5 flex-shrink-0 text-gold-400 ${isWinner ? '' : 'opacity-0'}`}>★</span>
+      <span className="flex-1 min-w-[10rem]">
+        <span className={`font-display text-base sm:text-lg leading-snug tracking-wide ${
+          isWinner ? 'text-gold-300' : missedHere ? 'text-gray-400 line-through decoration-red-400/50' : 'text-gray-300'
+        }`}>
+          {isSong ? `“${nominee.name}”` : nominee.name}
+        </span>
+        {secondary && (
+          <span className={`font-serif italic text-sm ml-1.5 ${isWinner ? 'text-gray-300' : 'text-gray-400'}`}>
+            — {secondary}
+          </span>
+        )}
+      </span>
+      {(mattPicked || dustinPicked) && (
+        <span className="flex items-center gap-1.5 flex-shrink-0">
+          {mattPicked && <PickBadge who="matt" correct={sealed ? null : mattG.is_correct} />}
+          {dustinPicked && <PickBadge who="dustin" correct={sealed ? null : dustinG.is_correct} />}
+        </span>
+      )}
     </div>
+  )
+}
+
+function PickBadge({ who, correct }) {
+  const isMatt = who === 'matt'
+  return (
+    <span className={`font-mono text-xs tracking-kicker px-2 py-0.5 rounded-full border ${
+      isMatt ? 'text-gold-400 border-gold-500/40' : 'text-film-400 border-film-500/40'
+    }`}>
+      {isMatt ? 'HERMZ' : 'DUST'}
+      {correct === true  && <span className="text-emerald-400 ml-1">✓</span>}
+      {correct === false && <span className="text-red-400 ml-1">✗</span>}
+    </span>
   )
 }
 
 // nominee management (Phase 13c): rename / remove / add — renames cascade to
 // both players' picks via a SECURITY DEFINER fn; removes are blocked while picked.
-function NomineeEditor({ nominees, onRename, onDelete, onAdd }) {
-  const [addVal, setAddVal] = useState('')
+// 2026-07-12: each row also edits the nominee's film (display-only, no cascade).
+function NomineeEditor({ nominees, onRename, onDelete, onAdd, onSetFilm }) {
+  const [addVal, setAddVal]   = useState('')
+  const [addFilm, setAddFilm] = useState('')
+  const submitAdd = () => { onAdd(addVal, addFilm); setAddVal(''); setAddFilm('') }
   return (
     <div className="px-4 pb-4 pt-2 space-y-2 border-t border-night-700/50">
       <div className="font-mono text-sm tracking-cinema text-cinema-400 uppercase mb-1">Edit the Field</div>
       {nominees.map(n => (
-        <NomineeRow key={n.id} nominee={n} onRename={onRename} onDelete={onDelete} />
+        <NomineeEditRow key={n.id} nominee={n} onRename={onRename} onDelete={onDelete} onSetFilm={onSetFilm} />
       ))}
-      <div className="flex items-center gap-2 pt-1">
+      <div className="flex items-center gap-2 pt-1 flex-wrap">
         <input value={addVal} onChange={e => setAddVal(e.target.value)}
-               onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); onAdd(addVal); setAddVal('') } }}
-               placeholder="Add a nominee…" className="input text-sm py-1.5 flex-1" />
-        <button type="button" onClick={() => { onAdd(addVal); setAddVal('') }}
+               onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); submitAdd() } }}
+               placeholder="Add a nominee…" className="input text-sm py-1.5 flex-1 min-w-[10rem]" />
+        <input value={addFilm} onChange={e => setAddFilm(e.target.value)}
+               onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); submitAdd() } }}
+               placeholder="Film (optional)" className="input text-sm py-1.5 w-44" />
+        <button type="button" onClick={submitAdd}
                 disabled={!addVal.trim()}
                 className="btn-cinema text-xs disabled:opacity-40">+ Add</button>
       </div>
@@ -716,16 +784,22 @@ function NomineeEditor({ nominees, onRename, onDelete, onAdd }) {
   )
 }
 
-function NomineeRow({ nominee, onRename, onDelete }) {
-  const [val, setVal] = useState(nominee.name)
-  const dirty = val.trim() !== nominee.name && val.trim() !== ''
+function NomineeEditRow({ nominee, onRename, onDelete, onSetFilm }) {
+  const [val, setVal]   = useState(nominee.name)
+  const [film, setFilm] = useState(nominee.film || '')
+  const dirtyName = val.trim() !== nominee.name && val.trim() !== ''
+  const dirtyFilm = film.trim() !== (nominee.film || '')
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 flex-wrap">
       <input value={val} onChange={e => setVal(e.target.value)}
-             onKeyDown={e => { if (e.key === 'Enter' && dirty) { e.preventDefault(); onRename(nominee.id, val.trim()) } }}
-             className="input text-sm py-1.5 flex-1" />
-      {dirty && (
-        <button type="button" onClick={() => onRename(nominee.id, val.trim())}
+             onKeyDown={e => { if (e.key === 'Enter' && dirtyName) { e.preventDefault(); onRename(nominee.id, val.trim()) } }}
+             className="input text-sm py-1.5 flex-1 min-w-[10rem]" />
+      <input value={film} onChange={e => setFilm(e.target.value)}
+             onKeyDown={e => { if (e.key === 'Enter' && dirtyFilm) { e.preventDefault(); onSetFilm(nominee.id, film.trim()) } }}
+             placeholder="Film" className="input text-sm py-1.5 w-44" />
+      {(dirtyName || dirtyFilm) && (
+        <button type="button"
+                onClick={() => { if (dirtyName) onRename(nominee.id, val.trim()); if (dirtyFilm) onSetFilm(nominee.id, film.trim()) }}
                 className="btn-gold text-xs px-3">Save</button>
       )}
       <button type="button" onClick={() => onDelete(nominee.id)}
