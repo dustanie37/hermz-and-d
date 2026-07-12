@@ -128,17 +128,43 @@ export default function OscarsYear() {
 
       // ADDITIVE: look up real posters — film_title gives a far better hit rate
       // than nominee names (people/songs never matched a films row).
+      // Sources: films (Canon, curated) wins over film_posters (OMDB cache for
+      // everything else — backfilled 2026-07-12, self-heals below).
       const names = new Set()
+      const winnerFilms = new Set()
       for (const cat of sorted) {
-        if (cat.winnerFilm) names.add(cat.winnerFilm)
+        if (cat.winnerFilm) { names.add(cat.winnerFilm); winnerFilms.add(cat.winnerFilm) }
         for (const n of cat.nominees) { names.add(n.name); if (n.film) names.add(n.film) }
       }
       if (names.size) {
-        const { data: films } = await supabase
-          .from('films').select('title, poster_url').in('title', [...names])
+        const [{ data: cachedPosters }, { data: films }] = await Promise.all([
+          supabase.from('film_posters').select('title, poster_url').in('title', [...names]),
+          supabase.from('films').select('title, poster_url').in('title', [...names]),
+        ])
         const map = {}
+        for (const f of cachedPosters || []) if (f.poster_url) map[f.title] = f.poster_url
         for (const f of films || []) if (f.poster_url) map[f.title] = f.poster_url
+        const negativeCache = new Set((cachedPosters || []).map(f => f.title))
         setPosterMap(map)
+        // self-heal: a future winner not in either source gets an OMDB lookup once,
+        // cached even when OMDB has nothing (null row) so we never loop.
+        const missing = [...winnerFilms].filter(t => !map[t] && !negativeCache.has(t))
+        if (missing.length && isAuthenticated) {
+          const omdbKey = import.meta.env.VITE_OMDB_API_KEY
+          const healed = {}
+          for (const title of missing.slice(0, 24)) {
+            let poster = null
+            try {
+              let d = await fetch(`https://www.omdbapi.com/?apikey=${omdbKey}&t=${encodeURIComponent(title)}&y=${yr - 1}`).then(r => r.json())
+              if (d.Response !== 'True' || !d.Poster || d.Poster === 'N/A')
+                d = await fetch(`https://www.omdbapi.com/?apikey=${omdbKey}&t=${encodeURIComponent(title)}`).then(r => r.json())
+              if (d.Response === 'True' && d.Poster && d.Poster !== 'N/A') poster = d.Poster
+            } catch { /* offline / rate-limited — try again next visit */ continue }
+            await supabase.from('film_posters').upsert({ title, poster_url: poster })
+            if (poster) healed[title] = poster
+          }
+          if (Object.keys(healed).length) setPosterMap(prev => ({ ...prev, ...healed }))
+        }
       }
     } catch (err) {
       setError(err.message)
