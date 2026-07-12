@@ -7,7 +7,7 @@ const UPDATES = [
       {
         tag: 'Oscars',
         color: 'gold',
-        text: 'Ceremony pages, redesigned around the field. Every category card now lists all its nominees as proper rows — the winner sits highlighted in gold with a poster beside it, and your picks appear as HERMZ/DUST badges right on the nominee each of you chose, with a chip in the corner calling the category (Both Correct, Both Missed, or Split Pick). And every nominee finally carries its film: directors and actors show what they were nominated for, songs show their movie (plus songwriters behind the scenes), screenplays name their writers, and International Feature shows the country.',
+        text: 'Ceremony pages, redesigned around the field. Every category card now lists all its nominees as proper rows — the winner sits highlighted in gold with a full-size poster beside it, and your picks appear as HERMZ/DUST badges right on the nominee each of you chose, with a chip in the corner calling the category (Both Correct, Both Missed, or Split Pick). And every nominee finally carries its film: directors and actors show what they were nominated for, songs show their movie (plus songwriters behind the scenes), screenplays name their writers, and International Feature shows the country.',
       },
       {
         tag: 'Oscars',

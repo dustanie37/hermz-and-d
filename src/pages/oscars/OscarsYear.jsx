@@ -680,18 +680,18 @@ function CategoryCard({ cat, idx, yearNum, editMode, posterMap, sealed, myUserna
       {/* winner poster + nominee rows */}
       <div className="flex gap-4 px-4 py-4">
         {!sealed && winner && (
-          <div className="flex-shrink-0 w-[88px] hidden sm:block">
-            <div className="w-[88px] h-[132px] rounded-lg overflow-hidden border border-night-700/60 bg-night-700/40">
+          <div className="flex-shrink-0 w-32 hidden sm:block">
+            <div className="w-32 h-48 rounded-lg overflow-hidden border border-night-700/60 bg-night-700/40 shadow-still-lg">
               {posterUrl ? (
                 <img src={posterUrl} alt={winnerFilm} className="w-full h-full object-cover" loading="lazy" />
               ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center gap-1.5 px-1.5">
-                  <span className="text-gold-500 text-lg leading-none">★</span>
-                  <span className="font-serif text-xs text-gray-400 text-center leading-tight line-clamp-4">{winnerFilm}</span>
+                <div className="w-full h-full flex flex-col items-center justify-center gap-2 px-2">
+                  <span className="text-gold-500 text-2xl leading-none">★</span>
+                  <span className="font-serif text-sm text-gray-400 text-center leading-tight line-clamp-4">{winnerFilm}</span>
                 </div>
               )}
             </div>
-            <div className="font-mono text-xs tracking-cinema text-gold-400 text-center mt-1.5">WINNER</div>
+            <div className="font-mono text-xs tracking-cinema text-gold-400 text-center mt-2">WINNER</div>
           </div>
         )}
 
