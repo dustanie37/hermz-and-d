@@ -7,7 +7,7 @@ const UPDATES = [
       {
         tag: 'Design',
         color: 'gold',
-        text: 'Ceremony page polish pass. The tiebreaker panel shrank from a three-column billboard to a single strip that says only what matters: the actual runtime, both guesses with how far off each was, and who took the year. In the hero, the winner\'s score now glows in a gold ring with the label tucked beneath it instead of floating over both scores (which overlapped on tied years like 2026). And a full type audit brought every label on the page up to the site\'s readability floor — no more 9–11px micro-print in the breadcrumb, year picker, tiebreaker details, or edit forms.',
+        text: 'Ceremony page polish pass (take two). The tiebreaker is now one elegant line — the actual runtime, both guesses in player colors with a ✓ on the closer one, and "X takes the year" in serif — replacing the old three-column billboard. The hero score card announces the winner once, in a colored strip across its top, and the loser\'s number dims; no more labels floating over each other on tied years. The film credits beside nominees (— The Hurt Locker) came up to full reading size and brightness, now a standing rule in the stylesheet. And the phone finally got what the desktop had: the score card shows in the hero at every width, winner posters appear (smaller) on mobile, and the big ceremony title wraps instead of clipping. A full type audit also cleared out every last patch of 9–11px micro-print.',
       },
       {
         tag: 'Oscars',
