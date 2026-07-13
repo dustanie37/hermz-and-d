@@ -5,6 +5,11 @@ const UPDATES = [
     date: 'July 12, 2026',
     entries: [
       {
+        tag: 'Design',
+        color: 'gold',
+        text: 'Ceremony page polish pass. The tiebreaker panel shrank from a three-column billboard to a single strip that says only what matters: the actual runtime, both guesses with how far off each was, and who took the year. In the hero, the winner\'s score now glows in a gold ring with the label tucked beneath it instead of floating over both scores (which overlapped on tied years like 2026). And a full type audit brought every label on the page up to the site\'s readability floor — no more 9–11px micro-print in the breadcrumb, year picker, tiebreaker details, or edit forms.',
+      },
+      {
         tag: 'Oscars',
         color: 'gold',
         text: 'Ceremony pages, redesigned around the field. Every category card now lists all its nominees as proper rows — the winner sits highlighted in gold with a full-size poster beside it, and your picks appear as HERMZ/DUST badges right on the nominee each of you chose, with a chip in the corner calling the category (Both Correct, Both Missed, or Split Pick). And every nominee finally carries its film: directors and actors show what they were nominated for, songs show their movie (plus songwriters behind the scenes), screenplays name their writers, and International Feature shows the country.',

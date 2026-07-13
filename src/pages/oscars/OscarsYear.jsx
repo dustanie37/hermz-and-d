@@ -3,7 +3,7 @@
 // Category-grouped poster-tile layout (Winner / Hermz / Dust) with the full
 // nominee field kept underneath. All edit-mode logic preserved.
 
-import { useState, useEffect, Fragment } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
@@ -385,7 +385,7 @@ export default function OscarsYear() {
 
   if (loading) return (
     <div className="py-20 flex items-center justify-center">
-      <span className="font-mono text-[11px] tracking-kicker text-gray-500 animate-pulse">LOADING CEREMONY…</span>
+      <span className="font-mono text-xs tracking-kicker text-gray-400 animate-pulse">LOADING CEREMONY…</span>
     </div>
   )
   if (error) return <div className="py-20 text-center text-red-400">Error: {error}</div>
@@ -444,12 +444,12 @@ export default function OscarsYear() {
                         flex items-end justify-between gap-4">
           <div className="min-w-0">
             <div className="flex items-center gap-3 mb-3">
-              <Link to="/oscars" className="font-mono text-[11px] tracking-kicker text-gold-500
+              <Link to="/oscars" className="font-mono text-xs tracking-kicker text-gold-500
                                             hover:text-gold-400 transition-colors flex items-center gap-2">
                 <OscarIcon size={12} /> OSCARS
               </Link>
               <span className="text-gray-600">/</span>
-              <span className="font-mono text-[11px] tracking-kicker text-white">{yearNum}</span>
+              <span className="font-mono text-xs tracking-kicker text-white">{yearNum}</span>
             </div>
             <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl text-white tracking-wide
                            leading-[0.92] whitespace-nowrap">
@@ -465,7 +465,7 @@ export default function OscarsYear() {
             {sealed ? (
               <div className="text-center px-2">
                 <div className="font-display text-2xl text-white tracking-wide leading-none">🔒</div>
-                <div className="font-mono text-[10px] tracking-cinema text-gold-500 mt-1.5">BALLOTS SEALED</div>
+                <div className="font-mono text-xs tracking-cinema text-gold-500 mt-1.5">BALLOTS SEALED</div>
               </div>
             ) : (
               <>
@@ -573,7 +573,7 @@ export default function OscarsYear() {
               <div className="flex items-center gap-3 pb-2 mb-4 border-b border-night-700/60">
                 <span className="font-mono text-sm tracking-cinema text-gold-500 uppercase">{GROUP_META[group.name] || group.name}</span>
                 <span className="flex-1 h-px bg-night-700/60" />
-                <span className="font-mono text-sm tracking-kicker text-gray-500">{group.cats.length} {group.cats.length === 1 ? 'category' : 'categories'}</span>
+                <span className="font-mono text-sm tracking-kicker text-gray-400">{group.cats.length} {group.cats.length === 1 ? 'category' : 'categories'}</span>
               </div>
               <div className="space-y-3">
                 {group.cats.map(({ c, idx }) => (
@@ -600,23 +600,23 @@ export default function OscarsYear() {
   )
 }
 
-// ── hero score ────────────────────────────────────────────────────────────────
+// ── hero score — winner treatment lives inside its own column (no overlay,
+//    2026-07-12: the floating "WINNER · TIEBREAKER" chip overlapped the other score)
 function HeroYearScore({ who, score, total, winner, tb }) {
   const c = who === 'matt' ? 'text-gold-500' : 'text-film-500'
   const name = who === 'matt' ? 'HERMZ' : 'DUST'
   return (
-    <div className="text-center px-1.5 relative">
-      {winner && (
-        <div className={`absolute -top-3 left-1/2 -translate-x-1/2 font-mono text-[10px]
-                         tracking-cinema ${c} px-1.5 py-px rounded bg-night-950/80 whitespace-nowrap`}>
-          ● WINNER{tb && ' · TIEBREAKER'}
-        </div>
-      )}
+    <div className={`text-center px-3 py-1.5 rounded-xl ${winner ? 'ring-1 ring-gold-500/50 bg-gold-500/[0.07]' : ''}`}>
       <div className={`font-mono text-xs tracking-cinema ${c} mb-1`}>{name}</div>
       <div className="flex items-baseline justify-center gap-1.5">
         <span className="font-display text-4xl text-white leading-none tracking-wide">{score}</span>
-        <span className="font-mono text-xs text-gray-500 tracking-kicker">/{total}</span>
+        <span className="font-mono text-xs text-gray-400 tracking-kicker">/{total}</span>
       </div>
+      {winner && (
+        <div className="font-mono text-xs tracking-cinema text-gold-400 mt-1 whitespace-nowrap">
+          ★ WINNER{tb ? ' · TB' : ''}
+        </div>
+      )}
     </div>
   )
 }
@@ -626,7 +626,7 @@ function YearDropdown({ current, allYears }) {
   const sorted = [...allYears].sort((a, b) => b - a)
   return (
     <select value={current} onChange={e => navigate(`/oscars/${e.target.value}`)}
-      className="bg-night-950/70 border border-white/[0.12] text-white font-mono text-[11px]
+      className="bg-night-950/70 border border-white/[0.12] text-white font-mono text-xs
                  tracking-kicker px-3 py-1.5 rounded-full cursor-pointer backdrop-blur-md
                  hover:border-gold-500/60 transition-colors">
       {sorted.map(y => <option key={y} value={y} className="bg-night-900">{y}</option>)}
@@ -876,49 +876,39 @@ function EditField({ nominees, winner, mattGuess, dustinGuess, onToggleNominee, 
   )
 }
 
-// ── Tiebreaker + year-details edit (UNCHANGED from current file) ─────────────
+// ── Tiebreaker — one compact strip: the fact, the numbers, the verdict ───────
+// (2026-07-12 redesign — the old three-column panel repeated "tiebreaker" four
+//  ways and dwarfed the categories below it.)
 function TiebreakerPanel({ yearData, mattWon }) {
-  const dustinWon = !mattWon
   const mattDiff   = runtimeDiff(yearData.actual_runtime, yearData.matt_runtime_guess)
   const dustinDiff = runtimeDiff(yearData.actual_runtime, yearData.dustin_runtime_guess)
   const hasMonologue = yearData.actual_monologue
   return (
-    <div className="border border-cinema-500/40 bg-cinema-500/[0.06] rounded-xl p-5 mb-6">
-      <div className="flex items-center gap-2 mb-4">
-        <span className="badge-tiebreaker">Tiebreaker</span>
-        <span className="font-mono text-[10px] tracking-kicker text-cinema-400 uppercase">tied score — decided by runtime guess</span>
-      </div>
-      <div className="grid grid-cols-3 gap-2 sm:gap-3 text-center text-sm">
-        <TBCol who="matt"   value={fmtRuntime(yearData.matt_runtime_guess)}   diff={mattDiff}   winner={mattWon} />
-        <div className="rounded-lg p-3 bg-night-700/60">
-          <div className="kicker-dim mb-1">ACTUAL RUNTIME</div>
-          <div className="font-display text-2xl text-white tracking-wide leading-none">{fmtRuntime(yearData.actual_runtime)}</div>
-        </div>
-        <TBCol who="dustin" value={fmtRuntime(yearData.dustin_runtime_guess)} diff={dustinDiff} winner={dustinWon} />
+    <div className="rounded-xl border border-amber-500/30 bg-amber-500/[0.05] px-4 py-3 mb-6">
+      <div className="flex items-center gap-x-4 gap-y-1.5 flex-wrap">
+        <span className="badge-tiebreaker flex-shrink-0">⚖ Tiebreaker</span>
+        <span className="font-mono text-xs tracking-kicker text-gray-300 uppercase">
+          Runtime <span className="text-white font-semibold">{fmtRuntime(yearData.actual_runtime)}</span>
+        </span>
+        <span className="font-mono text-xs tracking-kicker uppercase">
+          <span className="text-gold-400">Hermz {fmtRuntime(yearData.matt_runtime_guess)}</span>
+          {mattDiff && <span className="text-gray-400"> ({mattDiff})</span>}
+        </span>
+        <span className="font-mono text-xs tracking-kicker uppercase">
+          <span className="text-film-400">Dust {fmtRuntime(yearData.dustin_runtime_guess)}</span>
+          {dustinDiff && <span className="text-gray-400"> ({dustinDiff})</span>}
+        </span>
+        <span className={`font-mono text-xs tracking-cinema uppercase sm:ml-auto font-semibold ${mattWon ? 'text-gold-400' : 'text-film-400'}`}>
+          → {mattWon ? 'Hermz' : 'Dust'} wins the year
+        </span>
       </div>
       {hasMonologue && (
-        <div className="mt-4 pt-3 border-t border-cinema-500/20">
-          <p className="kicker-dim mb-2">OPENING MONOLOGUE · BACKUP TIEBREAKER (NOT NEEDED)</p>
-          <div className="grid grid-cols-3 gap-3 text-center text-xs text-gray-500">
-            <div>Hermz: {fmtMonologue(yearData.matt_monologue_guess)}</div>
-            <div>Actual: {fmtMonologue(yearData.actual_monologue)}</div>
-            <div>Dust: {fmtMonologue(yearData.dustin_monologue_guess)}</div>
-          </div>
-        </div>
+        <p className="font-mono text-xs tracking-kicker text-gray-400 uppercase mt-2 pt-2 border-t border-amber-500/15">
+          Monologue backup (unused) — actual {fmtMonologue(yearData.actual_monologue)} ·
+          Hermz {fmtMonologue(yearData.matt_monologue_guess)} ·
+          Dust {fmtMonologue(yearData.dustin_monologue_guess)}
+        </p>
       )}
-    </div>
-  )
-}
-
-function TBCol({ who, value, diff, winner }) {
-  const c = who === 'matt' ? 'text-gold-400' : 'text-film-400'
-  const name = who === 'matt' ? 'HERMZ GUESSED' : 'DUST GUESSED'
-  return (
-    <div className={`rounded-lg p-3 ${winner ? 'bg-cinema-500/10 border border-cinema-500/40' : 'bg-night-700/60'}`}>
-      <div className={`kicker-dim mb-1 ${winner ? 'text-cinema-400' : ''}`}>{name}</div>
-      <div className={`font-display text-2xl tracking-wide leading-none ${winner ? c : 'text-gray-400'}`}>{value}</div>
-      {diff && <div className="font-mono text-[10px] tracking-kicker text-gray-500 mt-1">{diff}</div>}
-      {winner && <div className="font-mono text-[9px] tracking-cinema text-cinema-400 mt-1.5">✓ CLOSER</div>}
     </div>
   )
 }
@@ -932,7 +922,7 @@ function YearDetailsEdit({ yearData, yearEdit, setYearEdit, mattTotal, dustinTot
   return (
     <div className="mb-6 rounded-xl border border-cinema-500/40 bg-cinema-500/[0.06] p-5">
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
-        <span className="font-mono text-[11px] tracking-cinema text-cinema-400 uppercase">Year Details &amp; Tiebreaker</span>
+        <span className="font-mono text-xs tracking-cinema text-cinema-400 uppercase">Year Details &amp; Tiebreaker</span>
         <div className="flex items-center gap-2 flex-wrap">
           <button onClick={onCalculateWinner} disabled={saving}
             className="text-xs px-3 py-1.5 rounded-lg bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 font-medium hover:bg-emerald-500/20 transition-colors">
@@ -973,9 +963,9 @@ function YearDetailsEdit({ yearData, yearEdit, setYearEdit, mattTotal, dustinTot
 function YearInput({ label, value, onChange, placeholder }) {
   return (
     <div>
-      <label className="block font-mono text-[9px] tracking-kicker text-gray-400 uppercase mb-1">{label}</label>
+      <label className="block font-mono text-xs tracking-kicker text-gray-300 uppercase mb-1">{label}</label>
       <input type="text" value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
-             className="input text-xs py-1.5 w-full" />
+             className="input text-sm py-1.5 w-full" />
     </div>
   )
 }
