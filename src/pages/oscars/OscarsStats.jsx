@@ -571,7 +571,7 @@ function CategoryStreaksSection({ catData, sorted }) {
     <div>
       <p className="kicker mb-3" style={{ color: accent }}>{label}</p>
       {children.length === 0
-        ? <p className="text-sm text-gray-500 italic">{empty}</p>
+        ? <p className="text-sm text-gray-400">{empty}</p>
         : <div className="space-y-1.5">{children}</div>
       }
     </div>
@@ -756,7 +756,7 @@ export default function OscarsStats() {
           <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl text-white tracking-wide leading-[0.92]">
             ALL-TIME STATS
           </h1>
-          <p className="font-serif italic text-lg text-gray-400 mt-3">
+          <p className="font-serif text-lg text-gray-400 mt-3">
             {years.length} ceremonies · 2008–{years[years.length-1]?.year ?? '—'}
           </p>
         </div>

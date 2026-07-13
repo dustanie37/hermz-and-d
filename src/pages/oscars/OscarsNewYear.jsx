@@ -199,7 +199,7 @@ export default function OscarsNewYear() {
           <h1 className="font-display text-4xl sm:text-5xl text-white tracking-wide leading-none">
             ADD NEW CEREMONY
           </h1>
-          <p className="font-serif italic text-gray-400 mt-2 text-base">
+          <p className="font-serif text-gray-400 mt-2 text-base">
             Set up nominees for an upcoming Academy Awards — then fill your ballots privately.
           </p>
         </div>

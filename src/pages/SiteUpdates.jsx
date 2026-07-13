@@ -7,6 +7,11 @@ const UPDATES = [
       {
         tag: 'Design',
         color: 'gold',
+        text: 'Italics retired. Every slanted serif across the Oscar section now stands upright — ceremony dates, film credits beside nominees, the tiebreaker\'s monologue line, and the page subtitles on the ballot, reveal, stats, and admin pages. Same typeface, straighter posture.',
+      },
+      {
+        tag: 'Design',
+        color: 'gold',
         text: 'Ceremony page polish pass (take two). The tiebreaker is now one elegant line — the actual runtime, both guesses in player colors with a ✓ on the closer one, and "X takes the year" in serif — replacing the old three-column billboard. The hero score card announces the winner once, in a colored strip across its top, and the loser\'s number dims; no more labels floating over each other on tied years. The film credits beside nominees (— The Hurt Locker) came up to full reading size and brightness, now a standing rule in the stylesheet. And the phone finally got what the desktop had: the score card shows in the hero at every width, winner posters appear (smaller) on mobile, and the big ceremony title wraps instead of clipping. A full type audit also cleared out every last patch of 9–11px micro-print.',
       },
       {
