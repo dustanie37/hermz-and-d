@@ -10,7 +10,7 @@ import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import OscarIcon from '../../components/OscarIcon'
 import FilmStill from '../../components/FilmStill'
-import { revealSequence, GROUP_META, groupOf, fmtRuntime, fmtMonologue } from '../../lib/oscarSeason'
+import { revealSequence, groupOf, fmtRuntime, fmtMonologue } from '../../lib/oscarSeason'
 
 function yearHue(y) { return ((y * 17) + 11) % 360 }
 
@@ -211,7 +211,7 @@ export default function OscarsReveal() {
                 : `On to ${shortName(next.name)} →`}
             </button>
             <span className="font-mono text-[10px] tracking-kicker text-gray-500">
-              {GROUP_META[groupOf(next.name)]?.toUpperCase()} · {next.fieldSize} IN THE FIELD
+              {groupOf(next)?.toUpperCase()} · {next.fieldSize} IN THE FIELD
             </span>
           </div>
         )}
@@ -265,7 +265,7 @@ function Spotlight({ cat, picks, posterMap }) {
       <div className="text-center mb-4">
         <div className="font-mono text-sm tracking-cinema text-gold-500 uppercase">{shortName(cat.name)}</div>
         <div className="font-mono text-[10px] tracking-kicker text-gray-500 mt-1">
-          {GROUP_META[groupOf(cat.name)]?.toUpperCase()} · {cat.fieldSize} NOMINEES IN THE FIELD
+          {groupOf(cat)?.toUpperCase()} · {cat.fieldSize} NOMINEES IN THE FIELD
         </div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

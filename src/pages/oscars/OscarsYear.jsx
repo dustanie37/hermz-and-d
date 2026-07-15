@@ -11,7 +11,7 @@ import OscarIcon from '../../components/OscarIcon'
 import FilmStill from '../../components/FilmStill'
 import { fetchWikidataNominees, PERSON_CATEGORIES } from '../../lib/oscarCategories'
 import {
-  GROUP_META, GROUP_ORDER, groupOf, isRevealed,
+  groupCategories, isRevealed,
   parseInterval, fmtRuntime, fmtMonologue,
   runtimeInputValue, monologueInputValue, toRuntimeInterval, toMonologueInterval,
 } from '../../lib/oscarSeason'
@@ -401,11 +401,10 @@ export default function OscarsYear() {
   const myUsername = profile?.username
 
   // bucket categories into groups, preserving display_order within each group
-  const groups = GROUP_ORDER
-    .map(g => ({ name: g, cats: categories
-      .map((c, idx) => ({ c, idx }))
-      .filter(({ c }) => groupOf(c.category.name) === g) }))
-    .filter(g => g.cats.length > 0)
+  const groups = groupCategories(
+    categories.map((c, idx) => ({ c, idx })),
+    ({ c }) => c.category,
+  )
 
   return (
     <div>
@@ -580,7 +579,7 @@ export default function OscarsYear() {
           {groups.map(group => (
             <div key={group.name}>
               <div className="flex items-center gap-3 pb-2 mb-4 border-b border-night-700/60">
-                <span className="font-mono text-sm tracking-cinema text-gold-500 uppercase">{GROUP_META[group.name] || group.name}</span>
+                <span className="font-mono text-sm tracking-cinema text-gold-500 uppercase">{group.name}</span>
                 <span className="flex-1 h-px bg-night-700/60" />
                 <span className="font-mono text-sm tracking-kicker text-gray-400">{group.cats.length} {group.cats.length === 1 ? 'category' : 'categories'}</span>
               </div>

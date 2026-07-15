@@ -10,7 +10,7 @@ import { useAuth } from '../../context/AuthContext'
 import OscarIcon from '../../components/OscarIcon'
 import FilmStill from '../../components/FilmStill'
 import {
-  GROUP_META, GROUP_ORDER, groupOf,
+  groupCategories,
   toRuntimeInterval, toMonologueInterval, runtimeInputValue, monologueInputValue,
 } from '../../lib/oscarSeason'
 
@@ -180,11 +180,7 @@ export default function OscarsBallot() {
   }
 
   // ── grouped categories ────────────────────────────────────────────────────
-  const groups = useMemo(() => (
-    GROUP_ORDER
-      .map(g => ({ name: g, cats: categories.filter(c => groupOf(c.name) === g) }))
-      .filter(g => g.cats.length > 0)
-  ), [categories])
+  const groups = useMemo(() => groupCategories(categories), [categories])
 
   // ── render ────────────────────────────────────────────────────────────────
   if (loading) return (
@@ -311,7 +307,7 @@ export default function OscarsBallot() {
             <div key={group.name}>
               <div className="flex items-center gap-3 pb-2 mb-4 border-b border-night-700/60">
                 <span className="font-mono text-sm tracking-cinema text-gold-500 uppercase">
-                  {GROUP_META[group.name] || group.name}
+                  {group.name}
                 </span>
                 <span className="flex-1 h-px bg-night-700/60" />
                 <span className="font-mono text-sm tracking-kicker text-gray-500">

@@ -2,6 +2,21 @@
 
 const UPDATES = [
   {
+    date: 'July 15, 2026',
+    entries: [
+      {
+        tag: 'Oscars',
+        color: 'gold',
+        text: 'The categories got regrouped. The old seven sections had a problem: a group literally called "Discontinued" held Sound Editing and Sound Mixing, while Best Sound — the category the Academy merged those two into in 2021 — sat over in Music. Same craft, filed in two different places purely because of what year it was, which made sound impossible to read across the nineteen ceremonies. Sound is now one block, all 19 years, and retired categories keep their real group and just get marked retired. There are five sections now: Major Awards (Picture, Director, the four acting races and both screenplays — the eight you actually argue about), Specialty Features, Craft, Music & Sound, and Shorts. Best Picture and Documentary Feature no longer share a group, so "the marquee" and "the ones you guess blind" are finally separate numbers. You\'ll see it on the ballot, the ceremony pages, the stats heatmap and ownership grid, and in the reveal order.',
+      },
+      {
+        tag: 'Behind the scenes',
+        color: 'gray',
+        text: 'A category\'s group is now stored with the category itself instead of being hardcoded in two places in the app that had already drifted apart. Practical upshot: the Categories admin has a Group dropdown, so when Stunt Design arrives in 2028 it gets grouped on the spot instead of quietly defaulting to Craft.',
+      },
+    ],
+  },
+  {
     date: 'July 12, 2026',
     entries: [
       {

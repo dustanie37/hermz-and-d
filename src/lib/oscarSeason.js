@@ -1,7 +1,8 @@
 // src/lib/oscarSeason.js
 // SINGLE SOURCE for the Oscar-season workflow (Phase 13):
 // year status machine, category grouping, and interval (runtime/monologue) helpers.
-// Consumers: OscarsBallot, OscarsYear, OscarsHome, Navbar. Edit HERE, never inline.
+// Consumers: OscarsBallot, OscarsYear, OscarsHome, OscarsStats, OscarsReveal,
+// OscarsCategories, Navbar. Edit HERE, never inline.
 
 // ── Year lifecycle ───────────────────────────────────────────────────────────
 // upcoming → ballots → locked → revealed → complete
@@ -18,66 +19,96 @@ export function isRevealed(status) {
   return status === 'revealed' || status === 'complete'
 }
 
-// ── Category groups (moved from OscarsYear 2026-07-11 — OscarsStats still has
-//    a local copy; consolidate when MoviesStats-style split happens) ──────────
-export const CAT_GROUP = {
-  'Best Picture':                    'Major',
-  'Best Director':                   'Major',
-  'Best Animated Feature Film':      'Major',
-  'Best International Feature Film': 'Major',
-  'Best Documentary Feature Film':   'Major',
-  'Best Actor':                      'Acting',
-  'Best Actress':                    'Acting',
-  'Best Supporting Actor':           'Acting',
-  'Best Supporting Actress':         'Acting',
-  'Best Original Screenplay':        'Writing',
-  'Best Adapted Screenplay':         'Writing',
-  'Best Production Design':          'Craft',
-  'Best Cinematography':             'Craft',
-  'Best Costume Design':             'Craft',
-  'Best Film Editing':               'Craft',
-  'Best Makeup and Hairstyling':     'Craft',
-  'Best Visual Effects':             'Craft',
-  'Best Casting':                    'Craft',
-  'Best Original Score':             'Music',
-  'Best Original Song':              'Music',
-  'Best Sound':                      'Music',
-  'Best Animated Short Film':        'Shorts',
-  'Best Documentary Short Film':     'Shorts',
-  'Best Live Action Short Film':     'Shorts',
-  'Best Sound Editing':              'Sound',
-  'Best Sound Mixing':               'Sound',
+// ── Category groups (2026-07-15 — now DATA, not a hardcoded map) ─────────────
+// The group lives on the `oscar_categories` row (`group_name` + `group_order`,
+// migration `oscar_category_groups`), NOT in a name→group object here. The old
+// map was duplicated in this file and OscarsStats.jsx, and fell back to 'Craft'
+// for anything unmapped — so a new category got grouped by accident.
+//
+//   1 Major Awards       (8) Picture · Director · 4 acting · 2 screenplay
+//   2 Specialty Features (3) Animated · International · Documentary Feature
+//   3 Craft              (7) Prod Design · Cinematography · Costume · Editing
+//                            · Makeup & Hair · VFX · Casting
+//   4 Music & Sound      (5) Score · Song · Sound (+ retired Sound Editing/Mixing)
+//   5 Shorts             (3) Animated · Documentary · Live Action
+//
+// ⚠️ ERA IS NOT A GROUPING AXIS. Retired categories keep their real group; the
+// "retired" state is read off active_until. (The old scheme had a 'Discontinued'
+// group holding Sound Editing/Mixing while Best Sound sat under Music — the same
+// craft split in two by date, which made sound unanalysable across the 19 years.)
+//
+// Adding a category? Set its group in the /oscars/categories admin. The DB has a
+// NOT NULL + CHECK constraint, so there is no silent fallback any more.
+
+/** The five groups, in display order. Mirrors the CHECK on oscar_categories. */
+export const GROUP_ORDER = [
+  'Major Awards',
+  'Specialty Features',
+  'Craft',
+  'Music & Sound',
+  'Shorts',
+]
+
+/** Accent colour per group — stats heatmap, ownership grid, legends. */
+export const GROUP_COLOR = {
+  'Major Awards':       '#a78bfa',
+  'Specialty Features': '#4ade80',
+  'Craft':              '#60a5fa',
+  'Music & Sound':      '#fb923c',
+  'Shorts':             '#94a3b8',
 }
-export const GROUP_META = {
-  Major:   'Major Awards',
-  Acting:  'Acting',
-  Writing: 'Writing',
-  Craft:   'Craft',
-  Music:   'Music & Sound',
-  Shorts:  'Short Films',
-  Sound:   'Discontinued',
+
+/** Group of a category ROW (accepts a raw row or a `{ category }` wrapper). */
+export function groupOf(cat) {
+  const c = cat?.group_name ? cat : cat?.category
+  return c?.group_name ?? null
 }
-export const GROUP_ORDER = ['Major', 'Acting', 'Writing', 'Craft', 'Music', 'Shorts', 'Sound']
-export function groupOf(name) { return CAT_GROUP[name] || 'Craft' }
+
+/** True once a category has been retired (Sound Editing/Mixing after 2020). */
+export function isRetired(cat, year) {
+  const c = cat?.category ?? cat
+  if (!c?.active_until) return false
+  return year == null ? true : year > c.active_until
+}
+
+/**
+ * Bucket category rows into ordered groups, dropping empties.
+ * `pick` maps an item to its category row when items are wrappers.
+ * Returns [{ name, order, cats }] sorted by group_order.
+ */
+export function groupCategories(items, pick = x => x) {
+  const buckets = new Map()
+  for (const item of items) {
+    const cat = pick(item)
+    const name = groupOf(cat)
+    if (!name) continue
+    if (!buckets.has(name)) {
+      buckets.set(name, { name, order: cat.group_order ?? 99, cats: [] })
+    }
+    buckets.get(name).cats.push(item)
+  }
+  return [...buckets.values()].sort((a, b) => a.order - b.order)
+}
 
 // ── Reveal ceremony order (Phase 13d — approved 2026-07-11) ──────────────────
-// "Build to Best Picture": shorts/craft first, prestige last. Within a group,
-// reverse display_order. Director is always second-to-last, Best Picture last.
-const REVEAL_GROUP_ORDER = ['Sound', 'Shorts', 'Music', 'Craft', 'Writing', 'Acting', 'Major']
+// "Build to Best Picture": shorts/craft first, prestige last. Groups run in
+// REVERSE group_order; within a group, reverse display_order. Director is always
+// second-to-last, Best Picture last. With the 5-group scheme the build reads:
+// Shorts → Music & Sound → Craft → Specialty Features → Major Awards,
+// and inside Major: Adapted → Original → Supp Actress → Supp Actor → Actress
+// → Actor → Director → Picture.
 export function revealSequence(categories) {
   const special = { 'Best Picture': 2, 'Best Director': 1 }
   return [...categories].sort((a, b) => {
-    const nameA = a.name ?? a.category?.name
-    const nameB = b.name ?? b.category?.name
-    const sA = special[nameA] || 0
-    const sB = special[nameB] || 0
+    const catA = a.category ?? a
+    const catB = b.category ?? b
+    const sA = special[catA.name] || 0
+    const sB = special[catB.name] || 0
     if (sA !== sB) return sA - sB
-    const gA = REVEAL_GROUP_ORDER.indexOf(groupOf(nameA))
-    const gB = REVEAL_GROUP_ORDER.indexOf(groupOf(nameB))
-    if (gA !== gB) return gA - gB
-    const oA = a.display_order ?? a.category?.display_order ?? 0
-    const oB = b.display_order ?? b.category?.display_order ?? 0
-    return oB - oA
+    const gA = catA.group_order ?? 99
+    const gB = catB.group_order ?? 99
+    if (gA !== gB) return gB - gA          // reverse group order
+    return (catB.display_order ?? 0) - (catA.display_order ?? 0)
   })
 }
 

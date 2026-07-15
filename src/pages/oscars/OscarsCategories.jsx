@@ -7,14 +7,17 @@ import { useState, useEffect } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
-import { groupOf, GROUP_META } from '../../lib/oscarSeason'
+import { GROUP_ORDER } from '../../lib/oscarSeason'
+
+/** group_order is positional — the group's index in the canonical display order. */
+const orderOfGroup = name => GROUP_ORDER.indexOf(name) + 1
 
 export default function OscarsCategories() {
   const { isDustin, loading: authLoading } = useAuth()
   const [cats,    setCats]    = useState([])
   const [loading, setLoading] = useState(true)
   const [error,   setError]   = useState(null)
-  const [newCat,  setNewCat]  = useState({ name: '', active_from: '', display_order: '' })
+  const [newCat,  setNewCat]  = useState({ name: '', group_name: 'Craft', active_from: '', display_order: '' })
   const [saving,  setSaving]  = useState(false)
 
   useEffect(() => { load() }, [])
@@ -36,6 +39,14 @@ export default function OscarsCategories() {
     setCats(prev => prev.map(c => c.id === id ? { ...c, [field]: value } : c))
   }
 
+  /** Group and group_order move together — order is positional, never hand-typed. */
+  async function saveGroup(id, group_name) {
+    const patch = { group_name, group_order: orderOfGroup(group_name) }
+    const { error: err } = await supabase.from('oscar_categories').update(patch).eq('id', id)
+    if (err) { alert(`Save failed: ${err.message}`); return }
+    setCats(prev => prev.map(c => c.id === id ? { ...c, ...patch } : c))
+  }
+
   async function addCategory(e) {
     e.preventDefault()
     if (!newCat.name.trim()) return
@@ -44,12 +55,14 @@ export default function OscarsCategories() {
       const maxOrder = Math.max(0, ...cats.map(c => c.display_order || 0))
       const { error: err } = await supabase.from('oscar_categories').insert({
         name: newCat.name.trim(),
+        group_name: newCat.group_name,
+        group_order: orderOfGroup(newCat.group_name),
         display_order: newCat.display_order ? parseInt(newCat.display_order, 10) : maxOrder + 1,
         active_from: newCat.active_from ? parseInt(newCat.active_from, 10) : null,
         active_until: null,
       })
       if (err) throw err
-      setNewCat({ name: '', active_from: '', display_order: '' })
+      setNewCat({ name: '', group_name: 'Craft', active_from: '', display_order: '' })
       await load()
     } catch (err) {
       alert(`Add failed: ${err.message}`)
@@ -81,26 +94,36 @@ export default function OscarsCategories() {
         <p className="font-serif text-base text-gray-400 mt-3 max-w-xl">
           Add a category the year the Academy introduces it, retire one the year it ends.
           "From" and "Until" are ceremony years, inclusive — leave Until blank while a category is current.
+          Group drives the ballot sections, the stats heatmap, and the reveal order; retiring a category
+          does <span className="text-gray-200">not</span> change its group.
         </p>
       </div>
 
       {/* Add new */}
       <form onSubmit={addCategory} className="card mb-8">
         <p className="font-display text-lg text-white tracking-wide mb-3">ADD A CATEGORY</p>
-        <div className="grid grid-cols-1 sm:grid-cols-[1fr_120px_120px_auto] gap-3 items-end">
+        <div className="grid grid-cols-1 sm:grid-cols-[1fr_170px_110px_110px_auto] gap-3 items-end">
           <div>
-            <label className="block font-mono text-[10px] tracking-kicker text-gray-300 uppercase mb-1.5">Name</label>
+            <label className="block font-mono text-xs tracking-kicker text-gray-300 uppercase mb-1.5">Name</label>
             <input value={newCat.name} onChange={e => setNewCat(c => ({ ...c, name: e.target.value }))}
                    placeholder="e.g. Best Achievement in Stunt Design" className="input w-full text-sm" />
           </div>
           <div>
-            <label className="block font-mono text-[10px] tracking-kicker text-gray-300 uppercase mb-1.5">From (year)</label>
+            <label className="block font-mono text-xs tracking-kicker text-gray-300 uppercase mb-1.5">Group</label>
+            <select value={newCat.group_name}
+                    onChange={e => setNewCat(c => ({ ...c, group_name: e.target.value }))}
+                    className="input w-full text-sm">
+              {GROUP_ORDER.map(g => <option key={g} value={g}>{g}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block font-mono text-xs tracking-kicker text-gray-300 uppercase mb-1.5">From (year)</label>
             <input type="number" value={newCat.active_from}
                    onChange={e => setNewCat(c => ({ ...c, active_from: e.target.value }))}
                    placeholder="2028" className="input w-full text-sm" />
           </div>
           <div>
-            <label className="block font-mono text-[10px] tracking-kicker text-gray-300 uppercase mb-1.5">Order</label>
+            <label className="block font-mono text-xs tracking-kicker text-gray-300 uppercase mb-1.5">Order</label>
             <input type="number" value={newCat.display_order}
                    onChange={e => setNewCat(c => ({ ...c, display_order: e.target.value }))}
                    placeholder="auto" className="input w-full text-sm" />
@@ -110,7 +133,7 @@ export default function OscarsCategories() {
             {saving ? 'Adding…' : '+ Add'}
           </button>
         </div>
-        <p className="font-mono text-[10px] tracking-kicker text-gray-500 mt-3">
+        <p className="font-mono text-xs tracking-kicker text-gray-400 mt-3">
           NOTE: WIKIDATA AUTO-FILL FOR A BRAND-NEW CATEGORY ALSO NEEDS A MAPPING IN
           lib/oscarCategories.js — MENTION IT IN THE NEXT SESSION AND IT'S A ONE-LINE ADD.
         </p>
@@ -122,7 +145,7 @@ export default function OscarsCategories() {
           <thead>
             <tr>
               <th className="table-header text-left">Category</th>
-              <th className="table-header text-left w-28">Group</th>
+              <th className="table-header text-left w-44">Group</th>
               <th className="table-header w-20">Order</th>
               <th className="table-header w-24">From</th>
               <th className="table-header w-24">Until</th>
@@ -138,8 +161,13 @@ export default function OscarsCategories() {
                     <CellInput value={c.name} onSave={v => saveField(c.id, 'name', v)}
                                className={`w-full ${retired ? 'text-gray-500' : 'text-gray-200'}`} />
                   </td>
-                  <td className="table-cell py-2.5 px-5 font-mono text-xs text-gray-400 uppercase tracking-kicker">
-                    {GROUP_META[groupOf(c.name)]}
+                  <td className="table-cell py-2.5 px-5">
+                    <select value={c.group_name ?? ''} onChange={e => saveGroup(c.id, e.target.value)}
+                            className={`input text-sm py-1 px-2 w-full bg-transparent border-transparent
+                                        hover:border-night-600 focus:border-gold-500/50
+                                        ${retired ? 'text-gray-500' : 'text-gray-300'}`}>
+                      {GROUP_ORDER.map(g => <option key={g} value={g}>{g}</option>)}
+                    </select>
                   </td>
                   <td className="table-cell py-2.5 px-3">
                     <CellInput value={c.display_order ?? ''} number

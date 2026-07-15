@@ -12,49 +12,12 @@ import { supabase } from '../../lib/supabase'
 import OscarIcon from '../../components/OscarIcon'
 import FilmStill from '../../components/FilmStill'
 import { DC, HC, CC } from '../../lib/helpers'
+// Category grouping is DATA now (oscar_categories.group_name/group_order) and the
+// helpers live in lib/oscarSeason — the local CAT_GROUP/GROUP_META copies that used
+// to sit here were a second source of truth and drifted. Never re-inline them.
+import { GROUP_ORDER, GROUP_COLOR } from '../../lib/oscarSeason'
 
 // ── colour tokens (must match tailwind.config.js gold-500 / film-500) ────────
-
-// ── category groupings ──────────────────────────────────────────────────────
-const CAT_GROUP = {
-  'Best Picture':                    'Major',
-  'Best Director':                   'Major',
-  'Best Animated Feature Film':      'Major',
-  'Best International Feature Film': 'Major',
-  'Best Documentary Feature Film':   'Major',
-  'Best Actor':                      'Acting',
-  'Best Actress':                    'Acting',
-  'Best Supporting Actor':           'Acting',
-  'Best Supporting Actress':         'Acting',
-  'Best Original Screenplay':        'Writing',
-  'Best Adapted Screenplay':         'Writing',
-  'Best Production Design':          'Craft',
-  'Best Cinematography':             'Craft',
-  'Best Costume Design':             'Craft',
-  'Best Film Editing':               'Craft',
-  'Best Makeup and Hairstyling':     'Craft',
-  'Best Visual Effects':             'Craft',
-  'Best Original Score':             'Music',
-  'Best Original Song':              'Music',
-  'Best Sound':                      'Music',
-  'Best Casting':                    'Craft',
-  'Best Animated Short Film':        'Shorts',
-  'Best Documentary Short Film':     'Shorts',
-  'Best Live Action Short Film':     'Shorts',
-  'Best Sound Editing':              'Sound',
-  'Best Sound Mixing':               'Sound',
-}
-
-const GROUP_META = {
-  Major:   { label: 'Major Awards', color: '#a78bfa' },
-  Acting:  { label: 'Acting',       color: '#f472b6' },
-  Writing: { label: 'Writing',      color: '#4ade80' },
-  Craft:   { label: 'Craft',        color: '#60a5fa' },
-  Music:   { label: 'Music & Sound',color: '#fb923c' },
-  Shorts:  { label: 'Short Films',  color: '#94a3b8' },
-  Sound:   { label: 'Discontinued', color: '#64748b' },
-}
-const GROUP_ORDER = ['Major','Acting','Writing','Craft','Music','Shorts','Sound']
 
 // ── helpers ─────────────────────────────────────────────────────────────────
 const pct        = (n, d) => d ? Math.round((n / d) * 100) : 0
@@ -183,8 +146,8 @@ function CategoryHeatmap({ catData, sorted }) {
   const LABEL_W = 172
 
   const cats = [...catData].sort((a, b) => {
-    const gA = GROUP_ORDER.indexOf(CAT_GROUP[a.name] || 'Craft')
-    const gB = GROUP_ORDER.indexOf(CAT_GROUP[b.name] || 'Craft')
+    const gA = a.groupOrder ?? 99
+    const gB = b.groupOrder ?? 99
     if (gA !== gB) return gA - gB
     return (a.order || 0) - (b.order || 0)
   })
@@ -225,8 +188,7 @@ function CategoryHeatmap({ catData, sorted }) {
 
         {/* Category rows */}
         {cats.map((cat, i) => {
-          const group = CAT_GROUP[cat.name] || 'Craft'
-          const meta = GROUP_META[group]
+          const group = cat.group
           const isNewGroup = group !== lastGroup
           if (isNewGroup) lastGroup = group
           return (
@@ -419,23 +381,23 @@ function DifficultyRating({ sorted }) {
 // ── OwnershipGrid ────────────────────────────────────────────────────────────
 function OwnershipGrid({ catData }) {
   const cats = [...catData].sort((a, b) => {
-    const gA = GROUP_ORDER.indexOf(CAT_GROUP[a.name] || 'Craft')
-    const gB = GROUP_ORDER.indexOf(CAT_GROUP[b.name] || 'Craft')
+    const gA = a.groupOrder ?? 99
+    const gB = b.groupOrder ?? 99
     if (gA !== gB) return gA - gB
     return (a.order || 0) - (b.order || 0)
   })
   const byGroup = GROUP_ORDER
-    .map(g => ({ g, meta: GROUP_META[g], cats: cats.filter(c => (CAT_GROUP[c.name] || 'Craft') === g) }))
+    .map(g => ({ g, color: GROUP_COLOR[g], cats: cats.filter(c => c.group === g) }))
     .filter(({ cats }) => cats.length > 0)
 
   return (
     <div className="space-y-6">
-      {byGroup.map(({ g, meta, cats }) => (
+      {byGroup.map(({ g, color, cats }) => (
         <div key={g}>
           <div className="flex items-center gap-2 mb-3"
-               style={{ borderLeft: `3px solid ${meta.color}`, paddingLeft: 12 }}>
-            <span className="font-mono text-sm font-semibold uppercase" style={{ color: meta.color }}>
-              {meta.label}
+               style={{ borderLeft: `3px solid ${color}`, paddingLeft: 12 }}>
+            <span className="font-mono text-sm font-semibold uppercase" style={{ color }}>
+              {g}
             </span>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
@@ -631,7 +593,7 @@ export default function OscarsStats() {
 
       const { data: guesses, error: gErr } = await supabase
         .from('oscar_guesses')
-        .select('is_correct, guess, oscar_categories(id, name, display_order, active_from, active_until), profiles(username), oscar_years(year)')
+        .select('is_correct, guess, oscar_categories(id, name, display_order, active_from, active_until, group_name, group_order), profiles(username), oscar_years(year)')
       if (gErr) throw gErr
 
       const catMap = {}
@@ -646,6 +608,7 @@ export default function OscarsStats() {
         if (!catMap[cat.id]) {
           catMap[cat.id] = {
             id: cat.id, name: cat.name, order: cat.display_order,
+            group: cat.group_name, groupOrder: cat.group_order,
             active_from: cat.active_from, active_until: cat.active_until,
             matt: { correct: 0, total: 0 }, dustin: { correct: 0, total: 0 }, byYear: {},
           }
@@ -719,8 +682,8 @@ export default function OscarsStats() {
   const dustEdgePct   = pct(dustWhenDisagree, disagreements)
 
   const grouped = GROUP_ORDER.map(g => ({
-    g, meta: GROUP_META[g],
-    cats: catData.filter(c => (CAT_GROUP[c.name] || 'Craft') === g).sort((a,b) => a.order - b.order),
+    g, color: GROUP_COLOR[g],
+    cats: catData.filter(c => c.group === g).sort((a,b) => a.order - b.order),
   })).filter(g => g.cats.length > 0)
 
   const hCW  = catData.filter(c => c.mattPct > c.dustinPct).length
@@ -968,12 +931,12 @@ export default function OscarsStats() {
           )}
 
           <div className="px-4 py-4 space-y-5">
-            {grouped.map(({ g, meta, cats }) => (
+            {grouped.map(({ g, color, cats }) => (
               <div key={g}>
                 <div className="flex items-center gap-2 mb-2"
-                     style={{ borderLeft: `3px solid ${meta.color}`, paddingLeft: 10 }}>
-                  <span className="font-mono text-[10px] tracking-cinema uppercase" style={{ color: meta.color }}>
-                    {meta.label}
+                     style={{ borderLeft: `3px solid ${color}`, paddingLeft: 10 }}>
+                  <span className="font-mono text-xs tracking-cinema uppercase" style={{ color }}>
+                    {g}
                   </span>
                 </div>
                 <div className="space-y-1">
