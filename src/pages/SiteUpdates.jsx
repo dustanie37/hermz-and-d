@@ -7,6 +7,11 @@ const UPDATES = [
       {
         tag: 'Oscars',
         color: 'gold',
+        text: 'The stats heatmap learned to filter. The Category Heatmap now opens with a row of chips — Both correct, Hermz only, Dust only, and Neither — each carrying its all-time count. Tap one and every other cell fades to a whisper; tap two to combine them ("show me everything that wasn\'t a shared win"). Categories with nothing matching dim their names too, so the pattern pops out of the grid instead of hiding in it. The chips took over legend duty from the old footer, and while we were in the grid, the tiny year labels and category names came up to full reading size.',
+      },
+      {
+        tag: 'Oscars',
+        color: 'gold',
         text: 'The categories got regrouped. The old seven sections had a problem: a group literally called "Discontinued" held Sound Editing and Sound Mixing, while Best Sound — the category the Academy merged those two into in 2021 — sat over in Music. Same craft, filed in two different places purely because of what year it was, which made sound impossible to read across the nineteen ceremonies. Sound is now one block, all 19 years, and retired categories keep their real group and just get marked retired. There are five sections now: Major Awards (Picture, Director, the four acting races and both screenplays — the eight you actually argue about), Specialty Features, Craft, Music & Sound, and Shorts. Best Picture and Documentary Feature no longer share a group, so "the marquee" and "the ones you guess blind" are finally separate numbers. You\'ll see it on the ballot, the ceremony pages, the stats heatmap and ownership grid, and in the reveal order.',
       },
       {

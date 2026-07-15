@@ -140,10 +140,18 @@ function MomentumTooltip({ active, payload, label }) {
 }
 
 // ── CategoryHeatmap ──────────────────────────────────────────────────────────
+const HEAT_FILTERS = [
+  { key: 'both',    label: 'Both correct', color: CC, chip: CC },
+  { key: 'hermz',   label: 'Hermz only',   color: HC, chip: HC },
+  { key: 'dust',    label: 'Dust only',    color: DC, chip: DC },
+  { key: 'neither', label: 'Neither',      color: '#1a1825', chip: '#9ca3af', bordered: true },
+]
+
 function CategoryHeatmap({ catData, sorted }) {
   const years = sorted.map(y => y.year)
-  const CELL = 22
+  const CELL = 24
   const LABEL_W = 172
+  const [filters, setFilters] = useState(() => new Set())
 
   const cats = [...catData].sort((a, b) => {
     const gA = a.groupOrder ?? 99
@@ -164,13 +172,59 @@ function CategoryHeatmap({ catData, sorted }) {
   }
 
   const stateColor = { both: CC, hermz: HC, dust: DC, neither: '#1a1825', inactive: '#070608' }
-  const stateBorder = { neither: '#2A2734' }
+
+  // Counts per state (across active cells only) — shown on the filter chips.
+  const counts = { both: 0, hermz: 0, dust: 0, neither: 0 }
+  for (const cat of cats) for (const yr of years) {
+    const s = cellState(cat, yr)
+    if (s !== 'inactive') counts[s]++
+  }
+
+  const filterOn = filters.size > 0
+  const toggleFilter = key => setFilters(prev => {
+    const next = new Set(prev)
+    if (next.has(key)) next.delete(key)
+    else next.add(key)
+    return next
+  })
 
   let lastGroup = null
 
   return (
     <>
-    <p className="sm:hidden font-mono text-[10px] tracking-kicker text-gray-500 uppercase mb-2">
+    {/* Filter chips — double as the legend (tap to isolate; combine freely) */}
+    <div className="flex flex-wrap items-center gap-2 mb-4">
+      <button onClick={() => setFilters(new Set())}
+        className={`font-mono text-xs px-3 py-1.5 rounded-full border transition-colors ${
+          !filterOn
+            ? 'bg-white text-night-950 border-white font-semibold'
+            : 'border-night-600 text-gray-400 hover:text-gray-200'
+        }`}>
+        All
+      </button>
+      {HEAT_FILTERS.map(f => {
+        const on = filters.has(f.key)
+        return (
+          <button key={f.key} onClick={() => toggleFilter(f.key)}
+            className={`flex items-center gap-2 font-mono text-xs px-3 py-1.5 rounded-full border transition-colors ${
+              on ? 'text-gray-100' : 'text-gray-400 hover:text-gray-200'
+            }`}
+            style={{
+              borderColor: on ? f.chip : '#26263c',
+              backgroundColor: on ? `${f.chip}1f` : 'transparent',
+            }}>
+            <span style={{
+              width: 10, height: 10, borderRadius: 2, flexShrink: 0,
+              backgroundColor: f.color,
+              border: f.bordered ? '1px solid #2A2734' : 'none',
+            }} />
+            {f.label}
+            <span className={on ? 'text-gray-300' : 'text-gray-500'}>{counts[f.key]}</span>
+          </button>
+        )
+      })}
+    </div>
+    <p className="sm:hidden font-mono text-xs tracking-kicker text-gray-400 uppercase mb-2">
       Swipe grid → for more years
     </p>
     <div className="overflow-x-auto -mx-1">
@@ -179,7 +233,7 @@ function CategoryHeatmap({ catData, sorted }) {
         <div className="flex" style={{ paddingLeft: LABEL_W }}>
           {years.map(yr => (
             <div key={yr} style={{ width: CELL, flexShrink: 0, textAlign: 'center', paddingBottom: 6 }}>
-              <span style={{ fontFamily: 'monospace', fontSize: 9, color: '#9298A6' }}>
+              <span style={{ fontFamily: 'monospace', fontSize: 12, color: '#9298A6' }}>
                 '{String(yr).slice(2)}
               </span>
             </div>
@@ -191,6 +245,8 @@ function CategoryHeatmap({ catData, sorted }) {
           const group = cat.group
           const isNewGroup = group !== lastGroup
           if (isNewGroup) lastGroup = group
+          const states = years.map(yr => cellState(cat, yr))
+          const rowHasMatch = !filterOn || states.some(s => filters.has(s))
           return (
             <div key={cat.id}>
               {isNewGroup && i > 0 && <div style={{ height: 8 }} />}
@@ -198,23 +254,28 @@ function CategoryHeatmap({ catData, sorted }) {
                 {/* Label */}
                 <div style={{ width: LABEL_W, flexShrink: 0, paddingRight: 10, textAlign: 'right' }}>
                   <span style={{
-                    fontSize: 11, lineHeight: 1,
-                    color: cat.isLegacy ? '#6b7280' : '#d1d5db',
+                    fontSize: 12, lineHeight: 1,
+                    color: cat.isLegacy ? '#9ca3af' : '#d1d5db',
+                    opacity: rowHasMatch ? 1 : 0.3,
+                    transition: 'opacity 0.15s',
                   }}>
                     {cat.name.replace('Best ', '')}
                   </span>
                 </div>
                 {/* Cells */}
-                {years.map(yr => {
-                  const state = cellState(cat, yr)
+                {years.map((yr, yi) => {
+                  const state = states[yi]
                   const isInactive = state === 'inactive'
                   const isNeither = state === 'neither'
-                  const bg = isInactive ? '#070608' : isNeither ? '#1a1825' : stateColor[state]
-                  return isInactive ? (
+                  const bg = stateColor[state]
+                  if (isInactive) return (
                     <div key={yr} style={{ width: CELL, flexShrink: 0, display: 'flex', justifyContent: 'center' }}>
                       <div style={{ width: CELL - 4, height: CELL - 4, borderRadius: 3, backgroundColor: '#070608' }} />
                     </div>
-                  ) : (
+                  )
+                  const dimmed = filterOn && !filters.has(state)
+                  const baseOpacity = dimmed ? 0.07 : isNeither ? 0.65 : 0.87
+                  return (
                     <Link key={yr} to={`/oscars/${yr}`}
                       title={`${yr} · ${cat.name}`}
                       style={{ width: CELL, flexShrink: 0, display: 'flex', justifyContent: 'center' }}>
@@ -223,15 +284,16 @@ function CategoryHeatmap({ catData, sorted }) {
                           width: CELL - 4, height: CELL - 4, borderRadius: 3,
                           backgroundColor: bg,
                           border: isNeither ? '1px solid #2A2734' : 'none',
-                          opacity: isNeither ? 0.65 : 0.87,
-                          transition: 'opacity 0.12s, transform 0.12s',
+                          opacity: baseOpacity,
+                          transition: 'opacity 0.15s, transform 0.12s',
                         }}
                         onMouseEnter={e => {
+                          if (dimmed) return
                           e.currentTarget.style.opacity = 1
                           e.currentTarget.style.transform = 'scale(1.18)'
                         }}
                         onMouseLeave={e => {
-                          e.currentTarget.style.opacity = isNeither ? 0.65 : 0.87
+                          e.currentTarget.style.opacity = baseOpacity
                           e.currentTarget.style.transform = 'scale(1)'
                         }}
                       />
@@ -243,28 +305,13 @@ function CategoryHeatmap({ catData, sorted }) {
           )
         })}
 
-        {/* Legend */}
-        <div className="flex flex-wrap items-center gap-5 mt-5 pt-4 border-t border-night-700/60">
-          {[
-            { color: CC,        label: 'Both correct',   neither: false, inactive: false },
-            { color: HC,        label: 'Hermz only',     neither: false, inactive: false },
-            { color: DC,        label: 'Dust only',      neither: false, inactive: false },
-            { color: '#1a1825', label: 'Neither',        neither: true,  inactive: false },
-            { color: '#070608', label: 'N/A (inactive)', neither: false, inactive: true  },
-          ].map(({ color, label, neither, inactive }) => (
-            <div key={label} className="flex items-center gap-2">
-              <div style={{
-                width: 14, height: 14, borderRadius: 2,
-                backgroundColor: color,
-                border: neither ? '1px solid #2A2734' : inactive ? '1px solid #1a1825' : 'none',
-                opacity: inactive ? 0.4 : 1,
-              }} />
-              <span style={{ fontFamily: 'monospace', fontSize: 10, color: '#6b7280' }}>{label}</span>
-            </div>
-          ))}
-          <span style={{ fontFamily: 'monospace', fontSize: 10, color: '#4b5563', marginLeft: 'auto' }}>
-            Click any cell → ceremony
-          </span>
+        {/* Footer note (states are explained by the filter chips above) */}
+        <div className="flex flex-wrap items-center gap-4 mt-5 pt-4 border-t border-night-700/60">
+          <div className="flex items-center gap-2">
+            <div style={{ width: 12, height: 12, borderRadius: 2, backgroundColor: '#070608', border: '1px solid #1a1825' }} />
+            <span className="font-mono text-xs text-gray-400">Category not active that year</span>
+          </div>
+          <span className="font-mono text-xs text-gray-400 ml-auto">Click any cell → ceremony</span>
         </div>
       </div>
     </div>
@@ -870,7 +917,7 @@ export default function OscarsStats() {
           <DifficultyRating sorted={sorted} />
         </div>
 
-        {/* ── 5. Category Heatmap ──────────────────────────────────────── */}
+        {/* ── 6. Category Heatmap ──────────────────────────────────────── */}
         <div className="card">
           <p className="kicker">CATEGORY HEATMAP</p>
           <p className="text-xs text-gray-500 mt-1 mb-5">
@@ -879,14 +926,14 @@ export default function OscarsStats() {
           <CategoryHeatmap catData={catData} sorted={sorted} />
         </div>
 
-        {/* ── 6. Category Ownership ────────────────────────────────────── */}
+        {/* ── 7. Category Ownership ────────────────────────────────────── */}
         <div className="card">
           <p className="kicker mb-1">CATEGORY OWNERSHIP</p>
           <p className="text-xs text-gray-500 mt-0.5 mb-5">All-time edge per category · faded = retired</p>
           <OwnershipGrid catData={catData} />
         </div>
 
-        {/* ── 7. Category Accuracy ──────────────────────────────────────── */}
+        {/* ── 8. Category Accuracy ──────────────────────────────────────── */}
         <div className="card p-0 overflow-hidden">
           <div className="px-6 pt-5 pb-3 border-b border-night-700/60 flex flex-wrap items-center justify-between gap-3">
             <div>
