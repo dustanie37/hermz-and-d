@@ -1,16 +1,46 @@
-# React + Vite
+# Hermz & D
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Two friends, a thirty-year Academy Awards guessing game, and a hand-built canon
+of favourite films. React + Vite + Supabase, deployed on Vercel.
 
-Currently, two official plugins are available:
+- **Live:** https://hermz-and-d.vercel.app
+- **Changelog:** https://hermz-and-d.vercel.app/updates (also `src/pages/SiteUpdates.jsx`)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Project docs live OUTSIDE this repo
 
-## React Compiler
+This repo holds **code only**. Every project document lives one level up, in the
+project folder alongside this repo — not in here:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+| File | What it's for |
+|---|---|
+| `reference.md` | Read this first. Architecture, conventions, data rules, gotchas. |
+| `updates.md` | Current build plan + the Minor Updates Log. |
+| `updates-archive.md` | Detailed history, 2026-05-04 → 2026-06-10. |
+| `references.md` | Data-import archive, spreadsheet layouts, deploy flow. |
+| `STYLESHEET.md` | The "Projector Room" design system. |
+| `*-scope.md` | Per-phase scope docs. |
 
-## Expanding the ESLint configuration
+⚠️ **Do not add a copy of any of those files to this repo.** There used to be a
+second `updates.md` in here. It was a fork of the real one, the two drifted for
+months, and because the deploy flow rsyncs this directory into a fresh clone, the
+stale fork kept trying to overwrite the live file and silently delete newer
+entries. It was removed 2026-07-15 (its unique history is in `updates-archive.md`
+and in this repo's git history). Keep docs at the project root so there is exactly
+one source of truth.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Develop
+
+```bash
+npm install
+npm run dev
+```
+
+Requires `.env` with `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`,
+`VITE_OMDB_API_KEY`, `VITE_TMDB_API_KEY`. Never commit it.
+
+## Deploy
+
+Vercel auto-deploys on push to `main`. See `references.md` § Deployment for the
+fresh-clone push flow — and read the Git Safety notes in `reference.md` before
+pushing. Always `git diff` after the rsync: the workspace copy can be stale and
+will silently revert remote work if you commit it blind.
