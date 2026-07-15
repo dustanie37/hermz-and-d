@@ -7,6 +7,16 @@ const UPDATES = [
       {
         tag: 'Oscars',
         color: 'gold',
+        text: 'Four new ways to read the rivalry on the stats page. The championship card now shows the average margin of victory and the biggest blowout year. An Era Split card cuts the 19 ceremonies in half — titles and accuracy for each era, with a trend arrow showing who\'s actually getting better at this. A Money & Kryptonite card names each player\'s three most reliable categories and the three that keep burning them (minimum eight years played, so no rookie categories sneaking in). And the timeline chart gained a dashed teal line tracking your agreement rate year by year — watch three decades of friendship converge or diverge.',
+      },
+      {
+        tag: 'Design',
+        color: 'gold',
+        text: 'The stats page got the full readability treatment. Every last patch of 9–11px micro-print came up to the 12px floor — hero labels, stat-card names, streak timeline years, tooltips, the works — and the dimmest grays brightened to reading strength. Repetitive labels were tightened ("All-Time" was on a page titled ALL-TIME STATS five times). The Neither cells in the heatmap turned from invisible gray to a muted red so they finally read against the background. And Category Ownership folded into the category table as a third view — Accuracy, Head-to-Head, and Ownership now live on one card instead of two sections apart.',
+      },
+      {
+        tag: 'Oscars',
+        color: 'gold',
         text: 'The stats heatmap learned to filter. The Category Heatmap now opens with a row of chips — Both correct, Hermz only, Dust only, and Neither — each carrying its all-time count. Tap one and every other cell fades to a whisper; tap two to combine them ("show me everything that wasn\'t a shared win"). Categories with nothing matching dim their names too, so the pattern pops out of the grid instead of hiding in it. The chips took over legend duty from the old footer, and while we were in the grid, the tiny year labels and category names came up to full reading size.',
       },
       {

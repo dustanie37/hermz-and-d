@@ -99,13 +99,13 @@
 
   /* ── Typography ──────────────────────────────────────────────────────── */
   .kicker {
-    @apply font-mono text-[11px] uppercase tracking-kicker text-gold-500;
+    @apply font-mono text-xs uppercase tracking-kicker text-gold-500;
   }
   .kicker-dim {
-    @apply font-mono text-[11px] uppercase tracking-kicker text-gray-400;
+    @apply font-mono text-xs uppercase tracking-kicker text-gray-400;
   }
   .kicker-cinema {
-    @apply font-mono text-[11px] uppercase tracking-kicker text-cinema-400;
+    @apply font-mono text-xs uppercase tracking-kicker text-cinema-400;
   }
 
   .page-title {
@@ -118,7 +118,7 @@
     @apply font-serif italic text-gray-400 text-base mb-6;
   }
   .stat-label {
-    @apply font-mono text-[10px] text-gray-400 uppercase tracking-kicker;
+    @apply font-mono text-xs text-gray-400 uppercase tracking-kicker;
   }
   .stat-value {
     @apply font-display text-3xl text-white font-normal;
