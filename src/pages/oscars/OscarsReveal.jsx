@@ -1,8 +1,9 @@
 // src/pages/oscars/OscarsReveal.jsx
-// Phase 13d — The Guess Reveal Ceremony (layout approved 2026-07-11).
-// Opens once both ballots are locked. Categories reveal one at a time, building
-// to Best Picture; either player can tap; reveals go through the SECURITY DEFINER
-// oscar_reveal_category() so strict RLS holds. Realtime + polling keep devices
+// Phase 13d — The Guess Reveal Ceremony (per-person reveal, 2026-07-16).
+// Opens once both ballots are locked. Categories come up one at a time; within
+// each, EACH player's pick is its own sealed card you tap to unseal — so you
+// never see both at once. Reveals go through the SECURITY DEFINER
+// oscar_reveal_pick() so strict RLS holds. Realtime + polling keep both phones
 // in sync; the ledger lives in the DB so progress survives closed tabs.
 
 import { useState, useEffect, useMemo, useRef } from 'react'
@@ -12,19 +13,24 @@ import OscarIcon from '../../components/OscarIcon'
 import FilmStill from '../../components/FilmStill'
 import { revealSequence, groupOf, fmtRuntime, fmtMonologue } from '../../lib/oscarSeason'
 
+const PEOPLE = ['matt', 'dustin']   // HERMZ (gold, left) · DUST (film, right)
+
 function yearHue(y) { return ((y * 17) + 11) % 360 }
+function shortName(name) { return name.replace(/^Best\s+/i, '').replace(/^Achievement in\s+/i, '') }
 
 export default function OscarsReveal() {
-  const [yearRow,   setYearRow]   = useState(null)
-  const [noneOpen,  setNoneOpen]  = useState(false)
-  const [cats,      setCats]      = useState([])   // active categories w/ field size
-  const [reveals,   setReveals]   = useState([])   // ledger rows
-  const [picks,     setPicks]     = useState({})   // category_id -> {matt, dustin}
-  const [ballots,   setBallots]   = useState([])   // finale tiebreakers (visible at revealed)
-  const [posterMap, setPosterMap] = useState({})
-  const [loading,   setLoading]   = useState(true)
-  const [revealing, setRevealing] = useState(false)
-  const [error,     setError]     = useState(null)
+  const [yearRow,  setYearRow]  = useState(null)
+  const [noneOpen, setNoneOpen] = useState(false)
+  const [cats,     setCats]     = useState([])   // active categories w/ field size
+  const [reveals,  setReveals]  = useState([])   // ledger rows (with username)
+  const [picks,    setPicks]    = useState({})   // category_id -> { matt, dustin } (revealed only)
+  const [ballots,  setBallots]  = useState([])   // finale tiebreakers (visible at revealed)
+  const [posterMap,setPosterMap]= useState({})
+  const [ids,      setIds]      = useState({})   // username -> user_id
+  const [spotIdx,  setSpotIdx]  = useState(null) // which category is in the spotlight
+  const [loading,  setLoading]  = useState(true)
+  const [busy,     setBusy]     = useState(null)  // `${catId}:${username}` while unsealing
+  const [error,    setError]    = useState(null)
   const yearRef = useRef(null)
 
   useEffect(() => { load() }, [])
@@ -55,14 +61,18 @@ export default function OscarsReveal() {
       yearRef.current = yr
       setYearRow(yr)
 
-      const [{ data: allCats, error: cErr }, { data: noms, error: nErr }] = await Promise.all([
+      const [{ data: allCats, error: cErr }, { data: noms, error: nErr }, { data: profs }] = await Promise.all([
         supabase.from('oscar_categories').select('*').order('display_order'),
         supabase.from('oscar_nominees').select('category_id').eq('year_id', yr.id),
+        supabase.from('profiles').select('id, username').in('username', PEOPLE),
       ])
       if (cErr || nErr) throw (cErr || nErr)
       const fieldSize = {}
       for (const n of noms || []) fieldSize[n.category_id] = (fieldSize[n.category_id] || 0) + 1
       setCats((allCats || []).filter(c => fieldSize[c.id]).map(c => ({ ...c, fieldSize: fieldSize[c.id] })))
+      const idMap = {}
+      for (const p of profs || []) idMap[p.username] = p.id
+      setIds(idMap)
 
       await refresh(yr)
     } catch (err) {
@@ -76,7 +86,7 @@ export default function OscarsReveal() {
     const yr = yrArg || yearRef.current
     if (!yr) return
     const [{ data: rev }, { data: pk }] = await Promise.all([
-      supabase.from('oscar_reveals').select('*').eq('year_id', yr.id).order('revealed_at'),
+      supabase.from('oscar_reveals').select('*, profiles(username)').eq('year_id', yr.id).order('revealed_at'),
       supabase.rpc('oscar_revealed_picks', { yid: yr.id }),
     ])
     setReveals(rev || [])
@@ -108,28 +118,53 @@ export default function OscarsReveal() {
   }
 
   const sequence = useMemo(() => revealSequence(cats), [cats])
-  const revealedIds = useMemo(() => new Set(reveals.map(r => r.category_id)), [reveals])
-  const next = sequence.find(c => !revealedIds.has(c.id))
-  const lastReveal = reveals.length ? reveals[reveals.length - 1] : null
-  const spotlight = lastReveal ? cats.find(c => c.id === lastReveal.category_id) : null
 
-  const agreeCount = useMemo(() => Object.values(picks)
-    .filter(p => p.matt && p.dustin && p.matt === p.dustin).length, [picks])
-  const splitCount = Object.keys(picks).length - agreeCount
+  // category_id -> Set of usernames whose pick is unsealed
+  const revealedBy = useMemo(() => {
+    const m = {}
+    for (const r of reveals) {
+      const u = r.profiles?.username
+      if (!u) continue
+      ;(m[r.category_id] ||= new Set()).add(u)
+    }
+    return m
+  }, [reveals])
 
-  async function revealNext() {
-    if (!next || revealing) return
-    setRevealing(true)
+  const isRevealed = (catId, who) => !!revealedBy[catId]?.has(who)
+  const isFull = (cat) => PEOPLE.every(who => isRevealed(cat.id, who))
+
+  const firstIncompleteIdx = useMemo(() => {
+    const i = sequence.findIndex(c => !isFull(c))
+    return i  // -1 once every category is fully unsealed
+  }, [sequence, revealedBy])
+
+  // Init the spotlight to wherever the ceremony currently stands (once).
+  useEffect(() => {
+    if (spotIdx === null && sequence.length) {
+      setSpotIdx(firstIncompleteIdx === -1 ? sequence.length - 1 : firstIncompleteIdx)
+    }
+  }, [sequence, firstIncompleteIdx, spotIdx])
+
+  const completedCats = useMemo(() => sequence.filter(isFull), [sequence, revealedBy])
+  const agreeCount = useMemo(() => completedCats.filter(c => {
+    const p = picks[c.id] || {}; return p.matt && p.dustin && p.matt === p.dustin
+  }).length, [completedCats, picks])
+  const splitCount = completedCats.length - agreeCount
+
+  async function revealPick(cat, who) {
+    const uid = ids[who]
+    const key = `${cat.id}:${who}`
+    if (!uid || busy || isRevealed(cat.id, who)) return
+    setBusy(key)
     try {
-      const { data, error: rpcErr } = await supabase
-        .rpc('oscar_reveal_category', { yid: yearRow.id, cid: next.id })
+      const { error: rpcErr } = await supabase
+        .rpc('oscar_reveal_pick', { yid: yearRow.id, cid: cat.id, uid })
       if (rpcErr) throw rpcErr
-      if (data === 'not_locked') await refresh()
-      else await refresh()
+      await refresh()
     } catch (err) {
       setError(`Reveal failed: ${err.message}`)
     } finally {
-      setRevealing(false)
+      setBusy(null)
     }
   }
 
@@ -149,9 +184,11 @@ export default function OscarsReveal() {
   )
 
   const done = yearRow.status === 'revealed'
-  const progress = cats.length ? (reveals.length / cats.length) * 100 : 0
-  const boardRows = [...reveals].reverse()
-    .filter(r => !spotlight || done || r.category_id !== spotlight.id)
+  const progress = cats.length ? (completedCats.length / cats.length) * 100 : 0
+  const spotCat = !done && spotIdx !== null ? sequence[spotIdx] : null
+  const spotFull = spotCat ? isFull(spotCat) : false
+  const nextCat = spotCat ? sequence[spotIdx + 1] : null
+  const boardCats = [...completedCats].reverse().filter(c => c.id !== spotCat?.id)
 
   return (
     <div>
@@ -171,7 +208,7 @@ export default function OscarsReveal() {
             {done ? 'ALL BALLOTS UNSEALED' : 'THE REVEAL CEREMONY'}
           </h1>
           <p className="font-serif text-gray-400 mt-2 text-base">
-            {done ? 'Every pick is on the table. See you on ceremony night.' : 'Two ballots. One category at a time. Building to Best Picture.'}
+            {done ? 'Every pick is on the table. See you on ceremony night.' : 'Unseal one pick at a time. Building to Best Picture.'}
           </p>
         </div>
       </FilmStill>
@@ -186,7 +223,7 @@ export default function OscarsReveal() {
         {/* progress strip */}
         <div className="flex items-center justify-between flex-wrap gap-3 mb-3">
           <span className="font-display text-2xl text-white tracking-wide">
-            {done ? `ALL ${cats.length} CATEGORIES REVEALED` : `CATEGORY ${Math.min(reveals.length + 1, cats.length)} OF ${cats.length}`}
+            {done ? `ALL ${cats.length} CATEGORIES REVEALED` : `CATEGORY ${Math.min(completedCats.length + 1, cats.length)} OF ${cats.length}`}
           </span>
           <span className="font-mono text-xs tracking-kicker text-gray-400">
             AGREED {agreeCount} · SPLIT {splitCount}
@@ -196,23 +233,47 @@ export default function OscarsReveal() {
           <div className="h-full bg-gold-500 transition-all duration-700" style={{ width: `${progress}%` }} />
         </div>
 
-        {/* spotlight — the most recent reveal */}
-        {spotlight && !done && (
-          <Spotlight cat={spotlight} picks={picks[spotlight.id] || {}} posterMap={posterMap} />
-        )}
+        {/* spotlight — the category in play, one sealed card per player */}
+        {spotCat && (
+          <div className="mb-8">
+            <div className="text-center mb-4">
+              <div className="font-mono text-sm tracking-cinema text-gold-500 uppercase">{shortName(spotCat.name)}</div>
+              <div className="font-mono text-[10px] tracking-kicker text-gray-500 mt-1">
+                {groupOf(spotCat)?.toUpperCase()} · {spotCat.fieldSize} NOMINEES IN THE FIELD
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {PEOPLE.map(who => (
+                <RevealCard
+                  key={who}
+                  who={who}
+                  revealed={isRevealed(spotCat.id, who)}
+                  pick={picks[spotCat.id]?.[who]}
+                  poster={posterMap[picks[spotCat.id]?.[who]]}
+                  busy={busy === `${spotCat.id}:${who}`}
+                  onReveal={() => revealPick(spotCat, who)}
+                />
+              ))}
+            </div>
 
-        {/* reveal CTA */}
-        {!done && next && (
-          <div className="flex flex-col items-center gap-2 mb-10">
-            <button onClick={revealNext} disabled={revealing}
-                    className="btn-gold text-base px-8 py-3 disabled:opacity-50">
-              {revealing ? 'Unsealing…'
-                : reveals.length === 0 ? `🎬 Begin — Reveal ${shortName(next.name)}`
-                : `On to ${shortName(next.name)} →`}
-            </button>
-            <span className="font-mono text-[10px] tracking-kicker text-gray-500">
-              {groupOf(next)?.toUpperCase()} · {next.fieldSize} IN THE FIELD
-            </span>
+            {/* flourish + advance, only once BOTH are unsealed */}
+            {spotFull && (
+              <div className="flex flex-col items-center gap-3 mt-5">
+                <Flourish same={picks[spotCat.id]?.matt && picks[spotCat.id]?.matt === picks[spotCat.id]?.dustin} />
+                {nextCat ? (
+                  <button onClick={() => setSpotIdx(spotIdx + 1)} className="btn-gold text-base px-8 py-3">
+                    On to {shortName(nextCat.name)} →
+                  </button>
+                ) : (
+                  <span className="font-mono text-[10px] tracking-kicker text-gray-500">Unseal the last card for the finale…</span>
+                )}
+              </div>
+            )}
+            {!spotFull && (
+              <p className="text-center font-mono text-[10px] tracking-kicker text-gray-500 mt-4">
+                TAP EACH CARD TO UNSEAL — ONE PICK AT A TIME
+              </p>
+            )}
           </div>
         )}
 
@@ -220,20 +281,19 @@ export default function OscarsReveal() {
         {done && <Finale yearRow={yearRow} ballots={ballots} agreeCount={agreeCount} splitCount={splitCount} total={cats.length} />}
 
         {/* the board so far */}
-        {boardRows.length > 0 && (
+        {boardCats.length > 0 && (
           <div className="mt-2">
             <div className="flex items-center gap-3 pb-2 mb-4 border-b border-night-700/60">
               <span className="font-mono text-sm tracking-cinema text-gold-500 uppercase">The Board So Far</span>
               <span className="flex-1 h-px bg-night-700/60" />
-              <span className="font-mono text-sm tracking-kicker text-gray-500">{reveals.length} revealed</span>
+              <span className="font-mono text-sm tracking-kicker text-gray-500">{completedCats.length} revealed</span>
             </div>
             <div className="space-y-1.5">
-              {boardRows.map(r => {
-                const cat = cats.find(c => c.id === r.category_id)
-                const p = picks[r.category_id] || {}
+              {boardCats.map(cat => {
+                const p = picks[cat.id] || {}
                 const same = p.matt && p.dustin && p.matt === p.dustin
                 return (
-                  <div key={r.id}
+                  <div key={cat.id}
                        className={`grid grid-cols-[1fr_auto_1fr] gap-3 items-center rounded-lg px-3 py-2 ${
                          same ? 'bg-emerald-500/[0.06] border border-emerald-500/20' : 'bg-night-800/40'
                        }`}>
@@ -241,7 +301,7 @@ export default function OscarsReveal() {
                     <span className={`font-mono text-[10px] tracking-kicker text-center whitespace-nowrap ${
                       same ? 'text-emerald-400' : 'text-gray-500'
                     }`}>
-                      {shortName(cat?.name || '').toUpperCase()} · {same ? 'SAME' : 'SPLIT'}
+                      {shortName(cat.name).toUpperCase()} · {same ? 'SAME' : 'SPLIT'}
                     </span>
                     <span className="text-sm text-film-400 truncate">{p.dustin || '— no guess —'}</span>
                   </div>
@@ -255,49 +315,31 @@ export default function OscarsReveal() {
   )
 }
 
-function shortName(name) { return name.replace(/^Best\s+/i, '').replace(/^Achievement in\s+/i, '') }
-
-// ── spotlight: two pick cards + flourish ─────────────────────────────────────
-function Spotlight({ cat, picks, posterMap }) {
-  const same = picks.matt && picks.dustin && picks.matt === picks.dustin
-  return (
-    <div className="mb-8">
-      <div className="text-center mb-4">
-        <div className="font-mono text-sm tracking-cinema text-gold-500 uppercase">{shortName(cat.name)}</div>
-        <div className="font-mono text-[10px] tracking-kicker text-gray-500 mt-1">
-          {groupOf(cat)?.toUpperCase()} · {cat.fieldSize} NOMINEES IN THE FIELD
-        </div>
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <PickCard who="matt"   pick={picks.matt}   poster={posterMap[picks.matt]} />
-        <PickCard who="dustin" pick={picks.dustin} poster={posterMap[picks.dustin]} />
-      </div>
-      <div className="text-center mt-4">
-        {same ? (
-          <span className="font-mono text-[11px] tracking-kicker text-emerald-400 px-4 py-1.5 rounded-full
-                           bg-emerald-500/10 border border-emerald-500/40">
-            ✨ GREAT MINDS — SAME PICK
-          </span>
-        ) : (
-          <span className="font-mono text-[11px] tracking-kicker text-cinema-400 px-4 py-1.5 rounded-full
-                           bg-cinema-500/10 border border-cinema-500/40">
-            ⚔ SPLIT DECISION
-          </span>
-        )}
-      </div>
-    </div>
-  )
-}
-
-function PickCard({ who, pick, poster }) {
+// ── a single player's card: sealed → tap → unsealed pick ────────────────────
+function RevealCard({ who, revealed, pick, poster, busy, onReveal }) {
   const gold = who === 'matt'
+  const label = gold ? 'HERMZ' : 'DUST'
+  const accent = gold ? 'text-gold-500' : 'text-film-500'
+  const border = gold ? 'border-gold-500/40' : 'border-film-500/40'
+
+  if (!revealed) {
+    return (
+      <button
+        onClick={onReveal}
+        disabled={busy}
+        className={`group w-full rounded-xl border border-dashed ${border} bg-night-800/40 hover:bg-night-800/70
+                    p-5 text-center transition-colors disabled:opacity-60 min-h-[168px] flex flex-col items-center justify-center gap-3`}>
+        <span className={`font-mono text-[11px] tracking-cinema uppercase ${accent}`}>{label}’s pick</span>
+        <span className="font-display text-2xl text-gray-500 group-hover:text-gray-300 tracking-wide transition-colors">
+          {busy ? 'UNSEALING…' : 'SEALED'}
+        </span>
+        <span className="font-mono text-[10px] tracking-kicker text-gray-600">TAP TO UNSEAL</span>
+      </button>
+    )
+  }
   return (
-    <div className={`rounded-xl border bg-night-800/60 p-5 text-center ${
-      gold ? 'border-gold-500/40' : 'border-film-500/40'
-    }`}>
-      <div className={`font-mono text-[11px] tracking-cinema uppercase mb-3 ${gold ? 'text-gold-500' : 'text-film-500'}`}>
-        {gold ? 'HERMZ PICKS' : 'DUST PICKS'}
-      </div>
+    <div className={`rounded-xl border ${border} bg-night-800/60 p-5 text-center min-h-[168px] flex flex-col items-center justify-center`}>
+      <div className={`font-mono text-[11px] tracking-cinema uppercase mb-3 ${accent}`}>{label} PICKS</div>
       {poster && (
         <img src={poster} alt="" className="w-16 h-24 object-cover rounded-md mx-auto mb-3 border border-white/10" />
       )}
@@ -305,6 +347,20 @@ function PickCard({ who, pick, poster }) {
         {(pick || 'NO GUESS').toUpperCase()}
       </div>
     </div>
+  )
+}
+
+function Flourish({ same }) {
+  return same ? (
+    <span className="font-mono text-[11px] tracking-kicker text-emerald-400 px-4 py-1.5 rounded-full
+                     bg-emerald-500/10 border border-emerald-500/40">
+      ✨ GREAT MINDS — SAME PICK
+    </span>
+  ) : (
+    <span className="font-mono text-[11px] tracking-kicker text-cinema-400 px-4 py-1.5 rounded-full
+                     bg-cinema-500/10 border border-cinema-500/40">
+      ⚔ SPLIT DECISION
+    </span>
   )
 }
 
