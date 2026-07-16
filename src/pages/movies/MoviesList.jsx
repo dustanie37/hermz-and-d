@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
+import { createPortal } from 'react-dom'
 import { Link, useSearchParams, useLocation } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import FilmStill from '../../components/FilmStill'
@@ -28,25 +29,105 @@ function GridViewIcon() {
 
 // Edition years come from ranking_events (published) — see `events` state (12g refactor)
 
-// One prior-year cell — shows prior rank + movement
-function PriorYearCell({ currentRank, filmId, priorMap }) {
-  if (!priorMap) return <td className="table-cell hidden md:table-cell" />
-  const prior = priorMap[filmId]
-  if (prior === undefined || prior === null) {
-    return (
-      <td className="table-cell text-center hidden md:table-cell">
-        <span className="text-xs text-gray-600 italic">NR</span>
-      </td>
-    )
+// ── Rank Trajectory sparkline ──────────────────────────────────────────────
+// Replaces the old per-edition "vs 'YY" columns with ONE column: a sparkline of a
+// film's rank across every edition up to the one being viewed. Number rail = the
+// exact ranks; gold enlarged dot = current edition; hollow dot = not ranked that
+// edition. Hover any dot for that edition's rank + the move into it (no mental math).
+const TRAJ_PAD_X = 16
+const TRAJ_GAP   = 46
+const trajWidth  = n => TRAJ_PAD_X * 2 + Math.max(n - 1, 0) * TRAJ_GAP
+const trajX      = (i, n, w) => (n <= 1 ? w / 2 : TRAJ_PAD_X + (w - TRAJ_PAD_X * 2) * i / (n - 1))
+
+// Move INTO edition i, measured against the previous edition the film was ranked in.
+function rankMove(ranks, i) {
+  const r = ranks[i]
+  if (r == null) return { kind: 'nr' }
+  let prev = null
+  for (let j = i - 1; j >= 0; j--) { if (ranks[j] != null) { prev = ranks[j]; break } }
+  if (prev == null) return { kind: 'new' }
+  const diff = prev - r                       // + = climbed toward #1
+  return { kind: diff > 0 ? 'up' : diff < 0 ? 'down' : 'same', diff }
+}
+
+// Current-edition move, shown as a compact tag beside the sparkline.
+function MoveTag({ ranks }) {
+  const m = rankMove(ranks, ranks.length - 1)
+  if (m.kind === 'nr')   return <span className="font-mono text-xs rank-same">—</span>
+  if (m.kind === 'new')  return <span className="font-mono text-xs" style={{ color: '#fcd34d' }}>★</span>
+  if (m.kind === 'up')   return <span className="font-mono text-xs rank-up">▴{m.diff}</span>
+  if (m.kind === 'down') return <span className="font-mono text-xs rank-down">▾{Math.abs(m.diff)}</span>
+  return <span className="font-mono text-xs rank-same">●</span>
+}
+
+function TrajectorySparkline({ ranks, years, color }) {
+  const [active, setActive] = useState(null)   // { i, x, y }
+  const n = ranks.length
+  const w = trajWidth(n)
+  const H = 56, PAD_TOP = 8, LINE_H = 22, BASE_Y = 36, RAIL_Y = 50
+  const present = ranks.filter(r => r != null)
+  const maxR = Math.max(...present, 2)
+  const X = i => trajX(i, n, w)
+  const Y = r => PAD_TOP + LINE_H * ((r - 1) / Math.max(maxR - 1, 1))
+  const linePts = ranks.map((r, i) => (r == null ? null : `${X(i)},${Y(r)}`)).filter(Boolean)
+
+  let tip = null
+  if (active != null) {
+    const i = active.i, r = ranks[i], m = rankMove(ranks, i)
+    const moveEl =
+      m.kind === 'nr'   ? <span className="rank-same">not ranked</span> :
+      m.kind === 'new'  ? <span style={{ color: '#fcd34d' }}>★ first ranked</span> :
+      m.kind === 'up'   ? <span className="rank-up">▴ {m.diff} · climbed</span> :
+      m.kind === 'down' ? <span className="rank-down">▾ {Math.abs(m.diff)} · fell</span> :
+                          <span className="rank-same">● held</span>
+    const left = Math.min(active.x + 14, window.innerWidth - 150)
+    const top  = Math.min(active.y + 14, window.innerHeight - 96)
+    tip = createPortal(
+      <div style={{ position: 'fixed', left, top, zIndex: 80, pointerEvents: 'none', borderLeft: `3px solid ${color}` }}
+           className="bg-night-900 border border-night-600 rounded-lg shadow-2xl px-3 py-2 min-w-[110px]">
+        <div className="font-mono text-xs tracking-kicker text-gray-400 uppercase">{years[i]} Edition</div>
+        <div className="font-display text-2xl leading-none text-white my-1">
+          {r == null ? <span className="text-gray-500">NR</span> : `#${r}`}
+        </div>
+        <div className="font-mono text-xs font-semibold">{moveEl}</div>
+      </div>, document.body)
   }
-  const diff = prior - currentRank
+
   return (
-    <td className="table-cell text-center hidden md:table-cell">
-      <span className="font-mono text-base font-semibold text-white">#{prior}</span>
-      {diff > 0 && <div className="text-sm rank-up font-mono">↑{diff}</div>}
-      {diff < 0 && <div className="text-sm rank-down font-mono">↓{Math.abs(diff)}</div>}
-      {diff === 0 && <div className="text-sm rank-same font-mono">●</div>}
-    </td>
+    <div className="relative inline-flex">
+      <svg width={w} height={H} className="overflow-visible"
+           onMouseMove={e => active != null && setActive(a => (a ? { ...a, x: e.clientX, y: e.clientY } : a))}
+           onMouseLeave={() => setActive(null)}>
+        <line x1={TRAJ_PAD_X} y1={BASE_Y} x2={w - TRAJ_PAD_X} y2={BASE_Y} stroke="#26263c" strokeWidth="1" />
+        {linePts.length > 1 && (
+          <polyline points={linePts.join(' ')} fill="none" stroke={color} strokeWidth="2"
+                    strokeLinejoin="round" strokeLinecap="round" opacity="0.9" />
+        )}
+        {ranks.map((r, i) => {
+          const cur = i === n - 1
+          if (r == null) return <circle key={`d${i}`} cx={X(i)} cy={BASE_Y} r="3" fill="none" stroke="#3a3a55" strokeWidth="1.5" />
+          if (cur)       return <circle key={`d${i}`} cx={X(i)} cy={Y(r)} r="4.5" fill="#fbbf24" stroke="#0a0a0f" strokeWidth="1" />
+          return <circle key={`d${i}`} cx={X(i)} cy={Y(r)} r="2.6" fill={color} />
+        })}
+        {ranks.map((r, i) => {
+          const cur = i === n - 1
+          const fill = r == null ? '#9ca3af' : cur ? '#fbbf24' : '#e5e7eb'
+          return (
+            <text key={`t${i}`} x={X(i)} y={RAIL_Y} textAnchor="middle"
+                  fontFamily="ui-monospace, monospace" fontSize="12" fontWeight="600" fill={fill}>
+              {r == null ? '—' : r}
+            </text>
+          )
+        })}
+        {ranks.map((r, i) => (
+          <circle key={`h${i}`} cx={X(i)} cy={r == null ? BASE_Y : Y(r)} r="12" fill="transparent"
+                  style={{ cursor: 'pointer' }}
+                  onMouseEnter={e => setActive({ i, x: e.clientX, y: e.clientY })}
+                  onClick={e => setActive(a => (a && a.i === i ? null : { i, x: e.clientX, y: e.clientY }))} />
+        ))}
+      </svg>
+      {tip}
+    </div>
   )
 }
 
@@ -198,7 +279,9 @@ export default function MoviesList() {
   function setView(v)    { setSearchParams({ event: eventYear, view: v }); setSortBy('rank') }
 
   const priorYears = eventYears.filter(y => y < eventYear)
-  const shortYear = y => `'${String(y).slice(2)}`
+  const trajYears  = eventYears.filter(y => y <= eventYear)   // ascending, includes current edition
+  const showTraj   = priorYears.length > 0                    // nothing to trace on the earliest edition
+  const lineColor  = view === 'combined' ? CC : view === 'matt' ? HC : DC
 
   const sortOptions = [
     { value: 'rank',      label: view === 'combined' ? 'Combined Rank' : 'Rank' },
@@ -466,11 +549,20 @@ export default function MoviesList() {
                     ) : (
                       <th className="table-header text-center">Score</th>
                     )}
-                    {[...priorYears].reverse().map(py => (
-                      <th key={py} className="table-header text-center hidden md:table-cell w-20">
-                        vs {shortYear(py)}
+                    {showTraj && (
+                      <th className="table-header">
+                        <div className="flex flex-col items-start gap-1">
+                          <span>Trajectory</span>
+                          <svg width={trajWidth(trajYears.length)} height="14" className="overflow-visible">
+                            {trajYears.map((y, i) => (
+                              <text key={y} x={trajX(i, trajYears.length, trajWidth(trajYears.length))} y="11"
+                                    textAnchor="middle" fontFamily="ui-monospace, monospace" fontSize="12"
+                                    fill="#9ca3af" letterSpacing="0.5">&apos;{String(y).slice(2)}</text>
+                            ))}
+                          </svg>
+                        </div>
                       </th>
-                    ))}
+                    )}
                   </tr>
                 </thead>
                 <tbody>
@@ -531,9 +623,18 @@ export default function MoviesList() {
                             <span className="font-display text-xl text-white tracking-wide">{row.score ?? '—'}</span>
                           </td>
                         )}
-                        {[...priorYears].reverse().map(py => (
-                          <PriorYearCell key={py} currentRank={row.rank} filmId={f.id} priorMap={allPriorMaps[py]} />
-                        ))}
+                        {showTraj && (() => {
+                          const trajRanks = trajYears.map(y =>
+                            y === eventYear ? row.rank : (allPriorMaps[y]?.[f.id] ?? null))
+                          return (
+                            <td className="table-cell">
+                              <div className="inline-flex items-center gap-2">
+                                <TrajectorySparkline ranks={trajRanks} years={trajYears} color={lineColor} />
+                                <MoveTag ranks={trajRanks} />
+                              </div>
+                            </td>
+                          )
+                        })()}
                       </tr>
                     )
                   })}

@@ -7,6 +7,11 @@ const UPDATES = [
       {
         tag: 'Films',
         color: 'film',
+        text: 'The ranking lists learned to show their history. Each film now carries a little trajectory — a sparkline tracing where it landed in every edition from 2001 to now. The line takes the list\'s color (teal for combined, blue for Dust, gold for Hermz), the current edition is the gold dot, and a hollow dot means the film wasn\'t on the list that year. The exact ranks sit right under the line, and hovering any point tells you how far it climbed or fell into that edition — so you can see something went up 23 then down 13 without doing the math in your head. It replaces the old "vs 2016 / vs 2007" columns with one column that tells the whole story.',
+      },
+      {
+        tag: 'Films',
+        color: 'film',
         text: 'The film stats page got the full Oscar-stats treatment — starting with four new toys. The Podium shows every edition\'s combined top three with each player\'s personal #1 beneath, plus the films with the most podium finishes. Edition Trends charts the Nostalgia Index (is the Canon aging with us?) and Score Inflation (are we becoming softer graders?). The Grading Curve shows where each player\'s scores run high and low across all editions and crowns the softer grader. And Guilty Pleasures & Homework confesses everything: the low-acclaim films we rank anyway, and the certified classics we rank lowest.',
       },
       {
