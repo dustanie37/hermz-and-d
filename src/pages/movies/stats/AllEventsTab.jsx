@@ -35,7 +35,7 @@ function PodiumSection({ allTimeData, rank1Data }) {
 
   return (
     <div className="card">
-      <PanelHeader title="The Podium" subtitle="Combined list top three, every edition" />
+      <PanelHeader title="The Podium" subtitle="Combined-list top three" />
       {podiumKings.length > 0 && (
         <p className="font-mono text-xs tracking-kicker text-gold-400 uppercase mb-5">
           MOST PODIUMS · {podiumKings.map(k => `${k.title} ×${k.n}`).join('  ·  ')}
@@ -100,7 +100,7 @@ function EditionTrendsSection({ allTimeData, scoresData }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
       <div className="card">
-        <PanelHeader title="The Nostalgia Index" subtitle="Average film age at ranking time · combined lists" />
+        <PanelHeader title="The Nostalgia Index" subtitle="Average film age at ranking time" />
         {aging != null && (
           <p className="font-mono text-xs tracking-kicker uppercase mb-4" style={{ color: CC }}>
             {aging > 0 ? `THE CANON AGED ${aging} YRS SINCE ${EVENTS_ORDER[0]}` : aging < 0 ? `THE CANON GOT ${Math.abs(aging)} YRS YOUNGER SINCE ${EVENTS_ORDER[0]}` : 'THE CANON HELD ITS AGE'}
@@ -232,7 +232,7 @@ function BumpChart({ allTimeData }) {
         Swipe chart → to explore
       </p>
       <p className="font-mono text-xs tracking-kicker text-gray-500 mt-3 text-center uppercase">
-        Combined list only · rank 1 at top · gap = not on that event's combined list
+        Combined lists · rank 1 at top · gap = not ranked that edition
       </p>
     </div>
   )
@@ -317,7 +317,7 @@ function AlwaysPresentSection({ allTimeData }) {
     .sort((a, b) => a.avgRank - b.avgRank), [filmMap, byFilm])
   return (
     <div className="card">
-      <PanelHeader title="On Every Combined List" subtitle={`${list.length} films · all ${EVENTS_ORDER.length} editions`} />
+      <PanelHeader title="On Every Combined List" subtitle={`${list.length} films`} />
       {list.length === 0 ? (
         <EmptyNote>None found</EmptyNote>
       ) : (
@@ -359,7 +359,7 @@ function InAndOutSection({ allTimeData }) {
     .sort((a, b) => sortTitle(a.title).localeCompare(sortTitle(b.title))), [filmMap, byFilm])
   return (
     <div className="card">
-      <PanelHeader title="Appeared, Disappeared & Returned" subtitle={`${list.length} films left a list, then came back`} />
+      <PanelHeader title="Appeared, Disappeared & Returned" subtitle={`${list.length} films`} />
       {list.length === 0 ? (
         <EmptyNote>None found</EmptyNote>
       ) : (

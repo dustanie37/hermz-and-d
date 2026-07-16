@@ -4,8 +4,8 @@ import { supabase } from '../../../lib/supabase'
 import { DC, HC } from '../../../lib/helpers'
 import { EVENTS_ORDER, latestEventYear, SCORE_CATS, PanelHeader, EmptyNote } from './shared'
 
-// ── MONEY & KRYPTONITE — scoring tendencies across all editions ──────────────
-function MoneyKryptoniteSection({ scoresData }) {
+// ── THE GRADING CURVE — scoring tendencies across all editions ───────────────
+function GradingCurveSection({ scoresData }) {
   const players = useMemo(() => {
     // Per player: avg of per-edition category averages. Acclaim excluded (agreed
     // jointly, not a personal tendency); Impact normalized to /10; category must
@@ -48,7 +48,7 @@ function MoneyKryptoniteSection({ scoresData }) {
 
   return (
     <div className="card">
-      <PanelHeader title="Money & Kryptonite" subtitle="Category generosity · all editions · Impact scaled to /10 · Acclaim excluded (scored jointly)" />
+      <PanelHeader title="The Grading Curve" subtitle="Average given per category · all editions · Acclaim excluded (scored jointly)" />
       {softer && softer.diff >= 0.05 && (
         <p className="font-mono text-xs tracking-kicker uppercase mb-5" style={{ color: softer.color }}>
           THE SOFTER GRADER · {softer.name} (+{softer.diff.toFixed(2)} AVG)
@@ -58,14 +58,14 @@ function MoneyKryptoniteSection({ scoresData }) {
         {players.map(p => (
           <div key={p.name} className="rounded-xl border border-night-600 bg-night-900/50 p-4">
             <div className="font-mono text-xs tracking-kicker mb-3" style={{ color: p.color }}>{p.name}</div>
-            <div className="kicker-dim mb-1.5">💰 MONEY</div>
+            <div className="kicker-dim mb-1.5">RUNS HIGH</div>
             {p.rows.slice(0, 2).map(r => (
               <div key={r.label} className="flex items-baseline justify-between py-0.5">
                 <span className="text-sm text-gray-200">{r.label}</span>
                 <span className="font-display text-xl tracking-wide leading-none" style={{ color: p.color }}>{r.avg.toFixed(2)}</span>
               </div>
             ))}
-            <div className="kicker-dim mt-3 mb-1.5">🪨 KRYPTONITE</div>
+            <div className="kicker-dim mt-3 mb-1.5">RUNS LOW</div>
             {p.rows.slice(-2).reverse().map(r => (
               <div key={r.label} className="flex items-baseline justify-between py-0.5">
                 <span className="text-sm text-gray-200">{r.label}</span>
@@ -182,7 +182,7 @@ export default function ScoresTab({ scoresData, profiles, events }) {
 
           {/* ── Average scores — dumbbell chart ─────────────────────────────── */}
           <div className="card">
-            <PanelHeader title="Average Scores by Category" subtitle={`${selectedEvent} · Impact scaled to /10`} />
+            <PanelHeader title="Average Scores by Category" subtitle="Impact scaled to /10" />
             <div className="space-y-1">
               {chartData.map(row => {
                 const dPct     = row.Dust  != null ? (row.Dust  / 10) * 100 : null
@@ -223,17 +223,17 @@ export default function ScoresTab({ scoresData, profiles, events }) {
           {/* ── Perfect scores — interactive card grid ───────────────────────── */}
           {tensData.length > 0 && (
             <div className="card">
-              <PanelHeader title="Perfect Scores" subtitle={`${selectedEvent} · 10s (20 for Impact) · tap a card for the films`} />
+              <PanelHeader title="Perfect Scores" subtitle="10s (20 for Impact) · tap a card for the films" />
 
               {/* totals */}
               <div className="grid grid-cols-2 gap-3 mb-5">
                 <div className="rounded-xl border border-night-600 bg-night-900/60 py-3 px-4 text-center">
                   <div className="font-display text-4xl tracking-wide leading-none" style={{ color: DC }}>{dustTenTotal}</div>
-                  <div className="stat-label mt-2">Dust total perfects</div>
+                  <div className="stat-label mt-2">Dust total</div>
                 </div>
                 <div className="rounded-xl border border-night-600 bg-night-900/60 py-3 px-4 text-center">
                   <div className="font-display text-4xl tracking-wide leading-none" style={{ color: HC }}>{hermzTenTotal}</div>
-                  <div className="stat-label mt-2">Hermz total perfects</div>
+                  <div className="stat-label mt-2">Hermz total</div>
                 </div>
               </div>
 
@@ -268,7 +268,7 @@ export default function ScoresTab({ scoresData, profiles, events }) {
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <span className="font-display text-xl text-white tracking-wide leading-none">{expandedRow?.category}</span>
-                      <span className="kicker-dim">perfect scores · {selectedEvent}</span>
+                      <span className="kicker-dim">perfect scores</span>
                     </div>
                     <button onClick={() => setExpandedCat(null)}
                             className="font-mono text-xs text-gray-500 hover:text-gray-300 transition-colors px-2 py-1">✕</button>
@@ -325,8 +325,8 @@ export default function ScoresTab({ scoresData, profiles, events }) {
             </div>
           )}
 
-          {/* ── Money & Kryptonite — all-time scoring tendencies ─────────────── */}
-          <MoneyKryptoniteSection scoresData={scoresData} />
+          {/* ── The Grading Curve — all-time scoring tendencies ──────────────── */}
+          <GradingCurveSection scoresData={scoresData} />
 
         </div>
       )}

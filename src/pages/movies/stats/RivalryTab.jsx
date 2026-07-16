@@ -57,11 +57,11 @@ function TasteComparisonSection({ allH2HFilms, loading }) {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="card">
-            <PanelHeader title="Decade Face-Off" subtitle={String(selectedYear)} />
+            <PanelHeader title="Decade Face-Off" />
             <H2HBar data={decadeH2H} />
           </div>
           <div className="card">
-            <PanelHeader title="Genre Face-Off" subtitle={String(selectedYear)} />
+            <PanelHeader title="Genre Face-Off" />
             <H2HBar data={genreH2H} />
           </div>
         </div>

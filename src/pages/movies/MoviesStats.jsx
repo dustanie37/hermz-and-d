@@ -400,7 +400,6 @@ export default function MoviesStats() {
   function setEvent(yr) { setSearchParams({ event: yr, view, tab }) }
   function setView(v)   { setSearchParams({ event: eventYear, view: v, tab }) }
 
-  const viewLabel = view === 'combined' ? 'Combined List' : view === 'dustin' ? "Dust's List" : "Hermz's List"
   const chartColor = view === 'matt' ? HC : view === 'dustin' ? DC : CC
 
   return (
@@ -441,7 +440,7 @@ export default function MoviesStats() {
           <ChartsTab
             eventYear={eventYear} view={view} setEvent={setEvent} setView={setView}
             films={chartsFilms} loading={chartsLoading} error={chartsError}
-            chartColor={chartColor} viewLabel={viewLabel}
+            chartColor={chartColor}
           />
         )}
 

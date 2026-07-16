@@ -7,7 +7,7 @@ const UPDATES = [
       {
         tag: 'Films',
         color: 'film',
-        text: 'The film stats page got the full Oscar-stats treatment — starting with four new toys. The Podium shows every edition\'s combined top three with each player\'s personal #1 beneath, plus the films with the most podium finishes. Edition Trends charts the Nostalgia Index (is the Canon aging with us?) and Score Inflation (are we becoming softer graders?). Money & Kryptonite names each player\'s most and least generous scoring categories across all editions and crowns the softer grader. And Guilty Pleasures & Homework confesses everything: the low-acclaim films we rank anyway, and the certified classics we rank lowest.',
+        text: 'The film stats page got the full Oscar-stats treatment — starting with four new toys. The Podium shows every edition\'s combined top three with each player\'s personal #1 beneath, plus the films with the most podium finishes. Edition Trends charts the Nostalgia Index (is the Canon aging with us?) and Score Inflation (are we becoming softer graders?). The Grading Curve shows where each player\'s scores run high and low across all editions and crowns the softer grader. And Guilty Pleasures & Homework confesses everything: the low-acclaim films we rank anyway, and the certified classics we rank lowest.',
       },
       {
         tag: 'Design',

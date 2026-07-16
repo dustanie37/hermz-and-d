@@ -69,7 +69,7 @@ function GuiltyPleasuresSection({ allTimeData, profiles, events }) {
 
   return (
     <div className="card">
-      <PanelHeader title="Guilty Pleasures & Homework" subtitle={`${latest} combined list · our rank vs the agreed acclaim score`} />
+      <PanelHeader title="Guilty Pleasures & Homework" subtitle={`${latest} combined list`} />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
         <div>
           <div className="font-mono text-xs tracking-kicker uppercase pb-2 mb-2 border-b border-night-700" style={{ color: HC }}>
@@ -131,7 +131,7 @@ export default function CrossoverTab({ data, allTimeData, profiles, events }) {
       <div className="card">
         <div className="mb-5">
           <div className="flex items-start justify-between flex-wrap gap-3 mb-4">
-            <PanelHeader title="Oscar × Our Rankings" subtitle="Combined-list films with Oscar recognition" />
+            <PanelHeader title="Oscar × Our Rankings" subtitle="Combined lists only" />
             <div className="flex gap-1 p-1 bg-night-900/60 rounded-full flex-shrink-0">
               {[{ v: 'all', label: 'All' }, { v: 'wins', label: '🏆 Winners' }, { v: 'noms', label: 'Noms Only' }].map(opt => (
                 <button key={opt.v} onClick={() => { setFilter(opt.v); setCatFilter(null) }}

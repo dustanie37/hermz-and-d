@@ -86,7 +86,7 @@ function QuickStats({ films }) {
 }
 
 // ── CHARTS TAB ────────────────────────────────────────────────────────────────
-export default function ChartsTab({ eventYear, view, setEvent, setView, films, loading, error, chartColor, viewLabel }) {
+export default function ChartsTab({ eventYear, view, setEvent, setView, films, loading, error, chartColor }) {
   return (
     <>
       {/* Event + view selectors */}
@@ -122,10 +122,6 @@ export default function ChartsTab({ eventYear, view, setEvent, setView, films, l
       {!loading && !error && films.length > 0 && (
         <>
           <QuickStats films={films} />
-          <p className="kicker-dim mb-6">
-            {eventYear} · <span className="text-gray-200">{viewLabel}</span>
-            <span className="ml-2">({films.length} films)</span>
-          </p>
 
           {/* Decade + Genre */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
