@@ -743,7 +743,7 @@ export default function OscarsStats() {
           <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl text-white tracking-wide leading-[0.92]">
             ALL-TIME STATS
           </h1>
-          <p className="font-serif text-lg text-gray-400 mt-3">
+          <p className="font-mono text-sm tracking-kicker uppercase text-gray-300 mt-3">
             {years.length} ceremonies · 2008–{years[years.length-1]?.year ?? '—'}
           </p>
         </div>
@@ -763,7 +763,7 @@ export default function OscarsStats() {
         {/* ── 1. Championship + Correct cards ─────────────────────────────── */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="card">
-            <p className="kicker mb-4">CHAMPIONSHIP RECORD</p>
+            <h3 className="font-display text-2xl text-white tracking-wide leading-none mb-4">Championship Record</h3>
             <div className="grid grid-cols-3 gap-3 text-center">
               <PlayerStat name="Hermz" value={mattWins}   sub={pctStr(mattWins, years.length)}   color="gold" leading={mattWins > dustinWins} />
               <div className="flex flex-col items-center justify-center">
@@ -797,7 +797,7 @@ export default function OscarsStats() {
           </div>
 
           <div className="card">
-            <p className="kicker mb-4">CORRECT GUESSES</p>
+            <h3 className="font-display text-2xl text-white tracking-wide leading-none mb-4">Correct Guesses</h3>
             <div className="grid grid-cols-3 gap-3 text-center">
               <PlayerStat name="Hermz" value={mattAllTime}   sub={`${pctStrFull(mattAllTime, totalPossible)} accuracy`}   color="gold" leading={mattAllTime > dustinAllTime} />
               <div className="flex flex-col items-center justify-center">
@@ -822,17 +822,14 @@ export default function OscarsStats() {
         {/* ── 2. Streaks + Peak/Valley ──────────────────────────────────── */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="card">
-            <p className="kicker mb-1">WIN STREAKS</p>
-            <p className="text-xs text-gray-400 mt-0.5 mb-4">
-              Hermz longest: {streaks.mattLongest} · Dust longest: {streaks.dustinLongest}
-            </p>
+            <h3 className="font-display text-2xl text-white tracking-wide leading-none mb-4">Win Streaks</h3>
             <ActiveStreak streaks={streaks} />
             <div className="mt-5 pt-4 border-t border-night-700/60">
               <StreakTimeline sorted={sorted} />
             </div>
           </div>
           <div className="card">
-            <p className="kicker mb-4">PEAK &amp; VALLEY</p>
+            <h3 className="font-display text-2xl text-white tracking-wide leading-none mb-4">Peak &amp; Valley</h3>
             <div className="grid grid-cols-2 gap-4 mb-5">
               <div>
                 <div className="font-mono text-xs tracking-kicker text-gold-400 mb-2">HERMZ</div>
@@ -877,8 +874,8 @@ export default function OscarsStats() {
 
         {/* ── 3. Timeline ─────────────────────────────────────────────────── */}
         <div className="card">
-          <p className="kicker">CORRECT GUESSES OVER TIME</p>
-          <p className="text-xs text-gray-400 mt-1 mb-5">◆ = tiebreaker year · dashed teal = agreement rate (right axis)</p>
+          <h3 className="font-display text-2xl text-white tracking-wide leading-none">Correct Guesses Over Time</h3>
+          <p className="text-xs text-gray-400 mt-2 mb-5">◆ = tiebreaker year · dashed teal = agreement rate (right axis)</p>
           <ResponsiveContainer width="100%" height={280}>
             <LineChart data={timelineData} margin={{ top:5, right:0, left:0, bottom:5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
@@ -898,8 +895,8 @@ export default function OscarsStats() {
 
         {/* ── 4. Category Streaks ──────────────────────────────────────── */}
         <div className="card">
-          <p className="kicker mb-1">CATEGORY STREAKS</p>
-          <p className="text-sm text-gray-400 mt-0.5 mb-6">
+          <h3 className="font-display text-2xl text-white tracking-wide leading-none">Category Streaks</h3>
+          <p className="text-sm text-gray-400 mt-2 mb-6">
             Hot and cold runs of 3+ years · longest-ever runs of 4+
           </p>
           <CategoryStreaksSection catData={catData} sorted={sorted} />
@@ -907,17 +904,14 @@ export default function OscarsStats() {
 
         {/* ── 5. Annual Difficulty ──────────────────────────────────────── */}
         <div className="card">
-          <p className="kicker mb-1">ANNUAL DIFFICULTY</p>
-          <p className="text-sm text-gray-400 mt-0.5 mb-4">Combined accuracy of both players · hardest years first</p>
+          <h3 className="font-display text-2xl text-white tracking-wide leading-none">Annual Difficulty</h3>
+          <p className="text-sm text-gray-400 mt-2 mb-4">Combined accuracy of both players · hardest years first</p>
           <DifficultyRating sorted={sorted} />
         </div>
 
         {/* ── 6. Category Heatmap ──────────────────────────────────────── */}
         <div className="card">
-          <p className="kicker">CATEGORY HEATMAP</p>
-          <p className="text-xs text-gray-400 mt-1 mb-5">
-            Every category, every year · tap a chip to filter
-          </p>
+          <h3 className="font-display text-2xl text-white tracking-wide leading-none mb-5">Category Heatmap</h3>
           <CategoryHeatmap catData={catData} sorted={sorted} />
         </div>
 
@@ -931,10 +925,10 @@ export default function OscarsStats() {
         <div className="card p-0 overflow-hidden">
           <div className="px-6 pt-5 pb-3 border-b border-night-700/60 flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="kicker">CATEGORY BREAKDOWN</p>
-              <p className="text-xs text-gray-400 mt-1">
+              <h3 className="font-display text-2xl text-white tracking-wide leading-none">Category Breakdown</h3>
+              <p className="text-xs text-gray-400 mt-2">
                 {catView === 'ownership'
-                  ? 'Who owns each category · faded = retired'
+                  ? 'Faded = retired'
                   : 'Click any row for the year-by-year record'}
               </p>
             </div>
@@ -964,14 +958,6 @@ export default function OscarsStats() {
                 <span className="font-display text-2xl" style={{ color: DC }}>{dCW}</span>
                 <div className="kicker-dim mt-1">DUST LEADS</div>
               </div>
-            </div>
-          )}
-
-          {catView === 'accuracy' && (
-            <div className="flex items-center gap-4 px-6 py-2.5 border-b border-night-700/60 text-xs">
-              <span style={{ color: HC }}>■ Hermz fills left</span>
-              <span style={{ color: DC }}>■ Dust fills right</span>
-              <span className="text-gray-400">(brighter bar = leader)</span>
             </div>
           )}
 
@@ -1031,8 +1017,7 @@ function EraSplitCard({ sorted }) {
   ]
   return (
     <div className="card">
-      <p className="kicker mb-1">ERA SPLIT</p>
-      <p className="text-xs text-gray-400 mt-0.5 mb-4">Early era vs modern era · titles and accuracy</p>
+      <h3 className="font-display text-2xl text-white tracking-wide leading-none mb-4">Era Split</h3>
       <div className="grid grid-cols-2 gap-4">
         {[e1, e2].map(era => (
           <div key={era.label} className="bg-night-700/40 rounded-xl p-4 text-center">
@@ -1087,8 +1072,8 @@ function MoneyKryptoniteCard({ catData }) {
 
   return (
     <div className="card">
-      <p className="kicker mb-1">MONEY &amp; KRYPTONITE</p>
-      <p className="text-xs text-gray-400 mt-0.5 mb-4">Best and worst categories per player · min {MIN_YEARS_PLAYED} years played</p>
+      <h3 className="font-display text-2xl text-white tracking-wide leading-none">Money &amp; Kryptonite</h3>
+      <p className="text-xs text-gray-400 mt-2 mb-4">Minimum {MIN_YEARS_PLAYED} years played</p>
       <div className="grid grid-cols-2 gap-5">
         {cols.map(p => (
           <div key={p.who}>
@@ -1114,7 +1099,7 @@ function BigPct({ who, pct, total, leading }) {
   const name = who === 'matt' ? 'HERMZ' : 'DUST'
   return (
     <div className="text-center px-2 relative">
-      <div className={`font-mono text-xs tracking-cinema ${c} mb-1.5`}>{name}{leading && ' · LEADING'}</div>
+      <div className={`font-mono text-xs tracking-cinema ${c} mb-1.5`}>{name}</div>
       <div className="flex items-baseline justify-center gap-1">
         <span className="font-display text-4xl text-white leading-none tracking-wide">{typeof pct === 'number' ? pct.toFixed(2) : pct}</span>
         <span className="font-mono text-sm text-gray-400">%</span>

@@ -2,6 +2,16 @@
 
 const UPDATES = [
   {
+    date: 'July 16, 2026',
+    entries: [
+      {
+        tag: 'Design',
+        color: 'gold',
+        text: 'Stats page, quieter and bolder. The card titles (Peak & Valley, Category Heatmap, and friends) stepped up from small gold print to proper display headlines, and the spindly serif under the big page title became clean type. Meanwhile the page stopped narrating its own visuals: no more "LEADING" tag next to the number that is obviously bigger, no more spelling out each player\'s longest streak right above the timeline that shows it, no more legend explaining that the gold bar belongs to the gold player. The numbers speak; the labels stopped repeating them.',
+      },
+    ],
+  },
+  {
     date: 'July 15, 2026',
     entries: [
       {
