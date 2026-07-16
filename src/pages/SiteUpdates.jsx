@@ -5,6 +5,11 @@ const UPDATES = [
     date: 'July 16, 2026',
     entries: [
       {
+        tag: 'Oscars',
+        color: 'gold',
+        text: 'Three new lenses on 19 years of picks. The Deciders finds the categories that actually swung championships — in every year decided by two categories or fewer, it names the split picks the champion won, where flipping a single call flips the title. The Upset Board tallies the winners that beat you both: the shock-rate headline, the categories that blindside you most, and the most chaotic ceremonies. And the Category Breakdown card gained a fourth view, Agreement — a bar per category showing how often you two pick the same nominee, crowned by your most-alike and least-alike categories.',
+      },
+      {
         tag: 'Design',
         color: 'gold',
         text: 'Stats page, quieter and bolder. The card titles (Peak & Valley, Category Heatmap, and friends) stepped up from small gold print to proper display headlines, and the spindly serif under the big page title became clean type. Meanwhile the page stopped narrating its own visuals: no more "LEADING" tag next to the number that is obviously bigger, no more spelling out each player\'s longest streak right above the timeline that shows it, no more legend explaining that the gold bar belongs to the gold player. The numbers speak; the labels stopped repeating them.',

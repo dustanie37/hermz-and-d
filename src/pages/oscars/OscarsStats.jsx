@@ -82,6 +82,18 @@ function MiniBar({ h, d }) {
   )
 }
 
+// single teal bar — how often the two picks matched (Agreement view)
+function AgreeBar({ a }) {
+  return (
+    <div className="flex items-center gap-2 flex-1 min-w-0">
+      <div className="flex-1 h-2.5 bg-night-700 rounded-sm overflow-hidden">
+        <div className="h-full rounded-sm transition-all" style={{ width: `${a}%`, backgroundColor: CC, opacity: 0.8 }} />
+      </div>
+      <span className="font-mono text-xs w-9 sm:w-10 text-right flex-shrink-0" style={{ color: CC }}>{a}%</span>
+    </div>
+  )
+}
+
 function SplitBar({ h, d }) {
   const hL = h > d, dL = d > h
   const total = Math.max(h + d, 1)
@@ -632,14 +644,24 @@ export default function OscarsStats() {
           catMap[cat.id].byYear[yr][user] = { guess: g.guess, correct: g.is_correct }
         }
       }
-      const cats = Object.values(catMap).map(c => ({
-        ...c,
-        mattPct:     pct(c.matt.correct,   c.matt.total),
-        dustinPct:   pct(c.dustin.correct, c.dustin.total),
-        combinedPct: pct(c.matt.correct + c.dustin.correct, c.matt.total + c.dustin.total),
-        isLegacy:    c.active_until !== null && c.active_until !== undefined,
-        isNew:       c.active_from  !== null && c.active_from  > 2008,
-      }))
+      const cats = Object.values(catMap).map(c => {
+        let pairs = 0, agrees = 0
+        for (const d of Object.values(c.byYear)) {
+          if (d.matt?.guess != null && d.dustin?.guess != null) {
+            pairs++
+            if (d.matt.guess === d.dustin.guess) agrees++
+          }
+        }
+        return {
+          ...c,
+          mattPct:     pct(c.matt.correct,   c.matt.total),
+          dustinPct:   pct(c.dustin.correct, c.dustin.total),
+          combinedPct: pct(c.matt.correct + c.dustin.correct, c.matt.total + c.dustin.total),
+          pairs, agreePct: pct(agrees, pairs),
+          isLegacy:    c.active_until !== null && c.active_until !== undefined,
+          isNew:       c.active_from  !== null && c.active_from  > 2008,
+        }
+      })
       setYears((yrData || []).filter(y => y.winner && y.winner !== 'pending'))
       setCatData(cats)
     } catch (err) { setError(err.message) }
@@ -713,6 +735,10 @@ export default function OscarsStats() {
   const hCW  = catData.filter(c => c.mattPct > c.dustinPct).length
   const dCW  = catData.filter(c => c.dustinPct > c.mattPct).length
   const tied = catData.filter(c => c.mattPct === c.dustinPct).length
+
+  const agreeEligible = catData.filter(c => c.pairs >= 8)
+  const mostAlike  = agreeEligible.length ? [...agreeEligible].sort((a, b) => b.agreePct - a.agreePct)[0] : null
+  const leastAlike = agreeEligible.length ? [...agreeEligible].sort((a, b) => a.agreePct - b.agreePct)[0] : null
 
   // ── render ────────────────────────────────────────────────────────────────
   return (
@@ -915,7 +941,13 @@ export default function OscarsStats() {
           <CategoryHeatmap catData={catData} sorted={sorted} />
         </div>
 
-        {/* ── 7. Era Split + Money & Kryptonite ────────────────────────── */}
+        {/* ── 7. The Deciders + Upset Board ────────────────────────────── */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <DecidersCard catData={catData} sorted={sorted} />
+          <UpsetBoard catData={catData} sorted={sorted} />
+        </div>
+
+        {/* ── 8. Era Split + Money & Kryptonite ────────────────────────── */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <EraSplitCard sorted={sorted} />
           <MoneyKryptoniteCard catData={catData} />
@@ -929,11 +961,13 @@ export default function OscarsStats() {
               <p className="text-xs text-gray-400 mt-2">
                 {catView === 'ownership'
                   ? 'Faded = retired'
+                  : catView === 'agreement'
+                  ? 'How often you pick the same nominee'
                   : 'Click any row for the year-by-year record'}
               </p>
             </div>
             <div className="flex items-center gap-1 bg-night-700/60 rounded-full p-1">
-              {[['accuracy','Accuracy'],['h2h','Head-to-Head'],['ownership','Ownership']].map(([val, label]) => (
+              {[['accuracy','Accuracy'],['h2h','Head-to-Head'],['ownership','Ownership'],['agreement','Agreement']].map(([val, label]) => (
                 <button key={val} onClick={() => setCatView(val)}
                   className={`text-xs px-3 py-1.5 rounded-full font-medium transition-colors ${
                     catView === val ? 'bg-white text-night-950' : 'text-gray-400 hover:text-gray-200'
@@ -944,7 +978,7 @@ export default function OscarsStats() {
             </div>
           </div>
 
-          {catView !== 'accuracy' && (
+          {(catView === 'h2h' || catView === 'ownership') && (
             <div className="flex items-center justify-center gap-8 py-3 bg-night-900/40 border-b border-night-700/60">
               <div className="text-center">
                 <span className="font-display text-2xl" style={{ color: HC }}>{hCW}</span>
@@ -957,6 +991,19 @@ export default function OscarsStats() {
               <div className="text-center">
                 <span className="font-display text-2xl" style={{ color: DC }}>{dCW}</span>
                 <div className="kicker-dim mt-1">DUST LEADS</div>
+              </div>
+            </div>
+          )}
+
+          {catView === 'agreement' && mostAlike && leastAlike && (
+            <div className="flex items-center justify-center gap-8 py-3 bg-night-900/40 border-b border-night-700/60">
+              <div className="text-center">
+                <span className="font-display text-2xl" style={{ color: CC }}>{mostAlike.agreePct}%</span>
+                <div className="kicker-dim mt-1">MOST ALIKE · {mostAlike.name.replace('Best ', '').toUpperCase()}</div>
+              </div>
+              <div className="text-center">
+                <span className="font-display text-2xl text-gray-300">{leastAlike.agreePct}%</span>
+                <div className="kicker-dim mt-1">LEAST ALIKE · {leastAlike.name.replace('Best ', '').toUpperCase()}</div>
               </div>
             </div>
           )}
@@ -988,6 +1035,113 @@ export default function OscarsStats() {
               ))}
             </div>
           )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── DecidersCard — the categories that swung championships ──────────────────
+// A "decider" = in a year decided by ≤2 categories (incl. tiebreaker years),
+// a split pick the champion got right — flip that one call and the title flips.
+function DecidersCard({ catData, sorted }) {
+  const byCat = {}
+  let closeYears = 0
+  for (const y of sorted) {
+    if (y.winner !== 'matt' && y.winner !== 'dustin') continue
+    const margin = Math.abs((y.matt_correct||0) - (y.dustin_correct||0))
+    if (margin > 2) continue
+    closeYears++
+    for (const cat of catData) {
+      const d = cat.byYear[y.year]
+      if (!d?.matt || !d?.dustin) continue
+      if (!!d.matt.correct === !!d.dustin.correct) continue
+      const champCorrect = y.winner === 'matt' ? d.matt.correct : d.dustin.correct
+      if (!champCorrect) continue
+      const k = cat.id
+      if (!byCat[k]) byCat[k] = { name: cat.name.replace('Best ', ''), years: [] }
+      byCat[k].years.push(y.year)
+    }
+  }
+  const rows = Object.values(byCat).sort((a, b) => b.years.length - a.years.length).slice(0, 10)
+  return (
+    <div className="card">
+      <h3 className="font-display not-italic text-2xl text-white tracking-wide leading-none">The Deciders</h3>
+      <p className="text-xs text-gray-400 mt-2 mb-3">
+        Split picks the champion won in years decided by ≤2 categories — flip one, the title flips
+      </p>
+      <p className="font-mono text-xs tracking-kicker text-gold-400 uppercase mb-4">
+        {closeYears} of {sorted.length} titles hinged on a category or two
+      </p>
+      <div className="space-y-1.5">
+        {rows.map(r => (
+          <div key={r.name} className="flex items-center gap-3 rounded-lg px-3 py-2 bg-night-800/50 hover:bg-night-800 transition-colors">
+            <span className="font-display not-italic text-3xl leading-none w-8 text-center flex-shrink-0 text-gold-400">{r.years.length}</span>
+            <span className="text-sm text-gray-100 flex-1 min-w-0 truncate">{r.name}</span>
+            <span className="flex flex-wrap gap-1.5 justify-end">
+              {r.years.map(yr => (
+                <Link key={yr} to={`/oscars/${yr}`}
+                  className="font-mono text-xs text-gray-400 hover:text-gold-400 transition-colors">
+                  '{String(yr).slice(2)}
+                </Link>
+              ))}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ── UpsetBoard — winners that beat both players ─────────────────────────────
+function UpsetBoard({ catData, sorted }) {
+  const byCat = {}, byYear = {}
+  let upsets = 0, contested = 0
+  for (const cat of catData) {
+    for (const d of Object.values(cat.byYear)) {
+      if (!d.matt || !d.dustin) continue
+      contested++
+      if (!d.matt.correct && !d.dustin.correct) {
+        upsets++
+        const nm = cat.name.replace('Best ', '')
+        byCat[nm] = (byCat[nm] || 0) + 1
+        byYear[d.year] = (byYear[d.year] || 0) + 1
+      }
+    }
+  }
+  const topCats  = Object.entries(byCat).sort((a, b) => b[1] - a[1]).slice(0, 5)
+  const topYears = Object.entries(byYear).sort((a, b) => b[1] - a[1]).slice(0, 5)
+  const RED = '#f87171'
+  return (
+    <div className="card">
+      <h3 className="font-display not-italic text-2xl text-white tracking-wide leading-none">Upset Board</h3>
+      <p className="text-xs text-gray-400 mt-2 mb-3">Winners neither of you picked</p>
+      <p className="font-mono text-xs tracking-kicker uppercase mb-4" style={{ color: RED }}>
+        {upsets} of {contested} contested calls · {pct(upsets, contested)}% shock rate
+      </p>
+      <div className="grid grid-cols-2 gap-5">
+        <div>
+          <div className="kicker-dim mb-2">SHOCK CATEGORIES</div>
+          <div className="space-y-1.5">
+            {topCats.map(([nm, n]) => (
+              <div key={nm} className="flex items-center gap-3 rounded-lg px-3 py-2 bg-red-900/10">
+                <span className="font-display not-italic text-2xl leading-none w-6 text-center flex-shrink-0" style={{ color: RED }}>{n}</span>
+                <span className="text-sm text-gray-100 min-w-0 truncate">{nm}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div>
+          <div className="kicker-dim mb-2">CHAOS YEARS</div>
+          <div className="space-y-1.5">
+            {topYears.map(([yr, n]) => (
+              <Link key={yr} to={`/oscars/${yr}`}
+                className="flex items-center gap-3 rounded-lg px-3 py-2 bg-red-900/10 hover:bg-red-900/20 transition-colors">
+                <span className="font-display not-italic text-2xl leading-none w-6 text-center flex-shrink-0" style={{ color: RED }}>{n}</span>
+                <span className="font-mono text-sm text-gray-100">{yr}</span>
+              </Link>
+            ))}
+          </div>
         </div>
       </div>
     </div>
@@ -1186,10 +1340,18 @@ function CategoryRow({ cat, view, expanded, onToggle }) {
         <div className="w-24 sm:w-44 flex-shrink-0 text-right">
           <span className="text-xs text-gray-300 leading-tight block truncate">{cat.name.replace('Best ', '')}</span>
         </div>
-        {view === 'accuracy' ? <MiniBar h={h} d={d} /> : <SplitBar h={h} d={d} />}
-        <div className="hidden sm:block w-14 flex-shrink-0 text-xs font-semibold text-right" style={{ color: edgeColor }}>
-          {edgeLabel}
-        </div>
+        {view === 'accuracy' ? <MiniBar h={h} d={d} />
+          : view === 'agreement' ? <AgreeBar a={cat.agreePct} />
+          : <SplitBar h={h} d={d} />}
+        {view === 'agreement' ? (
+          <div className="hidden sm:block w-14 flex-shrink-0 text-xs text-gray-400 text-right">
+            {cat.pairs} yrs
+          </div>
+        ) : (
+          <div className="hidden sm:block w-14 flex-shrink-0 text-xs font-semibold text-right" style={{ color: edgeColor }}>
+            {edgeLabel}
+          </div>
+        )}
         <div className={`text-gray-500 text-xs transition-transform ${expanded ? 'rotate-180' : ''}`}>▼</div>
       </div>
 
