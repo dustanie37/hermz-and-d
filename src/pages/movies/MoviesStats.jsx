@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import FilmStill from '../../components/FilmStill'
 import { DC, HC, CC, sortTitle } from '../../lib/helpers'
-import { setEditions, SCORE_CATS } from './stats/shared'
+import { setEditions, latestEventYear, SCORE_CATS } from './stats/shared'
 import ChartsTab from './stats/ChartsTab'
 import AllEventsTab from './stats/AllEventsTab'
 import RivalryTab from './stats/RivalryTab'
@@ -30,7 +30,9 @@ function Loading({ label = 'LOADING…' }) {
 export default function MoviesStats() {
   const [searchParams, setSearchParams] = useSearchParams()
 
-  const eventYear = Number(searchParams.get('event')) || 2026
+  // No explicit ?event= → follow the latest published edition (recomputed after
+  // loadMeta reassigns EVENTS_ORDER, so a new edition becomes the default automatically)
+  const eventYear = Number(searchParams.get('event')) || latestEventYear()
   const view      = searchParams.get('view') || 'combined'
   const rawTab    = searchParams.get('tab')  || 'charts'
   const tab       = TABS.some(t => t.value === rawTab) ? rawTab : 'charts'
