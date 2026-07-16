@@ -5,6 +5,16 @@ const UPDATES = [
     date: 'July 16, 2026',
     entries: [
       {
+        tag: 'Films',
+        color: 'film',
+        text: 'The film stats page got the full Oscar-stats treatment — starting with four new toys. The Podium shows every edition\'s combined top three with each player\'s personal #1 beneath, plus the films with the most podium finishes. Edition Trends charts the Nostalgia Index (is the Canon aging with us?) and Score Inflation (are we becoming softer graders?). Money & Kryptonite names each player\'s most and least generous scoring categories across all editions and crowns the softer grader. And Guilty Pleasures & Homework confesses everything: the low-acclaim films we rank anyway, and the certified classics we rank lowest.',
+      },
+      {
+        tag: 'Design',
+        color: 'film',
+        text: 'Film stats, quieter and bolder — the same say-less pass the Oscar page got. Card titles stepped up to proper display headlines, the small italic serif captions became clean labels (or disappeared where they only narrated the visual), micro-print came up to the reading floor, and dim grays brightened. Rank Movements and All-Time Arc merged into one card with an Edition-to-Edition / First-to-Last toggle, and the Podcast Prep tab retired — the Cinematrix workbench does that job properly now. Under the hood, the 2,000-line stats page split into per-tab files, so future stats work lands faster.',
+      },
+      {
         tag: 'Design',
         color: 'gold',
         text: 'The stats page now reads top to bottom like a story. First the title fight — championship record, correct guesses, win streaks, and the era split side by side. Then time — the 19-year accuracy chart. Then the years — difficulty rankings, each player\'s peak and valley, and the chaos of the Upset Board. Then the categories — the heatmap, the title-swinging Deciders next to Money & Kryptonite, the streaks, and the full category table. The overall agreement numbers also moved out of Peak & Valley and into the Agreement view where they belong (and the "Disagree" tile retired — it was just 100 minus Agree).',
