@@ -763,7 +763,7 @@ export default function OscarsStats() {
         {/* ── 1. Championship + Correct cards ─────────────────────────────── */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="card">
-            <h3 className="font-display text-2xl text-white tracking-wide leading-none mb-4">Championship Record</h3>
+            <h3 className="font-display not-italic text-2xl text-white tracking-wide leading-none mb-4">Championship Record</h3>
             <div className="grid grid-cols-3 gap-3 text-center">
               <PlayerStat name="Hermz" value={mattWins}   sub={pctStr(mattWins, years.length)}   color="gold" leading={mattWins > dustinWins} />
               <div className="flex flex-col items-center justify-center">
@@ -797,7 +797,7 @@ export default function OscarsStats() {
           </div>
 
           <div className="card">
-            <h3 className="font-display text-2xl text-white tracking-wide leading-none mb-4">Correct Guesses</h3>
+            <h3 className="font-display not-italic text-2xl text-white tracking-wide leading-none mb-4">Correct Guesses</h3>
             <div className="grid grid-cols-3 gap-3 text-center">
               <PlayerStat name="Hermz" value={mattAllTime}   sub={`${pctStrFull(mattAllTime, totalPossible)} accuracy`}   color="gold" leading={mattAllTime > dustinAllTime} />
               <div className="flex flex-col items-center justify-center">
@@ -822,14 +822,14 @@ export default function OscarsStats() {
         {/* ── 2. Streaks + Peak/Valley ──────────────────────────────────── */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="card">
-            <h3 className="font-display text-2xl text-white tracking-wide leading-none mb-4">Win Streaks</h3>
+            <h3 className="font-display not-italic text-2xl text-white tracking-wide leading-none mb-4">Win Streaks</h3>
             <ActiveStreak streaks={streaks} />
             <div className="mt-5 pt-4 border-t border-night-700/60">
               <StreakTimeline sorted={sorted} />
             </div>
           </div>
           <div className="card">
-            <h3 className="font-display text-2xl text-white tracking-wide leading-none mb-4">Peak &amp; Valley</h3>
+            <h3 className="font-display not-italic text-2xl text-white tracking-wide leading-none mb-4">Peak &amp; Valley</h3>
             <div className="grid grid-cols-2 gap-4 mb-5">
               <div>
                 <div className="font-mono text-xs tracking-kicker text-gold-400 mb-2">HERMZ</div>
@@ -874,7 +874,7 @@ export default function OscarsStats() {
 
         {/* ── 3. Timeline ─────────────────────────────────────────────────── */}
         <div className="card">
-          <h3 className="font-display text-2xl text-white tracking-wide leading-none">Correct Guesses Over Time</h3>
+          <h3 className="font-display not-italic text-2xl text-white tracking-wide leading-none">Correct Guesses Over Time</h3>
           <p className="text-xs text-gray-400 mt-2 mb-5">◆ = tiebreaker year · dashed teal = agreement rate (right axis)</p>
           <ResponsiveContainer width="100%" height={280}>
             <LineChart data={timelineData} margin={{ top:5, right:0, left:0, bottom:5 }}>
@@ -895,7 +895,7 @@ export default function OscarsStats() {
 
         {/* ── 4. Category Streaks ──────────────────────────────────────── */}
         <div className="card">
-          <h3 className="font-display text-2xl text-white tracking-wide leading-none">Category Streaks</h3>
+          <h3 className="font-display not-italic text-2xl text-white tracking-wide leading-none">Category Streaks</h3>
           <p className="text-sm text-gray-400 mt-2 mb-6">
             Hot and cold runs of 3+ years · longest-ever runs of 4+
           </p>
@@ -904,14 +904,14 @@ export default function OscarsStats() {
 
         {/* ── 5. Annual Difficulty ──────────────────────────────────────── */}
         <div className="card">
-          <h3 className="font-display text-2xl text-white tracking-wide leading-none">Annual Difficulty</h3>
+          <h3 className="font-display not-italic text-2xl text-white tracking-wide leading-none">Annual Difficulty</h3>
           <p className="text-sm text-gray-400 mt-2 mb-4">Combined accuracy of both players · hardest years first</p>
           <DifficultyRating sorted={sorted} />
         </div>
 
         {/* ── 6. Category Heatmap ──────────────────────────────────────── */}
         <div className="card">
-          <h3 className="font-display text-2xl text-white tracking-wide leading-none mb-5">Category Heatmap</h3>
+          <h3 className="font-display not-italic text-2xl text-white tracking-wide leading-none mb-5">Category Heatmap</h3>
           <CategoryHeatmap catData={catData} sorted={sorted} />
         </div>
 
@@ -925,7 +925,7 @@ export default function OscarsStats() {
         <div className="card p-0 overflow-hidden">
           <div className="px-6 pt-5 pb-3 border-b border-night-700/60 flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h3 className="font-display text-2xl text-white tracking-wide leading-none">Category Breakdown</h3>
+              <h3 className="font-display not-italic text-2xl text-white tracking-wide leading-none">Category Breakdown</h3>
               <p className="text-xs text-gray-400 mt-2">
                 {catView === 'ownership'
                   ? 'Faded = retired'
@@ -1017,7 +1017,7 @@ function EraSplitCard({ sorted }) {
   ]
   return (
     <div className="card">
-      <h3 className="font-display text-2xl text-white tracking-wide leading-none mb-4">Era Split</h3>
+      <h3 className="font-display not-italic text-2xl text-white tracking-wide leading-none mb-4">Era Split</h3>
       <div className="grid grid-cols-2 gap-4">
         {[e1, e2].map(era => (
           <div key={era.label} className="bg-night-700/40 rounded-xl p-4 text-center">
@@ -1072,7 +1072,7 @@ function MoneyKryptoniteCard({ catData }) {
 
   return (
     <div className="card">
-      <h3 className="font-display text-2xl text-white tracking-wide leading-none">Money &amp; Kryptonite</h3>
+      <h3 className="font-display not-italic text-2xl text-white tracking-wide leading-none">Money &amp; Kryptonite</h3>
       <p className="text-xs text-gray-400 mt-2 mb-4">Minimum {MIN_YEARS_PLAYED} years played</p>
       <div className="grid grid-cols-2 gap-5">
         {cols.map(p => (
