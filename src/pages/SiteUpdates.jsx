@@ -5,6 +5,11 @@ const UPDATES = [
     date: 'July 16, 2026',
     entries: [
       {
+        tag: 'Design',
+        color: 'gold',
+        text: 'The stats page now reads top to bottom like a story. First the title fight — championship record, correct guesses, win streaks, and the era split side by side. Then time — the 19-year accuracy chart. Then the years — difficulty rankings, each player\'s peak and valley, and the chaos of the Upset Board. Then the categories — the heatmap, the title-swinging Deciders next to Money & Kryptonite, the streaks, and the full category table. The overall agreement numbers also moved out of Peak & Valley and into the Agreement view where they belong (and the "Disagree" tile retired — it was just 100 minus Agree).',
+      },
+      {
         tag: 'Oscars',
         color: 'gold',
         text: 'Three new lenses on 19 years of picks. The Deciders finds the categories that actually swung championships — in every year decided by two categories or fewer, it names the split picks the champion won, where flipping a single call flips the title. The Upset Board tallies the winners that beat you both: the shock-rate headline, the categories that blindside you most, and the most chaotic ceremonies. And the Category Breakdown card gained a fourth view, Agreement — a bar per category showing how often you two pick the same nominee, crowned by your most-alike and least-alike categories.',

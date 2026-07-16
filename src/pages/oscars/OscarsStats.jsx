@@ -736,9 +736,6 @@ export default function OscarsStats() {
   const dCW  = catData.filter(c => c.dustinPct > c.mattPct).length
   const tied = catData.filter(c => c.mattPct === c.dustinPct).length
 
-  const agreeEligible = catData.filter(c => c.pairs >= 8)
-  const mostAlike  = agreeEligible.length ? [...agreeEligible].sort((a, b) => b.agreePct - a.agreePct)[0] : null
-  const leastAlike = agreeEligible.length ? [...agreeEligible].sort((a, b) => a.agreePct - b.agreePct)[0] : null
 
   // ── render ────────────────────────────────────────────────────────────────
   return (
@@ -854,48 +851,7 @@ export default function OscarsStats() {
               <StreakTimeline sorted={sorted} />
             </div>
           </div>
-          <div className="card">
-            <h3 className="font-display not-italic text-2xl text-white tracking-wide leading-none mb-4">Peak &amp; Valley</h3>
-            <div className="grid grid-cols-2 gap-4 mb-5">
-              <div>
-                <div className="font-mono text-xs tracking-kicker text-gold-400 mb-2">HERMZ</div>
-                <PeakRow label="Best"  year={mattBest?.year}   value={mattBest?.matt_correct}    total={mattBest?.total_categories} />
-                <PeakRow label="Worst" year={mattWorst?.year}  value={mattWorst?.matt_correct}   total={mattWorst?.total_categories} isWorst />
-              </div>
-              <div>
-                <div className="font-mono text-xs tracking-kicker text-film-400 mb-2">DUST</div>
-                <PeakRow label="Best"  year={dustinBest?.year}  value={dustinBest?.dustin_correct}  total={dustinBest?.total_categories} />
-                <PeakRow label="Worst" year={dustinWorst?.year} value={dustinWorst?.dustin_correct} total={dustinWorst?.total_categories} isWorst />
-              </div>
-            </div>
-            <div className="pt-4 border-t border-night-700">
-              <p className="kicker mb-3">AGREEMENT RATE</p>
-              <div className="grid grid-cols-3 text-center gap-2 mb-4">
-                <div className="bg-night-700/40 rounded-xl py-2.5 px-2">
-                  <div className="font-display text-2xl text-white">{agreePct}%</div>
-                  <div className="kicker-dim mt-1.5">AGREE</div>
-                </div>
-                <div className="bg-emerald-900/30 border border-emerald-700/40 rounded-xl py-2.5 px-2">
-                  <div className="font-display text-2xl text-emerald-400">{agreeAccuracy}%</div>
-                  <div className="kicker-dim mt-1.5">AGREED · RIGHT</div>
-                </div>
-                <div className="bg-night-700/40 rounded-xl py-2.5 px-2">
-                  <div className="font-display text-2xl text-white">{100 - agreePct}%</div>
-                  <div className="kicker-dim mt-1.5">DISAGREE</div>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3 text-center">
-                <div>
-                  <div className="font-mono text-xs tracking-cinema mb-1" style={{ color: HC }}>HERMZ WHEN DISAGREE</div>
-                  <div className="font-display text-xl" style={{ color: HC }}>{hermzEdgePct}%</div>
-                </div>
-                <div>
-                  <div className="font-mono text-xs tracking-cinema mb-1" style={{ color: DC }}>DUST WHEN DISAGREE</div>
-                  <div className="font-display text-xl" style={{ color: DC }}>{dustEdgePct}%</div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <EraSplitCard sorted={sorted} />
         </div>
 
         {/* ── 3. Timeline ─────────────────────────────────────────────────── */}
@@ -919,20 +875,31 @@ export default function OscarsStats() {
           </ResponsiveContainer>
         </div>
 
-        {/* ── 4. Category Streaks ──────────────────────────────────────── */}
-        <div className="card">
-          <h3 className="font-display not-italic text-2xl text-white tracking-wide leading-none">Category Streaks</h3>
-          <p className="text-sm text-gray-400 mt-2 mb-6">
-            Hot and cold runs of 3+ years · longest-ever runs of 4+
-          </p>
-          <CategoryStreaksSection catData={catData} sorted={sorted} />
-        </div>
-
-        {/* ── 5. Annual Difficulty ──────────────────────────────────────── */}
+        {/* ── 4. Annual Difficulty ──────────────────────────────────────── */}
         <div className="card">
           <h3 className="font-display not-italic text-2xl text-white tracking-wide leading-none">Annual Difficulty</h3>
           <p className="text-sm text-gray-400 mt-2 mb-4">Combined accuracy of both players · hardest years first</p>
           <DifficultyRating sorted={sorted} />
+        </div>
+
+        {/* ── 5. Peak & Valley + Upset Board ───────────────────────────── */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="card">
+            <h3 className="font-display not-italic text-2xl text-white tracking-wide leading-none mb-4">Peak &amp; Valley</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <div className="font-mono text-xs tracking-kicker text-gold-400 mb-2">HERMZ</div>
+                <PeakRow label="Best"  year={mattBest?.year}   value={mattBest?.matt_correct}    total={mattBest?.total_categories} />
+                <PeakRow label="Worst" year={mattWorst?.year}  value={mattWorst?.matt_correct}   total={mattWorst?.total_categories} isWorst />
+              </div>
+              <div>
+                <div className="font-mono text-xs tracking-kicker text-film-400 mb-2">DUST</div>
+                <PeakRow label="Best"  year={dustinBest?.year}  value={dustinBest?.dustin_correct}  total={dustinBest?.total_categories} />
+                <PeakRow label="Worst" year={dustinWorst?.year} value={dustinWorst?.dustin_correct} total={dustinWorst?.total_categories} isWorst />
+              </div>
+            </div>
+          </div>
+          <UpsetBoard catData={catData} sorted={sorted} />
         </div>
 
         {/* ── 6. Category Heatmap ──────────────────────────────────────── */}
@@ -941,19 +908,22 @@ export default function OscarsStats() {
           <CategoryHeatmap catData={catData} sorted={sorted} />
         </div>
 
-        {/* ── 7. The Deciders + Upset Board ────────────────────────────── */}
+        {/* ── 7. The Deciders + Money & Kryptonite ─────────────────────── */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <DecidersCard catData={catData} sorted={sorted} />
-          <UpsetBoard catData={catData} sorted={sorted} />
-        </div>
-
-        {/* ── 8. Era Split + Money & Kryptonite ────────────────────────── */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <EraSplitCard sorted={sorted} />
           <MoneyKryptoniteCard catData={catData} />
         </div>
 
-        {/* ── 8. Category Breakdown (Accuracy / Head-to-Head / Ownership) ── */}
+        {/* ── 8. Category Streaks ──────────────────────────────────────── */}
+        <div className="card">
+          <h3 className="font-display not-italic text-2xl text-white tracking-wide leading-none">Category Streaks</h3>
+          <p className="text-sm text-gray-400 mt-2 mb-6">
+            Hot and cold runs of 3+ years · longest-ever runs of 4+
+          </p>
+          <CategoryStreaksSection catData={catData} sorted={sorted} />
+        </div>
+
+        {/* ── 9. Category Breakdown (Accuracy / H2H / Ownership / Agreement) ── */}
         <div className="card p-0 overflow-hidden">
           <div className="px-6 pt-5 pb-3 border-b border-night-700/60 flex flex-wrap items-center justify-between gap-3">
             <div>
@@ -995,15 +965,23 @@ export default function OscarsStats() {
             </div>
           )}
 
-          {catView === 'agreement' && mostAlike && leastAlike && (
-            <div className="flex items-center justify-center gap-8 py-3 bg-night-900/40 border-b border-night-700/60">
+          {catView === 'agreement' && (
+            <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 py-3 px-4 bg-night-900/40 border-b border-night-700/60">
               <div className="text-center">
-                <span className="font-display text-2xl" style={{ color: CC }}>{mostAlike.agreePct}%</span>
-                <div className="kicker-dim mt-1">MOST ALIKE · {mostAlike.name.replace('Best ', '').toUpperCase()}</div>
+                <span className="font-display text-2xl" style={{ color: CC }}>{agreePct}%</span>
+                <div className="kicker-dim mt-1">AGREE</div>
               </div>
               <div className="text-center">
-                <span className="font-display text-2xl text-gray-300">{leastAlike.agreePct}%</span>
-                <div className="kicker-dim mt-1">LEAST ALIKE · {leastAlike.name.replace('Best ', '').toUpperCase()}</div>
+                <span className="font-display text-2xl text-emerald-400">{agreeAccuracy}%</span>
+                <div className="kicker-dim mt-1">AGREED · RIGHT</div>
+              </div>
+              <div className="text-center">
+                <span className="font-display text-2xl" style={{ color: HC }}>{hermzEdgePct}%</span>
+                <div className="kicker-dim mt-1">HERMZ WHEN SPLIT</div>
+              </div>
+              <div className="text-center">
+                <span className="font-display text-2xl" style={{ color: DC }}>{dustEdgePct}%</span>
+                <div className="kicker-dim mt-1">DUST WHEN SPLIT</div>
               </div>
             </div>
           )}
