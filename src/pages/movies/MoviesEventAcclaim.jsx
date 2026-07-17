@@ -102,6 +102,7 @@ export default function MoviesEventAcclaim() {
   const [loading, setLoading]   = useState(true)
   const [error, setError]       = useState(null)
   const [filter, setFilter]     = useState('all')
+  const [advancing, setAdvancing] = useState(false)
 
   useEffect(() => {
     if (!user) return
@@ -177,9 +178,21 @@ export default function MoviesEventAcclaim() {
   }), [rows, filter])
 
   const scoredCount = rows.filter(r => r.acclaim_score != null).length
+  const isDustin = profiles.find(p => p.id === user?.id)?.username === 'dustin'
+  const allAgreed = rows.length > 0 && scoredCount === rows.length
 
   function handleSaved(filmId, score) {
     setRows(prev => prev.map(r => r.id === filmId ? { ...r, acclaim_score: score } : r))
+  }
+
+  async function advanceToScoring() {
+    if (!event || event.status !== 'pooling') return
+    if (!window.confirm('Open scoring?\n\nBoth of you move into the ranking round, with these agreed acclaim scores locked in.')) return
+    setAdvancing(true); setError(null)
+    const { error: advErr } = await supabase.from('ranking_events').update({ status: 'scoring' }).eq('id', event.id)
+    if (advErr) { setError(advErr.message); setAdvancing(false); return }
+    setEvent(prev => ({ ...prev, status: 'scoring' }))
+    setAdvancing(false)
   }
 
   return (
@@ -200,7 +213,7 @@ export default function MoviesEventAcclaim() {
           <h1 className="font-display text-5xl sm:text-6xl text-white tracking-wide leading-none">
             AGREE THE ACCLAIM
           </h1>
-          <p className="font-serif italic text-base text-gray-400 mt-3">
+          <p className="font-sans text-base text-gray-300 mt-3">
             One score per film, settled together — the union of both lists, judged against the confirmed sources.
             {ready && !loading && (
               <span className="text-gray-300 ml-2">· {scoredCount} of {rows.length} scored</span>
@@ -222,7 +235,7 @@ export default function MoviesEventAcclaim() {
         {!loading && !ready && (
           <div className="card text-center py-16 space-y-4">
             <p className="font-display text-2xl text-white tracking-wide leading-none">NOT YET</p>
-            <p className="font-serif italic text-base text-gray-500 max-w-md mx-auto">
+            <p className="font-sans text-base text-gray-400 max-w-md mx-auto">
               {!event
                 ? 'There\'s no active event.'
                 : !bothLocked
@@ -234,6 +247,35 @@ export default function MoviesEventAcclaim() {
 
         {!loading && ready && (
           <>
+            {/* Advance banner — makes "acclaim done, move to scoring" unmistakable */}
+            <div className={`mb-6 rounded-xl border p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3
+              ${allAgreed && event.status === 'pooling' ? 'border-gold-500/50 bg-gold-500/[0.07]' : 'border-night-600 bg-night-800/40'}`}>
+              <div className="flex-1">
+                <p className="font-display text-2xl text-white tracking-wide leading-none">
+                  {event.status !== 'pooling'
+                    ? 'SCORING IS OPEN'
+                    : allAgreed ? 'ACCLAIM AGREED — READY TO SCORE' : `ACCLAIM · ${scoredCount} OF ${rows.length} AGREED`}
+                </p>
+                <p className="font-sans text-sm text-gray-300 mt-1.5">
+                  {event.status !== 'pooling'
+                    ? 'Acclaim is settled and scoring has begun — head to the scoring page when you\'re ready.'
+                    : allAgreed
+                    ? (isDustin
+                        ? 'Every film has an agreed score. Open scoring to move you both into the ranking round.'
+                        : 'Every film has an agreed score. Dustin can open scoring whenever you\'re both happy with these.')
+                    : `Agree a score on the ${rows.length - scoredCount} film${rows.length - scoredCount === 1 ? '' : 's'} still showing “—”, then you can move on to scoring.`}
+                </p>
+              </div>
+              {event.status !== 'pooling' ? (
+                <Link to="/movies/score" className="btn-gold text-sm whitespace-nowrap self-start sm:self-auto">Go to Scoring →</Link>
+              ) : allAgreed && isDustin ? (
+                <button onClick={advanceToScoring} disabled={advancing}
+                        className="btn-gold text-sm whitespace-nowrap self-start sm:self-auto disabled:opacity-50">
+                  {advancing ? 'Opening…' : 'Open Scoring →'}
+                </button>
+              ) : null}
+            </div>
+
             {/* Filters + sources summary */}
             <div className="flex items-center gap-1 mb-6 border-b border-white/[0.06] flex-wrap">
               {FILTERS.map(f => (
@@ -251,7 +293,7 @@ export default function MoviesEventAcclaim() {
             </div>
 
             {/* Auto-suggest placeholder note */}
-            <p className="font-serif italic text-xs text-gray-600 mb-6">
+            <p className="font-sans text-sm text-gray-400 mb-6">
               Suggested scores will appear here once the acclaim rules are settled — for now, the evidence is laid
               out and the verdict is yours.
             </p>
@@ -307,7 +349,7 @@ export default function MoviesEventAcclaim() {
               ))}
               {filtered.length === 0 && (
                 <div className="card text-center py-12">
-                  <p className="font-serif italic text-base text-gray-500">Nothing matches this filter.</p>
+                  <p className="font-sans text-base text-gray-400">Nothing matches this filter.</p>
                 </div>
               )}
             </div>

@@ -26,21 +26,21 @@ function PillRow({ label, value, max, onPick, locked = false }) {
   return (
     <div className="py-2.5 border-b border-white/[0.05] last:border-0">
       <div className="flex items-baseline justify-between mb-1.5">
-        <span className="font-mono text-[11px] tracking-kicker text-gray-400 uppercase">
+        <span className="font-mono text-sm tracking-kicker text-gray-300 uppercase">
           {label}{locked && <span className="text-gold-500 ml-1.5">🔒 agreed</span>}
         </span>
-        <span className={`font-display text-xl leading-none ${value != null ? 'text-white' : 'text-gray-600'}`}>
-          {value ?? '—'}<span className="text-gray-600 text-sm">/{max}</span>
+        <span className={`font-display text-3xl leading-none ${value != null ? 'text-white' : 'text-gray-500'}`}>
+          {value ?? '—'}
         </span>
       </div>
       {!locked && (
-        <div className="flex gap-1 flex-wrap">
+        <div className="flex gap-1.5 flex-wrap">
           {Array.from({ length: max }, (_, i) => i + 1).map(n => (
             <button key={n} onClick={() => onPick(n)}
-              className={`w-8 h-8 rounded-lg font-mono text-xs transition-all
+              className={`w-9 h-9 rounded-lg font-mono text-sm transition-all
                 ${value === n
                   ? 'bg-gold-500 text-night-950 font-bold'
-                  : 'bg-night-700/60 text-gray-400 hover:bg-night-600 hover:text-white'}`}>
+                  : 'bg-night-700/60 text-gray-300 hover:bg-night-600 hover:text-white'}`}>
               {n}
             </button>
           ))}
@@ -292,7 +292,7 @@ export default function MoviesScore() {
             </span>
           </div>
           <h1 className="font-display text-5xl sm:text-6xl text-white tracking-wide leading-none">{heroTitle}</h1>
-          <p className="font-serif italic text-base text-gray-400 mt-3">
+          <p className="font-sans text-base text-gray-300 mt-3">
             {me?.state === 'locked'
               ? 'Locked and sealed until the reveal ceremony.'
               : allScored && rows.length
@@ -318,7 +318,7 @@ export default function MoviesScore() {
         {!loading && (!event || event.status !== 'scoring') && (
           <div className="card text-center py-16 space-y-4">
             <p className="font-display text-2xl text-white tracking-wide leading-none">SCORING HASN'T OPENED</p>
-            <p className="font-serif italic text-base text-gray-500 max-w-sm mx-auto">
+            <p className="font-sans text-base text-gray-400 max-w-sm mx-auto">
               {!event ? 'There\'s no active event.' : `${event.label} is in the ${event.status} stage.`}
             </p>
           </div>
@@ -327,7 +327,7 @@ export default function MoviesScore() {
         {!loading && event?.status === 'scoring' && me && me.state === 'cultivated' && (
           <div className="card text-center py-16 space-y-5">
             <p className="font-display text-3xl text-white tracking-wide leading-none">READY WHEN YOU ARE</p>
-            <p className="font-serif italic text-base text-gray-400 max-w-md mx-auto">
+            <p className="font-sans text-base text-gray-300 max-w-md mx-auto">
               {listSize} films await, shuffled into an order only fate knows. Once you begin, swaps close
               and prior-edition rankings go dark for you until your list is locked.
             </p>
@@ -362,7 +362,7 @@ export default function MoviesScore() {
                 </div>
                 {/* Details + scores */}
                 <div className="md:col-span-3 p-5 sm:p-6">
-                  <p className="font-mono text-[11px] tracking-kicker text-gray-500 uppercase mb-1">
+                  <p className="font-mono text-xs tracking-kicker text-gray-400 uppercase mb-1.5">
                     {current.films?.release_year ?? '—'}
                     {current.films?.director && <> · Directed by {current.films.director}</>}
                   </p>
@@ -370,7 +370,7 @@ export default function MoviesScore() {
                     {current.films?.title?.toUpperCase()}
                   </h2>
                   {cast.length > 0 && (
-                    <p className="font-serif italic text-sm text-gray-400 mb-4">{cast.join(' · ')}</p>
+                    <p className="font-sans text-base text-gray-300 mb-4">{cast.join(' · ')}</p>
                   )}
 
                   <div className="border-t border-white/[0.06]">
@@ -387,10 +387,10 @@ export default function MoviesScore() {
                   <div className="flex items-center gap-4 pt-4 mt-1 border-t border-white/[0.06]">
                     <div>
                       <span className="font-display text-4xl leading-none text-gold-400">{totalOf(current)}</span>
-                      <span className="font-mono text-[10px] tracking-kicker text-gray-500 ml-1">/100</span>
+                      <span className="font-mono text-xs tracking-kicker text-gray-400 ml-1">/100</span>
                     </div>
                     <button onClick={skipFilm}
-                            className="ml-auto font-mono text-[11px] tracking-kicker text-gray-500 hover:text-amber-300 uppercase transition-colors">
+                            className="ml-auto font-mono text-xs tracking-kicker text-gray-400 hover:text-amber-300 uppercase transition-colors">
                       Skip for now →
                     </button>
                     <button onClick={finishFilm} disabled={!isComplete(current)}
@@ -399,7 +399,7 @@ export default function MoviesScore() {
                     </button>
                   </div>
                   {!isComplete(current) && (
-                    <p className="font-serif italic text-xs text-gray-600 mt-2 text-right">
+                    <p className="font-sans text-sm text-gray-400 mt-2 text-right">
                       Score every category to continue — progress saves as you tap.
                     </p>
                   )}
@@ -432,7 +432,7 @@ export default function MoviesScore() {
               )}
             </div>
             {me.state === 'scoring' && (
-              <p className="font-serif italic text-sm text-gray-500 mb-5">
+              <p className="font-sans text-base text-gray-400 mb-5">
                 Tap any film to adjust its scores — the list re-sorts live. Ties break by Impact, then most 10s, most 9s, and so on.
               </p>
             )}
