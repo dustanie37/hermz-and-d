@@ -305,7 +305,7 @@ export default function MoviesEventAdmin() {
         </div>
         <h1 className="font-display text-5xl text-white tracking-wide leading-none">RANKING EVENTS</h1>
         <p className="font-sans text-base text-gray-300 mt-3">
-          Create the next Canon edition and drive it through pooling, scoring, the reveal, and publication.
+          Create and run the next Canon edition, end to end.
         </p>
       </div>
 
