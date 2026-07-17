@@ -318,7 +318,7 @@ export default function MoviesScore() {
         {!loading && (!event || event.status !== 'scoring') && (
           <div className="card text-center py-16 space-y-4">
             <p className="font-display text-2xl text-white tracking-wide leading-none">SCORING HASN'T OPENED</p>
-            <p className="font-sans text-base text-gray-400 max-w-sm mx-auto">
+            <p className="font-sans text-base text-gray-300 max-w-sm mx-auto">
               {!event ? 'There\'s no active event.' : `${event.label} is in the ${event.status} stage.`}
             </p>
           </div>
@@ -399,7 +399,7 @@ export default function MoviesScore() {
                     </button>
                   </div>
                   {!isComplete(current) && (
-                    <p className="font-sans text-sm text-gray-400 mt-2 text-right">
+                    <p className="font-sans text-sm text-gray-300 mt-2 text-right">
                       Score every category to continue — progress saves as you tap.
                     </p>
                   )}
@@ -432,7 +432,7 @@ export default function MoviesScore() {
               )}
             </div>
             {me.state === 'scoring' && (
-              <p className="font-sans text-base text-gray-400 mb-5">
+              <p className="font-sans text-base text-gray-300 mb-5">
                 Tap any film to adjust its scores — the list re-sorts live. Ties break by Impact, then most 10s, most 9s, and so on.
               </p>
             )}

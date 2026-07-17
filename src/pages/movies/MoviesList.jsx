@@ -301,7 +301,7 @@ export default function MoviesList() {
       <div className="max-w-2xl mx-auto px-6 sm:px-10 py-24 text-center space-y-5">
         <p className="font-display text-6xl text-gray-700 leading-none">🎬</p>
         <h1 className="font-display text-4xl text-white tracking-wide leading-none">THE VAULT IS SEALED</h1>
-        <p className="font-serif italic text-base text-gray-400 max-w-md mx-auto">
+        <p className="font-sans text-base text-gray-300 max-w-md mx-auto">
           You're mid-scoring — past rankings stay hidden so every film gets judged fresh.
           They return the moment your list is locked.
         </p>
@@ -368,7 +368,7 @@ export default function MoviesList() {
                   EDITION
                 </span>
               </div>
-              <p className="font-serif italic text-base sm:text-lg text-gray-400 mt-3">
+              <p className="font-sans text-base sm:text-lg text-gray-400 mt-3">
                 {view === 'combined' ? 'Combined' : view === 'matt' ? "Hermz's" : "Dust's"} list ·
                 {rows.length} films · sortable, searchable, with rank movement.
               </p>

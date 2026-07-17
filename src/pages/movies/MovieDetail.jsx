@@ -474,7 +474,7 @@ export default function MovieDetail() {
             <h1 className="font-display text-4xl sm:text-6xl lg:text-7xl text-white tracking-wide leading-[0.92]">
               {film.title?.toUpperCase()}
             </h1>
-            <p className="font-serif italic text-base sm:text-xl text-gray-300 mt-2 sm:mt-3">
+            <p className="font-sans text-base sm:text-xl text-gray-300 mt-2 sm:mt-3">
               {film.director && <>Directed by <span className="text-white">{film.director}</span> · </>}
               {film.release_year}
               {film.writer && <span className="text-gray-400"> · Written by {film.writer}</span>}
@@ -543,7 +543,7 @@ export default function MovieDetail() {
               <>
                 <OscarNomsList noms={oscarNoms} />
                 {oscarNoms.length < (film.oscar_nominations || 0) && (
-                  <p className="text-xs text-gray-500 italic mt-3">
+                  <p className="text-xs text-gray-500 mt-3">
                     Showing {oscarNoms.length} of {film.oscar_nominations} — some categories unavailable.
                   </p>
                 )}
@@ -555,9 +555,9 @@ export default function MovieDetail() {
                 ))}
               </div>
             ) : film.oscar_nominations > 0 ? (
-              <p className="text-sm text-gray-500 italic">Nominated but did not win a tracked category.</p>
+              <p className="text-sm text-gray-500">Nominated but did not win a tracked category.</p>
             ) : (
-              <p className="text-sm text-gray-500 italic">No Oscar nominations on record.</p>
+              <p className="text-sm text-gray-500">No Oscar nominations on record.</p>
             )}
           </div>
 
@@ -621,7 +621,7 @@ export default function MovieDetail() {
                   </div>
                 ) : (
                   <div className="flex items-center gap-3">
-                    <p className="text-sm text-gray-500 italic">No acclaim score set.</p>
+                    <p className="text-sm text-gray-500">No acclaim score set.</p>
                     {suggestion && suggestion.factors.length > 0 && (
                       <span className="text-xs text-gray-500">(algorithm suggests {suggestion.score})</span>
                     )}
@@ -642,7 +642,7 @@ export default function MovieDetail() {
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-gray-500 italic">No tracked list appearances.</p>
+              <p className="text-sm text-gray-500">No tracked list appearances.</p>
             )}
           </div>
         </div>
@@ -650,7 +650,7 @@ export default function MovieDetail() {
         {/* Blackout notice (Phase 12d) */}
         {blackout && (
           <div className="card text-center py-8">
-            <p className="font-serif italic text-sm text-gray-500">
+            <p className="font-sans text-sm text-gray-400">
               Ranking history is hidden while you're scoring — every film gets judged fresh.
               It returns when your list is locked.
             </p>
@@ -690,7 +690,7 @@ export default function MovieDetail() {
                           <div className="flex items-center gap-2">
                             <span className="font-display text-xl text-white tracking-wide">{yr}</span>
                             {isDropOff && (
-                              <span className="text-xs px-1.5 py-0.5 rounded bg-night-700 text-gray-500 italic font-mono">off list</span>
+                              <span className="text-xs px-1.5 py-0.5 rounded bg-night-700 text-gray-500 font-mono">off list</span>
                             )}
                             {onAny && !dPrev && i > 0 && (
                               <span className="badge-gold text-xs">NEW</span>
@@ -703,7 +703,7 @@ export default function MovieDetail() {
                               <span className="font-mono font-bold text-xl text-white">#{dRow.rank}</span>
                               <RankMovement from={dPrev} to={dRow.rank} />
                             </span>
-                          ) : <span className="text-sm text-gray-500 italic">NR</span>}
+                          ) : <span className="text-sm text-gray-500">NR</span>}
                         </td>
                         <td className="table-cell text-center">
                           {mRow ? (
@@ -711,7 +711,7 @@ export default function MovieDetail() {
                               <span className="font-mono font-bold text-xl text-white">#{mRow.rank}</span>
                               <RankMovement from={mPrev} to={mRow.rank} />
                             </span>
-                          ) : <span className="text-sm text-gray-500 italic">NR</span>}
+                          ) : <span className="text-sm text-gray-500">NR</span>}
                         </td>
                         <td className="table-cell text-center">
                           {cRow ? (
@@ -719,10 +719,10 @@ export default function MovieDetail() {
                               <span className="font-mono font-bold text-xl" style={{ color: CC }}>#{cRow.combined_rank}</span>
                               <RankMovement from={cPrev} to={cRow.combined_rank} />
                             </span>
-                          ) : <span className="text-sm text-gray-500 italic">NR</span>}
+                          ) : <span className="text-sm text-gray-500">NR</span>}
                         </td>
                         <td className="table-cell text-center hidden sm:table-cell">
-                          {cRow ? <span className="font-mono font-bold text-white">{cRow.total_score}</span> : <span className="text-sm text-gray-500 italic">—</span>}
+                          {cRow ? <span className="font-mono font-bold text-white">{cRow.total_score}</span> : <span className="text-sm text-gray-500">—</span>}
                         </td>
                       </tr>
                     )
@@ -772,7 +772,7 @@ export default function MovieDetail() {
 
         {!blackout && appearsIn.length === 0 && (
           <div className="card text-center py-10">
-            <p className="text-gray-500 text-sm italic">This film has not appeared on any ranking list.</p>
+            <p className="text-gray-500 text-sm">This film has not appeared on any ranking list.</p>
           </div>
         )}
       </div>

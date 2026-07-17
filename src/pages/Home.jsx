@@ -107,7 +107,7 @@ export default function Home() {
                            text-white tracking-wide">
               HERMZ <span className="text-gray-500">&amp;</span> D
             </h1>
-            <p className="font-serif italic text-lg sm:text-xl text-gray-400 mt-3 max-w-3xl leading-snug">
+            <p className="font-sans text-lg sm:text-xl text-gray-400 mt-3 max-w-3xl leading-snug">
               Two friends, three hundred and five films, one long running Oscar competition.
             </p>
           </div>
@@ -270,7 +270,7 @@ export default function Home() {
                          className="aspect-[2/3] rounded-md border border-white/10 shadow-still" />
             ))}
           </div>
-          <div className="mt-4 font-sans text-xs text-gray-500">
+          <div className="mt-4 font-sans text-sm text-gray-400">
             {moviesData?.events.length ?? '—'} editions · 2001 → {moviesData?.latestEvent?.year ?? '—'}
           </div>
         </Link>

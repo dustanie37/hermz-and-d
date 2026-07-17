@@ -134,7 +134,7 @@ function PlayerCard({ who, pick, film, onBothLists, years, priorRanks, canReveal
                 {revealing ? 'Revealing…' : `Reveal ${isD ? 'Dustin' : 'Hermz'}'s pick`}
               </button>
             ) : (
-              <p className="font-sans text-sm text-gray-400">waits its turn…</p>
+              <p className="font-sans text-sm text-gray-300">waits its turn…</p>
             )}
           </div>
         </div>
@@ -399,7 +399,7 @@ export default function MoviesCeremony() {
         {!loading && !ceremonyOpen && (
           <div className="card text-center py-16 space-y-4">
             <p className="font-display text-2xl text-white tracking-wide leading-none">THE CURTAIN IS DOWN</p>
-            <p className="font-sans text-base text-gray-400 max-w-sm mx-auto">
+            <p className="font-sans text-base text-gray-300 max-w-sm mx-auto">
               {!event ? 'There\'s no active event.' : 'The ceremony opens once both lists are locked.'}
             </p>
           </div>
@@ -487,7 +487,7 @@ export default function MoviesCeremony() {
                     <span className="font-display text-xl text-white leading-none">{row.total}</span>
                   </div>
                 ))}
-                <p className="font-sans text-sm text-gray-400 text-center mt-4">
+                <p className="font-sans text-sm text-gray-300 text-center mt-4">
                   The publish step makes it official across the site — that's the next chapter.
                 </p>
               </div>

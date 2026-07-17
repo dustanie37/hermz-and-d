@@ -477,7 +477,7 @@ export default function MoviesEventAdmin() {
                 Cancel
               </button>
             </div>
-            <p className="font-sans text-sm text-gray-400">
+            <p className="font-sans text-sm text-gray-300">
               {newIsTest
                 ? 'A test run works exactly like the real workflow — same pages, same rules — but wears a TEST badge, can never be published, and can be deleted (with all its data) at any time.'
                 : 'The event starts in Setup — nothing is visible to players until you advance it to Pooling.'}
@@ -487,7 +487,7 @@ export default function MoviesEventAdmin() {
           <div className="card text-center py-14 space-y-4">
             <p className="font-display text-6xl text-gray-700 tracking-wide leading-none">🎞</p>
             <p className="font-display text-2xl text-white tracking-wide leading-none">NO ACTIVE EVENT</p>
-            <p className="font-sans text-base text-gray-400 max-w-sm mx-auto">
+            <p className="font-sans text-base text-gray-300 max-w-sm mx-auto">
               All editions are published. Start the next chapter of the Canon whenever you're both ready.
             </p>
             <button onClick={() => setShowCreate(true)} className="btn-gold text-sm mt-2">

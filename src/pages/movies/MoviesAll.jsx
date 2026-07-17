@@ -254,7 +254,7 @@ export default function MoviesAll() {
           <h1 className="font-display text-5xl sm:text-6xl text-white tracking-wide leading-none">
             THE ARCHIVE
           </h1>
-          <p className="font-serif italic text-base text-gray-400 mt-3">
+          <p className="font-sans text-base text-gray-300 mt-3">
             {loading
               ? 'Cataloguing the canon…'
               : `${films.length} films in the database · ${totalOnAny} on at least one combined list`}

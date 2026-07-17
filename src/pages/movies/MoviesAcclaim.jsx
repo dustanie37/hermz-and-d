@@ -88,7 +88,7 @@ function InlineEditor({ film, onSaved }) {
             {film.acclaim_score}
           </span>
         ) : (
-          <span className="font-mono text-[10px] tracking-kicker text-gray-600 w-8 text-right italic">—</span>
+          <span className="font-mono text-[10px] tracking-kicker text-gray-600 w-8 text-right">—</span>
         )}
         {suggest && (
           <span className="font-mono text-[10px] tracking-kicker text-gray-500 hidden sm:inline">≈{suggest.score}</span>
@@ -275,7 +275,7 @@ export default function MoviesAcclaim() {
           <h1 className="font-display text-5xl sm:text-6xl text-white tracking-wide leading-none">
             ACCLAIM SCORES
           </h1>
-          <p className="font-serif italic text-base text-gray-400 mt-3">
+          <p className="font-sans text-base text-gray-300 mt-3">
             Agreed score out of 10 per film — informed by Oscar history and external critics.
           </p>
         </div>
@@ -366,7 +366,7 @@ export default function MoviesAcclaim() {
             {/* Film list */}
             <div className="card p-0 overflow-hidden">
               {displayed.length === 0 ? (
-                <div className="text-center py-12 text-sm text-gray-500 italic">
+                <div className="text-center py-12 text-sm text-gray-500">
                   No films match the current filters.
                 </div>
               ) : (

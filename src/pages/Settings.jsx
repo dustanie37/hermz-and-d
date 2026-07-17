@@ -69,7 +69,7 @@ export default function Settings() {
         <h1 className="font-display text-5xl text-white tracking-wide leading-none">
           SETTINGS
         </h1>
-        <p className="font-serif italic text-base text-gray-400 mt-3 flex items-center gap-2">
+        <p className="font-sans text-base text-gray-300 mt-3 flex items-center gap-2">
           Signed in as
           <span className={`inline-flex items-center gap-1.5 ${nameColor} font-sans not-italic font-medium`}>
             <span className={`w-1.5 h-1.5 rounded-full ${dotColor}`} />

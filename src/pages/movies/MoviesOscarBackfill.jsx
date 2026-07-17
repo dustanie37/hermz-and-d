@@ -373,7 +373,7 @@ export default function MoviesOscarBackfill() {
       <h1 className="font-display text-4xl text-white tracking-wide leading-none mb-3">
         OSCAR NOMS BACKFILL
       </h1>
-      <p className="font-serif italic text-base text-gray-400 mb-7 leading-relaxed">
+      <p className="font-sans text-base text-gray-300 mb-7 leading-relaxed">
         Two-pass tool. <strong className="not-italic text-gray-200">Film-page pass</strong> queries each film's own Wikidata entity.
         <strong className="not-italic text-gray-200"> Ceremony-page pass</strong> uses the Oscar ceremony entity as a fallback —
         more complete for historical films where Wikidata's film page is missing nomination data.

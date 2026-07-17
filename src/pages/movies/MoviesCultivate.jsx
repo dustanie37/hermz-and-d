@@ -392,7 +392,7 @@ export default function MoviesCultivate() {
         {!loading && (!event || event.status === 'setup') && (
           <div className="card text-center py-16 space-y-4">
             <p className="font-display text-2xl text-white tracking-wide leading-none">NOTHING TO CULTIVATE YET</p>
-            <p className="font-sans text-base text-gray-400 max-w-sm mx-auto">
+            <p className="font-sans text-base text-gray-300 max-w-sm mx-auto">
               {event ? 'Pooling hasn\'t opened.' : 'There\'s no active event.'}
               {isDustin && <> Manage events from the <Link to="/movies/event-admin" className="text-gold-400 hover:text-gold-300">event admin</Link>.</>}
             </p>
@@ -402,7 +402,7 @@ export default function MoviesCultivate() {
         {!loading && event && event.status !== 'setup' && event.status !== 'pooling' && !iAmLocked && (
           <div className="card text-center py-16 space-y-4">
             <p className="font-display text-2xl text-white tracking-wide leading-none">CULTIVATION IS CLOSED</p>
-            <p className="font-sans text-base text-gray-400 max-w-sm mx-auto">
+            <p className="font-sans text-base text-gray-300 max-w-sm mx-auto">
               {event.label} has moved on to the {event.status} stage.
             </p>
           </div>
@@ -411,7 +411,7 @@ export default function MoviesCultivate() {
         {!loading && event && event.status === 'pooling' && !me && (
           <div className="card text-center py-16 space-y-4">
             <p className="font-display text-2xl text-white tracking-wide leading-none">NOT A PLAYER</p>
-            <p className="font-sans text-base text-gray-400 max-w-sm mx-auto">
+            <p className="font-sans text-base text-gray-300 max-w-sm mx-auto">
               You're not registered as a player in this event.
             </p>
           </div>
@@ -476,7 +476,7 @@ export default function MoviesCultivate() {
             {/* Grid */}
             {byBucket[tab].length === 0 ? (
               <div className="card text-center py-14">
-                <p className="font-sans text-base text-gray-400">
+                <p className="font-sans text-base text-gray-300">
                   {tab === 'unsorted'
                     ? pool.length === 0
                       ? <>Your pool is empty — <Link to="/movies/pool" className="text-cinema-400 hover:text-cinema-300 not-italic">gather some candidates</Link> first.</>
@@ -551,7 +551,7 @@ export default function MoviesCultivate() {
                   </Link>
                 )}
               </div>
-              <p className="font-sans text-sm text-gray-400 mt-4 text-center">
+              <p className="font-sans text-sm text-gray-300 mt-4 text-center">
                 {canSwap
                   ? 'Hover your own list to make a one-for-one swap — open until scoring begins.'
                   : 'Swaps are closed — scoring has begun.'}

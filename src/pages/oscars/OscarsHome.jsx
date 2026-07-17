@@ -303,7 +303,7 @@ function UpcomingCard({ year: y, isAuthenticated, deleting, onDelete, onMarkComp
             {shortCeremony(y.ceremony_name).toUpperCase()}
           </p>
           {formatDate(y.ceremony_name) && (
-            <p className="font-sans text-xs text-gray-500 mt-0.5">{formatDate(y.ceremony_name)}</p>
+            <p className="font-sans text-sm text-gray-400 mt-0.5">{formatDate(y.ceremony_name)}</p>
           )}
         </div>
         <span className={`font-mono text-[10px] tracking-kicker px-2 py-1 rounded-full border ${meta.chip}`}>

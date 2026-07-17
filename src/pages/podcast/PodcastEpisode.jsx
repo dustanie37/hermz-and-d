@@ -428,7 +428,7 @@ export default function PodcastEpisode() {
           Ep {String(nextEp.episode_num).padStart(2,'0')} →
         </Link>
       ) : (
-        <div className="text-sm text-gray-500 font-mono italic">End of The Canon</div>
+        <div className="text-sm text-gray-500 font-mono">End of The Canon</div>
       )}
     </div>
   )
@@ -452,7 +452,7 @@ export default function PodcastEpisode() {
             <StatusChip status={ep.status} />
           </div>
           <h1 className="font-display text-5xl sm:text-6xl text-white leading-none">{epTitle(ep).toUpperCase()}</h1>
-          <p className="font-serif italic text-gray-400 text-lg mt-2">
+          <p className="font-sans text-gray-400 text-lg mt-2">
             The origin story — Hermz &amp; D and The Canon they built.
           </p>
         </div>
@@ -567,7 +567,7 @@ export default function PodcastEpisode() {
         <div className="card p-6">
           <SectionHeader label="IN THE CANON" sub="Ranking history across all editions" />
           {editionsOn.length === 0 ? (
-            <p className="text-gray-600 text-sm italic">No ranking data found.</p>
+            <p className="text-gray-600 text-sm">No ranking data found.</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full min-w-[480px] text-sm">

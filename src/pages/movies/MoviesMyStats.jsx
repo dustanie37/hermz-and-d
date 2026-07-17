@@ -27,7 +27,7 @@ function StatCard({ value, label, sub, accent = 'text-white' }) {
     <div className="card px-5 py-4">
       <p className={`font-display text-4xl leading-none ${accent}`}>{value}</p>
       <p className="font-mono text-[10px] tracking-kicker text-gray-500 uppercase mt-2">{label}</p>
-      {sub && <p className="font-sans text-sm text-gray-400 mt-1">{sub}</p>}
+      {sub && <p className="font-sans text-sm text-gray-300 mt-1">{sub}</p>}
     </div>
   )
 }
@@ -190,7 +190,7 @@ export default function MoviesMyStats() {
         {!loading && (!event || !me || me.state !== 'locked') && (
           <div className="card text-center py-16 space-y-4">
             <p className="font-display text-2xl text-white tracking-wide leading-none">NOT YET</p>
-            <p className="font-sans text-base text-gray-400 max-w-sm mx-auto">
+            <p className="font-sans text-base text-gray-300 max-w-sm mx-auto">
               {!event ? 'There\'s no active event.'
                 : me?.state === 'scoring' ? <>The waiting room opens when your list is locked. <Link to="/movies/score" className="text-gold-400 hover:text-gold-300 not-italic">Back to scoring →</Link></>
                 : 'The waiting room opens once you\'ve scored and locked your list.'}
@@ -220,7 +220,7 @@ export default function MoviesMyStats() {
                                    year={`was #${r.prevRank}`}
                                    right={<Movement delta={r.delta} />} />
                     ))}
-                    {risers.length === 0 && <p className="font-sans text-sm text-gray-400">No risers this time.</p>}
+                    {risers.length === 0 && <p className="font-sans text-sm text-gray-300">No risers this time.</p>}
                   </ul>
                 </div>
                 <div className="card p-5">
@@ -231,7 +231,7 @@ export default function MoviesMyStats() {
                                    year={`was #${r.prevRank}`}
                                    right={<Movement delta={r.delta} />} />
                     ))}
-                    {fallers.length === 0 && <p className="font-sans text-sm text-gray-400">Nothing fell — generous mood.</p>}
+                    {fallers.length === 0 && <p className="font-sans text-sm text-gray-300">Nothing fell — generous mood.</p>}
                   </ul>
                 </div>
               </div>
@@ -251,7 +251,7 @@ export default function MoviesMyStats() {
                                  year={r.films?.release_year} right={<Movement isReturn />} />
                   ))}
                   {newEntries.length === 0 && returning.length === 0 && (
-                    <p className="font-sans text-sm text-gray-400">Every film has ranked before.</p>
+                    <p className="font-sans text-sm text-gray-300">Every film has ranked before.</p>
                   )}
                 </ul>
               </div>
@@ -263,7 +263,7 @@ export default function MoviesMyStats() {
                                  right={<span className="rank-off font-mono text-[11px]">OFF LIST</span>} />
                   ))}
                   {dropped.length === 0 && (
-                    <p className="font-sans text-sm text-gray-400">Nothing dropped — the canon holds.</p>
+                    <p className="font-sans text-sm text-gray-300">Nothing dropped — the canon holds.</p>
                   )}
                 </ul>
               </div>

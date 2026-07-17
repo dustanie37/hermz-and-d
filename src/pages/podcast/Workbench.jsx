@@ -209,7 +209,7 @@ function TalkingPointsCard({ ep, setEp }) {
       <SectionHeader label="TALKING POINTS" sub={points.length ? `${points.filter(p => p.done).length}/${points.length} covered` : 'Build the conversation'} />
 
       {points.length === 0 && (
-        <p className="text-gray-500 text-base italic mb-4">
+        <p className="text-gray-500 text-base mb-4">
           {ep.type === 'film'
             ? 'Nothing yet — add points below, or pull ideas in from the generated insights above.'
             : 'Nothing yet — add the first talking point below.'}
@@ -323,7 +323,7 @@ function TimestampsCard({ ep, timestamps, setTimestamps }) {
       <SectionHeader label="TIMESTAMPS" sub="Chapters — fill in after recording" />
 
       {timestamps.length === 0 && (
-        <p className="text-gray-500 text-base italic mb-4">No chapters yet.</p>
+        <p className="text-gray-500 text-base mb-4">No chapters yet.</p>
       )}
 
       {timestamps.length > 0 && (

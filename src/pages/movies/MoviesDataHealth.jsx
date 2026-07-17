@@ -100,7 +100,7 @@ export default function MoviesDataHealth() {
           <span className="font-mono text-[11px] tracking-kicker text-white uppercase">Data Health</span>
         </div>
         <h1 className="font-display text-5xl text-white tracking-wide leading-none">OSCAR DATA HEALTH</h1>
-        <p className="font-serif italic text-base text-gray-400 mt-3">
+        <p className="font-sans text-base text-gray-300 mt-3">
           Spreadsheet totals vs. category rows — Special Achievement Awards excluded from counts.
         </p>
       </div>

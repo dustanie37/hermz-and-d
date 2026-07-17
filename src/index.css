@@ -28,9 +28,12 @@
     letter-spacing: 0.01em;
     line-height: 0.95;
   }
+  /* h3 defaults to the display face (Bebas), non-italic — every h3 in the app
+     already overrides to font-display, so this just kills the italic-serif
+     footgun for any new h3. Instrument Serif is NOT a UI default anywhere. */
   h3 {
-    font-family: 'Instrument Serif', Georgia, serif;
-    font-style: italic;
+    font-family: 'Bebas Neue', system-ui, sans-serif;
+    font-style: normal;
     letter-spacing: 0.005em;
   }
 
@@ -115,7 +118,7 @@
     @apply font-display text-3xl text-white font-normal leading-tight mb-2;
   }
   .section-subtitle {
-    @apply font-serif italic text-gray-400 text-base mb-6;
+    @apply font-sans text-gray-300 text-base mb-6;
   }
   .stat-label {
     @apply font-mono text-xs text-gray-400 uppercase tracking-kicker;
@@ -144,7 +147,7 @@
   .rank-down { @apply text-red-400; }
   .rank-same { @apply text-gray-500; }
   .rank-new  { @apply text-cinema-400; }
-  .rank-off  { @apply text-gray-600 italic; }
+  .rank-off  { @apply text-gray-600; }
 
   /* ── Inputs ──────────────────────────────────────────────────────────── */
   .input {

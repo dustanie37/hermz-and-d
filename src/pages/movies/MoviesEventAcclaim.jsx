@@ -235,7 +235,7 @@ export default function MoviesEventAcclaim() {
         {!loading && !ready && (
           <div className="card text-center py-16 space-y-4">
             <p className="font-display text-2xl text-white tracking-wide leading-none">NOT YET</p>
-            <p className="font-sans text-base text-gray-400 max-w-md mx-auto">
+            <p className="font-sans text-base text-gray-300 max-w-md mx-auto">
               {!event
                 ? 'There\'s no active event.'
                 : !bothLocked
@@ -293,7 +293,7 @@ export default function MoviesEventAcclaim() {
             </div>
 
             {/* Auto-suggest placeholder note */}
-            <p className="font-sans text-sm text-gray-400 mb-6">
+            <p className="font-sans text-sm text-gray-300 mb-6">
               Suggested scores will appear here once the acclaim rules are settled — for now, the evidence is laid
               out and the verdict is yours.
             </p>
@@ -349,7 +349,7 @@ export default function MoviesEventAcclaim() {
               ))}
               {filtered.length === 0 && (
                 <div className="card text-center py-12">
-                  <p className="font-sans text-base text-gray-400">Nothing matches this filter.</p>
+                  <p className="font-sans text-base text-gray-300">Nothing matches this filter.</p>
                 </div>
               )}
             </div>

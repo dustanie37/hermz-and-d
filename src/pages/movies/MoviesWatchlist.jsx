@@ -385,7 +385,7 @@ function AddFilmModal({ onClose, onAdd, existingImdbIds, defaultTab }) {
         {/* Results */}
         <div className="overflow-y-auto flex-1 p-2">
           {results.length === 0 && !searching && (
-            <p className="text-sm text-gray-500 text-center py-8 italic">
+            <p className="text-sm text-gray-500 text-center py-8">
               Search for a film above to add it.
             </p>
           )}
@@ -570,7 +570,7 @@ export default function MoviesWatchlist() {
           <h1 className="font-display text-5xl sm:text-6xl text-white tracking-wide leading-none">
             FUTURE CONSIDERATION
           </h1>
-          <p className="font-serif italic text-base text-gray-400 mt-3">
+          <p className="font-sans text-base text-gray-300 mt-3">
             Films to watch, first-time views to consider, and rewatch notes for the next edition
             {!loading && items.length > 0 && (
               <span className="text-gray-500 ml-2">· {items.length} total</span>
@@ -635,7 +635,7 @@ export default function MoviesWatchlist() {
                 ? 'NO FIRST WATCHES YET'
                 : 'NO REWATCHES YET'}
             </p>
-            <p className="font-serif italic text-base text-gray-500 max-w-sm mx-auto">
+            <p className="font-sans text-base text-gray-400 max-w-sm mx-auto">
               {activeTab === 'unseen'
                 ? 'Add films you want to see for the first time.'
                 : activeTab === 'first_time'

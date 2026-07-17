@@ -154,7 +154,7 @@ export default function MoviesLists() {
           <h1 className="font-display text-5xl sm:text-6xl text-white tracking-wide leading-none">
             CRITICS' CANONS
           </h1>
-          <p className="font-serif italic text-base text-gray-400 mt-3">
+          <p className="font-sans text-base text-gray-300 mt-3">
             Acclaimed external rankings and how they overlap with ours.
           </p>
         </div>
@@ -186,7 +186,7 @@ export default function MoviesLists() {
               Published {activeList.published}
             </p>
             {!loading && (
-              <p className="font-sans text-sm text-gray-400 mt-1.5">
+              <p className="font-sans text-sm text-gray-300 mt-1.5">
                 {search
                   ? `${displayEntries.length} of ${totalCount} matching "${search}"`
                   : (

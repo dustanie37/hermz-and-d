@@ -228,7 +228,7 @@ export default function PodcastHome() {
           <h1 className="font-display text-[70px] sm:text-[88px] text-white leading-none tracking-wide">
             {PODCAST_NAME.toUpperCase()}
           </h1>
-          <p className="font-serif italic text-gray-400 text-xl mt-1.5">
+          <p className="font-sans text-gray-400 text-xl mt-1.5">
             {PODCAST_TAGLINE}
           </p>
           {!loading && episodes.length > 0 && (

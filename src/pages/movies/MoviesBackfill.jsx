@@ -121,7 +121,7 @@ export default function MoviesBackfill() {
       <h1 className="font-display text-4xl text-white tracking-wide leading-none mb-3">
         TMDB ACTOR BACKFILL
       </h1>
-      <p className="font-serif italic text-base text-gray-400 mb-7 max-w-2xl">
+      <p className="font-sans text-base text-gray-300 mb-7 max-w-2xl">
         Fetches up to 10 cast members per film from The Movie Database and saves them to
         Supabase. Films with 4+ actors already are skipped.
       </p>
