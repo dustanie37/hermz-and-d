@@ -50,16 +50,29 @@ function PillRow({ label, value, max, onPick, locked = false }) {
   )
 }
 
+// ── Poster: the whole poster, uncropped, on a soft blurred fill of itself ─────
+function PosterFill({ film, imgClassName = 'max-h-[440px] max-w-[88%] my-6' }) {
+  if (!film?.poster_url) return <FilmStill title={film?.title ?? ''} className="absolute inset-0 w-full h-full" />
+  return (
+    <>
+      <img src={film.poster_url} alt="" aria-hidden="true"
+           className="absolute inset-0 w-full h-full object-cover blur-2xl opacity-25 scale-110" />
+      <img src={film.poster_url} alt={film.title ?? ''}
+           className={`relative z-10 w-auto object-contain rounded-lg shadow-still-lg ${imgClassName}`} />
+    </>
+  )
+}
+
 // ── Edit modal (review stage) ────────────────────────────────────────────────
 
 function EditModal({ row, onClose, onChange }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-night-950/80 backdrop-blur-md" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-xl bg-night-900 border border-white/[0.1]
-                      rounded-2xl shadow-still-lg flex flex-col max-h-[90vh]"
+      <div className="relative z-10 w-full max-w-3xl bg-night-900 border border-white/[0.1]
+                      rounded-2xl shadow-still-lg flex flex-col max-h-[90vh] overflow-hidden"
            onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between p-5 border-b border-night-700/60">
+        <div className="flex items-center justify-between p-5 border-b border-night-700/60 shrink-0">
           <div>
             <span className="kicker">Adjust scores</span>
             <h2 className="font-display text-2xl text-white tracking-wide leading-none mt-1.5">
@@ -73,14 +86,20 @@ function EditModal({ row, onClose, onChange }) {
                                flex items-center justify-center rounded-full hover:bg-white/5">✕</button>
           </div>
         </div>
-        <div className="overflow-y-auto p-5">
-          {MANUAL_CATS.map(c => (
-            <PillRow key={c.key} label={c.label} value={row[c.key]} max={c.max}
-                     onPick={n => onChange(row, c.key, n)} />
-          ))}
-          <PillRow label="Acclaim" value={row.score_acclaim} max={10} locked />
-          <PillRow label={IMPACT.label} value={row[IMPACT.key]} max={IMPACT.max}
-                   onPick={n => onChange(row, IMPACT.key, n)} />
+        <div className="flex flex-col sm:flex-row min-h-0 flex-1">
+          <div className="relative shrink-0 bg-night-950 flex items-center justify-center overflow-hidden
+                          h-[220px] sm:h-auto sm:w-[230px] border-b sm:border-b-0 sm:border-r border-night-700/60">
+            <PosterFill film={row.films} imgClassName="max-h-[190px] sm:max-h-[380px] max-w-[80%] my-4" />
+          </div>
+          <div className="overflow-y-auto p-5 min-h-0 flex-1">
+            {MANUAL_CATS.map(c => (
+              <PillRow key={c.key} label={c.label} value={row[c.key]} max={c.max}
+                       onPick={n => onChange(row, c.key, n)} />
+            ))}
+            <PillRow label="Acclaim" value={row.score_acclaim} max={10} locked />
+            <PillRow label={IMPACT.label} value={row[IMPACT.key]} max={IMPACT.max}
+                     onPick={n => onChange(row, IMPACT.key, n)} />
+          </div>
         </div>
       </div>
     </div>
@@ -339,18 +358,7 @@ export default function MoviesScore() {
               <div className="grid grid-cols-1 md:grid-cols-5">
                 {/* Poster */}
                 <div className="md:col-span-2 relative min-h-[320px] bg-night-900 flex items-center justify-center overflow-hidden">
-                  {current.films?.poster_url ? (
-                    <>
-                      {/* soft ambient fill so the uncropped poster doesn't sit on flat bars */}
-                      <img src={current.films.poster_url} alt="" aria-hidden="true"
-                           className="absolute inset-0 w-full h-full object-cover blur-2xl opacity-25 scale-110" />
-                      {/* the whole poster, never cropped */}
-                      <img src={current.films.poster_url} alt={current.films?.title ?? ''}
-                           className="relative z-10 max-h-[440px] w-auto max-w-[88%] object-contain rounded-lg shadow-still-lg my-6" />
-                    </>
-                  ) : (
-                    <FilmStill title={current.films?.title ?? ''} className="absolute inset-0 w-full h-full" />
-                  )}
+                  <PosterFill film={current.films} />
                 </div>
                 {/* Details + scores */}
                 <div className="md:col-span-3 p-5 sm:p-6">

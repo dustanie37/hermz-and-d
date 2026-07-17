@@ -6,11 +6,14 @@
 
 import { sortTitle } from './helpers'
 
+// Display order (2026-07-16): Lead → Supporting → Direction → Screenplay →
+// Cinematography → Production Design → Influence. (Acclaim + Personal Impact
+// render after these.) Order is display-only; totals/completeness are unaffected.
 export const MANUAL_CATS = [
-  { key: 'score_direction',         label: 'Direction',              max: 10 },
-  { key: 'score_screenplay',        label: 'Screenplay',             max: 10 },
   { key: 'score_lead_performance',  label: 'Lead Performance',       max: 10 },
   { key: 'score_supp_performance',  label: 'Supporting Performance', max: 10 },
+  { key: 'score_direction',         label: 'Direction',              max: 10 },
+  { key: 'score_screenplay',        label: 'Screenplay',             max: 10 },
   { key: 'score_cinematography',    label: 'Cinematography',         max: 10 },
   { key: 'score_production_design', label: 'Production Design',      max: 10 },
   { key: 'score_influence',         label: 'Influence',              max: 10 },
