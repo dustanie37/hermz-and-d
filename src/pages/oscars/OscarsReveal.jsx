@@ -14,6 +14,7 @@ import FilmStill from '../../components/FilmStill'
 import { revealSequence, groupOf, fmtRuntime, fmtMonologue } from '../../lib/oscarSeason'
 
 const PEOPLE = ['matt', 'dustin']   // HERMZ (gold, left) · DUST (film, right)
+const MAJOR_GROUP = 'Major Awards'  // the 8 marquee categories — always revealed last, building to Best Picture
 
 function yearHue(y) { return ((y * 17) + 11) % 360 }
 function shortName(name) { return name.replace(/^Best\s+/i, '').replace(/^Achievement in\s+/i, '') }
@@ -27,7 +28,7 @@ export default function OscarsReveal() {
   const [ballots,  setBallots]  = useState([])   // finale tiebreakers (visible at revealed)
   const [posterMap,setPosterMap]= useState({})
   const [ids,      setIds]      = useState({})   // username -> user_id
-  const [spotIdx,  setSpotIdx]  = useState(null) // which category is in the spotlight
+  const [spotId,   setSpotId]   = useState(null) // category id in the spotlight (user-pickable)
   const [loading,  setLoading]  = useState(true)
   const [busy,     setBusy]     = useState(null)  // `${catId}:${username}` while unsealing
   const [error,    setError]    = useState(null)
@@ -133,17 +134,13 @@ export default function OscarsReveal() {
   const isRevealed = (catId, who) => !!revealedBy[catId]?.has(who)
   const isFull = (cat) => PEOPLE.every(who => isRevealed(cat.id, who))
 
-  const firstIncompleteIdx = useMemo(() => {
-    const i = sequence.findIndex(c => !isFull(c))
-    return i  // -1 once every category is fully unsealed
-  }, [sequence, revealedBy])
+  // categories still needing at least one card unsealed, in the default build order
+  const remaining = useMemo(() => sequence.filter(c => !isFull(c)), [sequence, revealedBy])
 
-  // Init the spotlight to wherever the ceremony currently stands (once).
+  // Default the spotlight to the first still-sealed category; either of you can pick another.
   useEffect(() => {
-    if (spotIdx === null && sequence.length) {
-      setSpotIdx(firstIncompleteIdx === -1 ? sequence.length - 1 : firstIncompleteIdx)
-    }
-  }, [sequence, firstIncompleteIdx, spotIdx])
+    if (spotId === null && remaining.length) setSpotId(remaining[0].id)
+  }, [remaining, spotId])
 
   const completedCats = useMemo(() => sequence.filter(isFull), [sequence, revealedBy])
   const agreeCount = useMemo(() => completedCats.filter(c => {
@@ -185,9 +182,14 @@ export default function OscarsReveal() {
 
   const done = yearRow.status === 'revealed'
   const progress = cats.length ? (completedCats.length / cats.length) * 100 : 0
-  const spotCat = !done && spotIdx !== null ? sequence[spotIdx] : null
+  const nonMajorLeft = remaining.filter(c => groupOf(c) !== MAJOR_GROUP)
+  const majorLeft    = remaining.filter(c => groupOf(c) === MAJOR_GROUP)   // sequence order = build to Best Picture
+  const majorsUnlocked = nonMajorLeft.length === 0
+  let spotCat = done ? null : (cats.find(c => c.id === spotId) || remaining[0] || null)
+  // the Major 8 are reserved for the finale — never spotlight one while lesser categories remain
+  if (spotCat && groupOf(spotCat) === MAJOR_GROUP && !majorsUnlocked) spotCat = nonMajorLeft[0] || spotCat
   const spotFull = spotCat ? isFull(spotCat) : false
-  const nextCat = spotCat ? sequence[spotIdx + 1] : null
+  const suggested = remaining.find(c => c.id !== spotCat?.id) || null  // next, respecting the build order
   const boardCats = [...completedCats].reverse().filter(c => c.id !== spotCat?.id)
 
   return (
@@ -208,7 +210,7 @@ export default function OscarsReveal() {
             {done ? 'ALL BALLOTS UNSEALED' : 'THE REVEAL CEREMONY'}
           </h1>
           <p className="font-serif text-gray-400 mt-2 text-base">
-            {done ? 'Every pick is on the table. See you on ceremony night.' : 'Unseal one pick at a time. Building to Best Picture.'}
+            {done ? 'Every pick is on the table. See you on ceremony night.' : 'Unseal one pick at a time — reveal the categories in any order you like.'}
           </p>
         </div>
       </FilmStill>
@@ -260,9 +262,9 @@ export default function OscarsReveal() {
             {spotFull && (
               <div className="flex flex-col items-center gap-3 mt-5">
                 <Flourish same={picks[spotCat.id]?.matt && picks[spotCat.id]?.matt === picks[spotCat.id]?.dustin} />
-                {nextCat ? (
-                  <button onClick={() => setSpotIdx(spotIdx + 1)} className="btn-gold text-base px-8 py-3">
-                    On to {shortName(nextCat.name)} →
+                {suggested ? (
+                  <button onClick={() => setSpotId(suggested.id)} className="btn-gold text-base px-8 py-3">
+                    On to {shortName(suggested.name)} →
                   </button>
                 ) : (
                   <span className="font-mono text-[10px] tracking-kicker text-gray-500">Unseal the last card for the finale…</span>
@@ -275,6 +277,18 @@ export default function OscarsReveal() {
               </p>
             )}
           </div>
+        )}
+
+        {/* category picker — free-pick the lesser categories; the Major 8 stay locked for the finale */}
+        {!done && remaining.length > 0 && (
+          <CategoryPicker
+            nonMajor={nonMajorLeft}
+            major={majorLeft}
+            majorsUnlocked={majorsUnlocked}
+            revealedBy={revealedBy}
+            currentId={spotCat?.id}
+            onPick={setSpotId}
+          />
         )}
 
         {/* finale */}
@@ -311,6 +325,59 @@ export default function OscarsReveal() {
           </div>
         )}
       </div>
+    </div>
+  )
+}
+
+// ── category picker: free-pick the lesser categories; Major 8 locked for the finale ─
+function CategoryPicker({ nonMajor, major, majorsUnlocked, revealedBy, currentId, onPick }) {
+  const chipClass = (c, clickable) => {
+    const isCurrent = c.id === currentId
+    const base = 'px-3 py-1.5 rounded-full border font-mono text-[11px] tracking-kicker transition-colors'
+    if (isCurrent) return `${base} border-gold-500/70 bg-gold-500/10 text-gold-300`
+    if (clickable) return `${base} border-night-600 text-gray-300 hover:border-gold-500/50 hover:text-white`
+    return `${base} border-night-700 text-gray-500`
+  }
+  const label = (c) => {
+    const opened = revealedBy[c.id]?.size || 0
+    return (
+      <>{shortName(c.name).toUpperCase()}{opened === 1 && <span className="ml-1.5 text-cinema-400">◐ 1/2</span>}</>
+    )
+  }
+  const Head = ({ title, right }) => (
+    <div className="flex items-center gap-3 pb-2 mb-3 border-b border-night-700/60">
+      <span className="font-mono text-sm tracking-cinema text-gold-500 uppercase">{title}</span>
+      <span className="flex-1 h-px bg-night-700/60" />
+      <span className="font-mono text-sm tracking-kicker text-gray-500">{right}</span>
+    </div>
+  )
+  return (
+    <div className="mb-10 space-y-6">
+      {nonMajor.length > 0 && (
+        <div>
+          <Head title="Up Next — Pick Any Order" right={`${nonMajor.length} left`} />
+          <div className="flex flex-wrap gap-2">
+            {nonMajor.map(c => (
+              <button key={c.id} onClick={() => onPick(c.id)} className={chipClass(c, true)}>{label(c)}</button>
+            ))}
+          </div>
+        </div>
+      )}
+      {major.length > 0 && (
+        <div>
+          <Head title="The Majors — Building to Best Picture" right={majorsUnlocked ? 'in order' : 'locked'} />
+          <div className="flex flex-wrap gap-2">
+            {major.map(c => (
+              <span key={c.id} className={chipClass(c, false)}>{label(c)}</span>
+            ))}
+          </div>
+          {!majorsUnlocked && (
+            <p className="font-mono text-[10px] tracking-kicker text-gray-500 mt-2">
+              🔒 REVEALED LAST — FINISH THE OTHER CATEGORIES FIRST
+            </p>
+          )}
+        </div>
+      )}
     </div>
   )
 }

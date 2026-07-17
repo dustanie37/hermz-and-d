@@ -218,12 +218,15 @@ export default function MoviesScore() {
     if (!window.confirm('Lock your list?\n\nThis is final until the reveal — your ranked list and personal stats open up, and the ceremony unlocks once both of you are in.')) return
     setLocking(true); setError(null)
     try {
-      // Persist final ranks (shared comparator — the ceremony + publish read these)
+      // Persist final ranks (shared comparator — the ceremony + publish read these).
+      // Conflict on the natural key (event_id,user_id,film_id): event_scores.id is
+      // GENERATED ALWAYS, so it must never be sent in the payload. Rows already exist
+      // from "Begin scoring", so this updates their rank in place.
       const rankRows = ranked.map((r, i) => ({
-        id: r.id, event_id: r.event_id, user_id: r.user_id, film_id: r.film_id, rank: i + 1,
+        event_id: r.event_id, user_id: r.user_id, film_id: r.film_id, rank: i + 1,
       }))
       const { error: rkErr } = await supabase
-        .from('event_scores').upsert(rankRows, { onConflict: 'id' })
+        .from('event_scores').upsert(rankRows, { onConflict: 'event_id,user_id,film_id' })
       if (rkErr) throw rkErr
 
       const { error: stErr } = await supabase

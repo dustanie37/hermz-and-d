@@ -54,7 +54,7 @@ const SECTIONS = [
       { tag: 'Oscars', color: 'gold', name: 'Private ballots',
         text: 'Each of you fills your own secret ballot — picks and tiebreakers save as you tap, and the other side stays a 🔒 until the reveal.' },
       { tag: 'Oscars', color: 'gold', isNew: true, name: 'The Oscar Reveal',
-        text: 'Ceremony night, categories come up one at a time from the shorts to Best Picture — and now each of your picks is its own sealed card you tap to unseal, so Hermz and Dust never flip at the same moment. The "same pick" or "split" flourish only lands once both cards are open. Syncs live across both phones.' },
+        text: 'Ceremony night: reveal the lesser categories in whatever order you want, then the eight majors come last, building to Best Picture. Within each category, each of your picks is its own sealed card you tap to unseal, so Hermz and Dust never flip at the same moment — and the "same pick" or "split" flourish only lands once both are open. Syncs live across both phones.' },
       { tag: 'Oscars', color: 'gold', name: 'Live ceremony night',
         text: 'Enter winners during the broadcast and the other phone updates within seconds — each win folds into the all-time stats as it lands.' },
       { tag: 'Oscars', color: 'gold', name: 'Manage nominees & categories',
