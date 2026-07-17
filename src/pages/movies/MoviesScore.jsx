@@ -29,9 +29,9 @@ function PillRow({ label, value, max, onPick, locked = false }) {
         <span className="font-mono text-sm tracking-kicker text-gray-300 uppercase">
           {label}{locked && <span className="text-gold-500 ml-1.5">🔒 agreed</span>}
         </span>
-        <span className={`font-display text-3xl leading-none ${value != null ? 'text-white' : 'text-gray-500'}`}>
-          {value ?? '—'}
-        </span>
+        {locked && (
+          <span className="font-display text-2xl leading-none text-gold-400">{value ?? '—'}</span>
+        )}
       </div>
       {!locked && (
         <div className="flex gap-1.5 flex-wrap">
@@ -80,7 +80,7 @@ function EditModal({ row, onClose, onChange }) {
             </h2>
           </div>
           <div className="flex items-center gap-3">
-            <span className="font-display text-3xl text-gold-400 leading-none">{totalOf(row)}</span>
+            <span className="font-display text-4xl text-gold-400 leading-none">{totalOf(row)}</span>
             <button onClick={onClose}
                     className="text-gray-500 hover:text-gray-200 transition-colors text-xl leading-none w-8 h-8
                                flex items-center justify-center rounded-full hover:bg-white/5">✕</button>
@@ -384,10 +384,10 @@ export default function MoviesScore() {
                   </div>
 
                   {/* Footer: total + actions */}
-                  <div className="flex items-center gap-4 pt-4 mt-1 border-t border-white/[0.06]">
-                    <div>
-                      <span className="font-display text-4xl leading-none text-gold-400">{totalOf(current)}</span>
-                      <span className="font-mono text-xs tracking-kicker text-gray-400 ml-1">/100</span>
+                  <div className="flex items-center gap-4 flex-wrap pt-4 mt-1 border-t border-white/[0.06]">
+                    <div className="flex items-baseline">
+                      <span className="font-display text-6xl leading-none text-gold-400">{totalOf(current)}</span>
+                      <span className="font-mono text-sm tracking-kicker text-gray-400 ml-1.5">/100</span>
                     </div>
                     <button onClick={skipFilm}
                             className="ml-auto font-mono text-xs tracking-kicker text-gray-400 hover:text-amber-300 uppercase transition-colors">
