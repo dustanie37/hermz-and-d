@@ -91,7 +91,7 @@ export default function OscarsCategories() {
           <span className="font-mono text-[11px] tracking-kicker text-white uppercase">Oscar Categories</span>
         </div>
         <h1 className="font-display text-5xl text-white tracking-wide leading-none">CATEGORIES</h1>
-        <p className="font-serif text-base text-gray-400 mt-3 max-w-xl">
+        <p className="font-sans text-base text-gray-300 mt-3 max-w-xl">
           Add a category the year the Academy introduces it, retire one the year it ends.
           "From" and "Until" are ceremony years, inclusive — leave Until blank while a category is current.
           Group drives the ballot sections, the stats heatmap, and the reveal order; retiring a category

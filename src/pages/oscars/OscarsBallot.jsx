@@ -220,7 +220,7 @@ export default function OscarsBallot() {
           <h1 className="font-display text-4xl sm:text-5xl text-white tracking-wide leading-none">
             {iAmLocked ? 'BALLOT LOCKED' : 'MY BALLOT'}
           </h1>
-          <p className="font-serif text-gray-400 mt-2 text-base">
+          <p className="font-sans text-gray-400 mt-2 text-base">
             {iAmLocked
               ? bothLocked ? 'Both ballots are in. The reveal awaits.' : `Waiting on ${otherLabel === 'HERMZ' ? 'Hermz' : 'Dust'}…`
               : 'Your picks are sealed from each other until the reveal.'}
@@ -361,7 +361,7 @@ export default function OscarsBallot() {
         )}
         {iAmLocked && (
           <div className="mt-8 text-center">
-            <p className="font-serif text-gray-400">
+            <p className="font-sans text-gray-400">
               {bothLocked ? 'Both ballots locked. See you at the reveal.' : 'Your ballot is in. No peeking allowed.'}
             </p>
             <div className="mt-3 flex items-center justify-center gap-3">

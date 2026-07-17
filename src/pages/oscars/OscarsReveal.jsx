@@ -209,7 +209,7 @@ export default function OscarsReveal() {
           <h1 className="font-display text-4xl sm:text-5xl text-white tracking-wide leading-none">
             {done ? 'ALL BALLOTS UNSEALED' : 'THE REVEAL CEREMONY'}
           </h1>
-          <p className="font-serif text-gray-400 mt-2 text-base">
+          <p className="font-sans text-gray-400 mt-2 text-base">
             {done ? 'Every pick is on the table. See you on ceremony night.' : 'Unseal one pick at a time — reveal the categories in any order you like.'}
           </p>
         </div>

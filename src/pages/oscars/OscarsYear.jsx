@@ -455,7 +455,7 @@ export default function OscarsYear() {
                            leading-[0.95]">
               {shortCeremony(yearData.ceremony_name).toUpperCase()}
             </h1>
-            <p className="font-serif text-base sm:text-lg text-gray-400 mt-1.5 sm:mt-2">
+            <p className="font-sans text-base sm:text-lg text-gray-400 mt-1.5 sm:mt-2">
               {formatDate(yearData.ceremony_name)}
             </p>
           </div>
@@ -690,7 +690,7 @@ function CategoryCard({ cat, idx, yearNum, editMode, posterMap, sealed, myUserna
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center gap-2 px-2">
                   <span className="text-gold-500 text-2xl leading-none">★</span>
-                  <span className="font-serif text-sm text-gray-400 text-center leading-tight line-clamp-4">{winnerFilm}</span>
+                  <span className="font-sans text-sm text-gray-300 text-center leading-tight line-clamp-4">{winnerFilm}</span>
                 </div>
               )}
             </div>
@@ -705,7 +705,7 @@ function CategoryCard({ cat, idx, yearNum, editMode, posterMap, sealed, myUserna
                         mattG={mattG} dustinG={dustinG} />
           ))}
           {nominees.length === 0 && (
-            <p className="font-serif text-sm text-gray-500 py-2">Nominees not entered yet.</p>
+            <p className="font-sans text-sm text-gray-400 py-2">Nominees not entered yet.</p>
           )}
         </div>
       </div>
@@ -757,7 +757,7 @@ function NomineeRow({ nominee, catName, winner, sealed, myUsername, mattG, dusti
           {isSong ? `“${nominee.name}”` : nominee.name}
         </span>
         {secondary && (
-          <span className={`font-serif text-base ml-2 ${isWinner ? 'text-gray-100' : 'text-gray-300'}`}>
+          <span className={`font-sans text-base ml-2 ${isWinner ? 'text-gray-100' : 'text-gray-300'}`}>
             — {secondary}
           </span>
         )}
@@ -899,7 +899,7 @@ function TiebreakerPanel({ yearData, mattWon }) {
         </span>
       </div>
       {hasMonologue && (
-        <p className="font-serif text-base text-gray-300 mt-3 pt-3 border-t border-amber-500/15">
+        <p className="font-sans text-base text-gray-300 mt-3 pt-3 border-t border-amber-500/15">
           Backup monologue, unused — actual {fmtMonologue(yearData.actual_monologue)},
           Hermz {fmtMonologue(yearData.matt_monologue_guess)},
           Dust {fmtMonologue(yearData.dustin_monologue_guess)}.
