@@ -35,7 +35,7 @@ function PillRow({ label, value, max, onPick, locked = false }) {
       </div>
       {!locked && (
         <div className="flex gap-1 flex-wrap">
-          {Array.from({ length: max + 1 }, (_, n) => (
+          {Array.from({ length: max }, (_, i) => i + 1).map(n => (
             <button key={n} onClick={() => onPick(n)}
               className={`w-8 h-8 rounded-lg font-mono text-xs transition-all
                 ${value === n
