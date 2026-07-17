@@ -338,9 +338,19 @@ export default function MoviesScore() {
             <div className="card p-0 overflow-hidden">
               <div className="grid grid-cols-1 md:grid-cols-5">
                 {/* Poster */}
-                <div className="md:col-span-2 relative min-h-[320px]">
-                  <FilmStill src={current.films?.poster_url} title={current.films?.title ?? ''}
-                             className="absolute inset-0 w-full h-full" />
+                <div className="md:col-span-2 relative min-h-[320px] bg-night-900 flex items-center justify-center overflow-hidden">
+                  {current.films?.poster_url ? (
+                    <>
+                      {/* soft ambient fill so the uncropped poster doesn't sit on flat bars */}
+                      <img src={current.films.poster_url} alt="" aria-hidden="true"
+                           className="absolute inset-0 w-full h-full object-cover blur-2xl opacity-25 scale-110" />
+                      {/* the whole poster, never cropped */}
+                      <img src={current.films.poster_url} alt={current.films?.title ?? ''}
+                           className="relative z-10 max-h-[440px] w-auto max-w-[88%] object-contain rounded-lg shadow-still-lg my-6" />
+                    </>
+                  ) : (
+                    <FilmStill title={current.films?.title ?? ''} className="absolute inset-0 w-full h-full" />
+                  )}
                 </div>
                 {/* Details + scores */}
                 <div className="md:col-span-3 p-5 sm:p-6">
