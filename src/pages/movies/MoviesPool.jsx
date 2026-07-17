@@ -321,7 +321,7 @@ export default function MoviesPool() {
           <h1 className="font-display text-5xl sm:text-6xl text-white tracking-wide leading-none">
             BUILD YOUR POOL
           </h1>
-          <p className="font-serif italic text-base text-gray-400 mt-3">
+          <p className="font-sans text-base text-gray-300 mt-3">
             Gather every candidate worth considering — you'll cultivate down to exactly {event?.list_size ?? 125} next.
             {!loading && poolingOpen && (
               <span className="text-gray-300 ml-2">· {pool.length} in your pool</span>
@@ -343,7 +343,7 @@ export default function MoviesPool() {
           <div className="card text-center py-16 space-y-4">
             <p className="font-display text-6xl text-gray-700 leading-none">🎬</p>
             <p className="font-display text-2xl text-white tracking-wide leading-none">NO ACTIVE EVENT</p>
-            <p className="font-serif italic text-base text-gray-500 max-w-sm mx-auto">
+            <p className="font-sans text-base text-gray-400 max-w-sm mx-auto">
               The next Canon edition hasn't been created yet.
               {isDustin && <> Start one from the <Link to="/movies/event-admin" className="text-gold-400 hover:text-gold-300">event admin</Link>.</>}
             </p>
@@ -356,7 +356,7 @@ export default function MoviesPool() {
             <p className="font-display text-2xl text-white tracking-wide leading-none">
               {event.label.toUpperCase()} IS COMING
             </p>
-            <p className="font-serif italic text-base text-gray-500 max-w-sm mx-auto">
+            <p className="font-sans text-base text-gray-400 max-w-sm mx-auto">
               The event exists but pooling hasn't opened yet.
               {isDustin && <> Open it from the <Link to="/movies/event-admin" className="text-gold-400 hover:text-gold-300">event admin</Link>.</>}
             </p>
@@ -366,7 +366,7 @@ export default function MoviesPool() {
         {!loading && event && event.status === 'pooling' && iAmLocked && (
           <div className="card text-center py-16 space-y-4">
             <p className="font-display text-2xl text-white tracking-wide leading-none">YOUR LIST IS LOCKED</p>
-            <p className="font-serif italic text-base text-gray-500 max-w-sm mx-auto">
+            <p className="font-sans text-base text-gray-400 max-w-sm mx-auto">
               You've cultivated your {event.list_size ?? 125} — the pool is frozen.
             </p>
             <Link to="/movies/cultivate" className="btn-gold text-sm inline-block mt-2">View your list →</Link>
@@ -376,7 +376,7 @@ export default function MoviesPool() {
         {!loading && event && event.status !== 'pooling' && event.status !== 'setup' && (
           <div className="card text-center py-16 space-y-4">
             <p className="font-display text-2xl text-white tracking-wide leading-none">POOLING IS CLOSED</p>
-            <p className="font-serif italic text-base text-gray-500 max-w-sm mx-auto">
+            <p className="font-sans text-base text-gray-400 max-w-sm mx-auto">
               {event.label} has moved on to the {event.status} stage.
             </p>
             {event.status === 'scoring' && (
@@ -438,7 +438,7 @@ export default function MoviesPool() {
                   {tab === 'prior' && (
                     <div>
                       <div className="p-4 border-b border-night-700/60 flex items-center justify-between gap-3">
-                        <p className="font-serif italic text-xs text-gray-500">
+                        <p className="font-sans text-sm text-gray-400">
                           Every film from your past ranked lists, deduped.
                         </p>
                         <button onClick={handleAddAllPrior}
@@ -449,7 +449,7 @@ export default function MoviesPool() {
                       </div>
                       <div className="max-h-[520px] overflow-y-auto p-2">
                         {prior.length === 0 && (
-                          <p className="text-sm text-gray-500 text-center py-8 italic">No prior rankings found.</p>
+                          <p className="text-sm text-gray-500 text-center py-8">No prior rankings found.</p>
                         )}
                         {prior.map(entry => (
                           <IntakeRow key={entry.film.id}
@@ -472,13 +472,13 @@ export default function MoviesPool() {
                   {tab === 'watchlist' && (
                     <div>
                       <div className="p-4 border-b border-night-700/60">
-                        <p className="font-serif italic text-xs text-gray-500">
+                        <p className="font-sans text-sm text-gray-400">
                           Your Future Consideration lists. New films are created and enriched on add.
                         </p>
                       </div>
                       <div className="max-h-[520px] overflow-y-auto p-2">
                         {watch.length === 0 && (
-                          <p className="text-sm text-gray-500 text-center py-8 italic">
+                          <p className="text-sm text-gray-500 text-center py-8">
                             Your watchlist is empty. <Link to="/movies/watchlist" className="text-cinema-400 hover:text-cinema-300 not-italic">Open Future Consideration →</Link>
                           </p>
                         )}
@@ -520,13 +520,13 @@ export default function MoviesPool() {
                           </button>
                         </form>
                         {searchErr && <p className="text-xs text-red-400 mt-2">{searchErr}</p>}
-                        <p className="font-serif italic text-xs text-gray-500 mt-2">
+                        <p className="font-sans text-sm text-gray-400 mt-2">
                           Films not yet in the database are created and enriched automatically.
                         </p>
                       </div>
                       <div className="max-h-[480px] overflow-y-auto p-2">
                         {results.length === 0 && !searching && (
-                          <p className="text-sm text-gray-500 text-center py-8 italic">Search for a film to add it.</p>
+                          <p className="text-sm text-gray-500 text-center py-8">Search for a film to add it.</p>
                         )}
                         {results.map(item => (
                           <IntakeRow key={item.imdbId}
@@ -558,7 +558,7 @@ export default function MoviesPool() {
                 {poolSorted.length === 0 ? (
                   <div className="card text-center py-16 space-y-3">
                     <p className="font-display text-2xl text-white tracking-wide leading-none">AN EMPTY VAULT</p>
-                    <p className="font-serif italic text-base text-gray-500 max-w-sm mx-auto">
+                    <p className="font-sans text-base text-gray-400 max-w-sm mx-auto">
                       Start with your prior editions — one click pulls every film you've ever ranked.
                     </p>
                   </div>

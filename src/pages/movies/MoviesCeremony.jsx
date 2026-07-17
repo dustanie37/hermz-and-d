@@ -134,7 +134,7 @@ function PlayerCard({ who, pick, film, onBothLists, years, priorRanks, canReveal
                 {revealing ? 'Revealing…' : `Reveal ${isD ? 'Dustin' : 'Hermz'}'s pick`}
               </button>
             ) : (
-              <p className="font-serif italic text-sm text-gray-600">waits its turn…</p>
+              <p className="font-sans text-sm text-gray-400">waits its turn…</p>
             )}
           </div>
         </div>
@@ -399,7 +399,7 @@ export default function MoviesCeremony() {
         {!loading && !ceremonyOpen && (
           <div className="card text-center py-16 space-y-4">
             <p className="font-display text-2xl text-white tracking-wide leading-none">THE CURTAIN IS DOWN</p>
-            <p className="font-serif italic text-base text-gray-500 max-w-sm mx-auto">
+            <p className="font-sans text-base text-gray-400 max-w-sm mx-auto">
               {!event ? 'There\'s no active event.' : 'The ceremony opens once both lists are locked.'}
             </p>
           </div>
@@ -420,7 +420,7 @@ export default function MoviesCeremony() {
             </div>
 
             {displayedPair.d && displayedPair.h && displayedPair.d.film_id === displayedPair.h.film_id && (
-              <p className="text-center font-serif italic text-gold-300 mb-4">
+              <p className="text-center font-sans text-gold-300 mb-4">
                 ✨ The same film, the same rank — the Canon agrees with itself. ✨
               </p>
             )}
@@ -465,7 +465,7 @@ export default function MoviesCeremony() {
             <div className="text-center mb-8">
               <p className="font-mono text-[11px] tracking-cinema text-gold-400 uppercase mb-2">✦ For the first time anywhere ✦</p>
               <h2 className="font-display text-4xl text-white tracking-wide leading-none">THE COMBINED LIST</h2>
-              <p className="font-serif italic text-sm text-gray-400 mt-2">
+              <p className="font-sans text-sm text-gray-300 mt-2">
                 Films on both lists — neither of you has seen this until now.
               </p>
             </div>
@@ -487,7 +487,7 @@ export default function MoviesCeremony() {
                     <span className="font-display text-xl text-white leading-none">{row.total}</span>
                   </div>
                 ))}
-                <p className="font-serif italic text-xs text-gray-500 text-center mt-4">
+                <p className="font-sans text-sm text-gray-400 text-center mt-4">
                   The publish step makes it official across the site — that's the next chapter.
                 </p>
               </div>

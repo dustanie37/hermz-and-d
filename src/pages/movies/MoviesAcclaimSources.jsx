@@ -163,7 +163,7 @@ export default function MoviesAcclaimSources() {
           </span>
         </div>
         <h1 className="font-display text-5xl text-white tracking-wide leading-none">ACCLAIM SOURCES</h1>
-        <p className="font-serif italic text-base text-gray-400 mt-3">
+        <p className="font-sans text-base text-gray-300 mt-3">
           Agree the official lists for {event?.label ?? 'the event'} — confirming freezes the set so every film
           is judged against identical data.
         </p>
@@ -177,7 +177,7 @@ export default function MoviesAcclaimSources() {
         <div className="py-20 text-center font-mono text-[11px] tracking-kicker text-gray-500 animate-pulse">LOADING…</div>
       ) : !event ? (
         <div className="card text-center py-16">
-          <p className="font-serif italic text-base text-gray-500">No active event.</p>
+          <p className="font-sans text-base text-gray-400">No active event.</p>
         </div>
       ) : (
         <>
@@ -241,7 +241,7 @@ export default function MoviesAcclaimSources() {
                       className="btn-gold text-sm disabled:opacity-50">
                 {busy ? 'Freezing…' : `Confirm ${selected.size} Source${selected.size !== 1 ? 's' : ''}`}
               </button>
-              <p className="font-serif italic text-xs text-gray-500 max-w-md">
+              <p className="font-sans text-sm text-gray-400 max-w-md">
                 Volatile lists (IMDB Top 250, National Film Registry) are frozen as they exist right now —
                 re-import them first if you want fresher data.
               </p>

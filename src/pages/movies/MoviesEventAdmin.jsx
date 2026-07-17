@@ -282,7 +282,7 @@ export default function MoviesEventAdmin() {
     return (
       <div className="max-w-2xl mx-auto px-6 sm:px-10 py-20 text-center">
         <p className="font-display text-3xl text-white tracking-wide">ADMIN ONLY</p>
-        <p className="font-serif italic text-base text-gray-400 mt-3">
+        <p className="font-sans text-base text-gray-300 mt-3">
           Event administration is Dustin's booth. <Link to="/movies" className="text-gold-400 hover:text-gold-300">Back to films →</Link>
         </p>
       </div>
@@ -304,7 +304,7 @@ export default function MoviesEventAdmin() {
           <span className="font-mono text-[11px] tracking-kicker text-white uppercase">Ranking Events</span>
         </div>
         <h1 className="font-display text-5xl text-white tracking-wide leading-none">RANKING EVENTS</h1>
-        <p className="font-serif italic text-base text-gray-400 mt-3">
+        <p className="font-sans text-base text-gray-300 mt-3">
           Create the next Canon edition and drive it through pooling, scoring, the reveal, and publication.
         </p>
       </div>
@@ -343,7 +343,7 @@ export default function MoviesEventAdmin() {
             </div>
 
             <StatusStepper status={activeEvent.status} />
-            <p className="font-serif italic text-sm text-gray-400">
+            <p className="font-sans text-sm text-gray-300">
               {STATUS_META[activeEvent.status].desc}.
             </p>
 
@@ -477,7 +477,7 @@ export default function MoviesEventAdmin() {
                 Cancel
               </button>
             </div>
-            <p className="font-serif italic text-xs text-gray-500">
+            <p className="font-sans text-sm text-gray-400">
               {newIsTest
                 ? 'A test run works exactly like the real workflow — same pages, same rules — but wears a TEST badge, can never be published, and can be deleted (with all its data) at any time.'
                 : 'The event starts in Setup — nothing is visible to players until you advance it to Pooling.'}
@@ -487,7 +487,7 @@ export default function MoviesEventAdmin() {
           <div className="card text-center py-14 space-y-4">
             <p className="font-display text-6xl text-gray-700 tracking-wide leading-none">🎞</p>
             <p className="font-display text-2xl text-white tracking-wide leading-none">NO ACTIVE EVENT</p>
-            <p className="font-serif italic text-base text-gray-500 max-w-sm mx-auto">
+            <p className="font-sans text-base text-gray-400 max-w-sm mx-auto">
               All editions are published. Start the next chapter of the Canon whenever you're both ready.
             </p>
             <button onClick={() => setShowCreate(true)} className="btn-gold text-sm mt-2">
