@@ -255,6 +255,9 @@ CREATE INDEX idx_combined_rankings_event ON public.combined_rankings (event_id, 
 -- =============================================================
 
 -- Oscar yearly summary: total correct per person per year
+-- SECURITY (2026-07-22): must be security_invoker. As a definer view it read
+-- oscar_guesses as its creator, bypassing the Phase 13 ballot-privacy RLS.
+-- If you recreate this view, re-apply the ALTER at the bottom of this block.
 CREATE OR REPLACE VIEW public.v_oscar_year_summary AS
 SELECT
   oy.year,
@@ -270,39 +273,49 @@ LEFT JOIN public.profiles p ON p.id = og.user_id
 GROUP BY oy.id, oy.year, oy.ceremony_name, oy.winner, oy.tiebreaker_used
 ORDER BY oy.year;
 
--- Oscar category accuracy across all years per person
-CREATE OR REPLACE VIEW public.v_category_accuracy AS
-SELECT
-  oc.name AS category,
-  p.username,
-  COUNT(*) FILTER (WHERE og.is_correct IS NOT NULL) AS years_played,
-  COUNT(*) FILTER (WHERE og.is_correct = TRUE)       AS years_correct,
-  ROUND(
-    COUNT(*) FILTER (WHERE og.is_correct = TRUE)::DECIMAL /
-    NULLIF(COUNT(*) FILTER (WHERE og.is_correct IS NOT NULL), 0) * 100, 1
-  ) AS pct_correct
-FROM public.oscar_guesses og
-JOIN public.oscar_categories oc ON oc.id = og.category_id
-JOIN public.profiles p ON p.id = og.user_id
-GROUP BY oc.name, p.username
-ORDER BY oc.name, p.username;
+ALTER VIEW public.v_oscar_year_summary SET (security_invoker = on);
 
--- Film rank history across all events (both personal and combined)
-CREATE OR REPLACE VIEW public.v_film_rank_history AS
-SELECT
-  f.id AS film_id,
-  f.title,
-  f.release_year,
-  re.year AS event_year,
-  ir.rank AS personal_rank,
-  ir.total_score,
-  p.username,
-  cr.combined_rank,
-  cr.avg_rank,
-  cr.total_score AS combined_total_score
-FROM public.films f
-JOIN public.individual_rankings ir ON ir.film_id = f.id
-JOIN public.ranking_events re      ON re.id = ir.event_id
-JOIN public.profiles p             ON p.id = ir.user_id
-LEFT JOIN public.combined_rankings cr ON cr.film_id = f.id AND cr.event_id = ir.event_id
-ORDER BY f.title, re.year, p.username;
+-- ---------------------------------------------------------------
+-- DROPPED 2026-07-22 (security pass): v_category_accuracy and
+-- v_film_rank_history were SECURITY DEFINER views over oscar_guesses /
+-- individual_rankings, so they bypassed RLS. Neither was referenced
+-- anywhere in src/ -- they existed only in this file. Left commented out
+-- rather than deleted so the SQL is recoverable. DO NOT UNCOMMENT without
+-- adding `WITH (security_invoker = on)`.
+-- ---------------------------------------------------------------
+-- -- Oscar category accuracy across all years per person
+-- CREATE OR REPLACE VIEW public.v_category_accuracy AS
+-- SELECT
+--   oc.name AS category,
+--   p.username,
+--   COUNT(*) FILTER (WHERE og.is_correct IS NOT NULL) AS years_played,
+--   COUNT(*) FILTER (WHERE og.is_correct = TRUE)       AS years_correct,
+--   ROUND(
+--     COUNT(*) FILTER (WHERE og.is_correct = TRUE)::DECIMAL /
+--     NULLIF(COUNT(*) FILTER (WHERE og.is_correct IS NOT NULL), 0) * 100, 1
+--   ) AS pct_correct
+-- FROM public.oscar_guesses og
+-- JOIN public.oscar_categories oc ON oc.id = og.category_id
+-- JOIN public.profiles p ON p.id = og.user_id
+-- GROUP BY oc.name, p.username
+-- ORDER BY oc.name, p.username;
+--
+-- -- Film rank history across all events (both personal and combined)
+-- CREATE OR REPLACE VIEW public.v_film_rank_history AS
+-- SELECT
+--   f.id AS film_id,
+--   f.title,
+--   f.release_year,
+--   re.year AS event_year,
+--   ir.rank AS personal_rank,
+--   ir.total_score,
+--   p.username,
+--   cr.combined_rank,
+--   cr.avg_rank,
+--   cr.total_score AS combined_total_score
+-- FROM public.films f
+-- JOIN public.individual_rankings ir ON ir.film_id = f.id
+-- JOIN public.ranking_events re      ON re.id = ir.event_id
+-- JOIN public.profiles p             ON p.id = ir.user_id
+-- LEFT JOIN public.combined_rankings cr ON cr.film_id = f.id AND cr.event_id = ir.event_id
+-- ORDER BY f.title, re.year, p.username;

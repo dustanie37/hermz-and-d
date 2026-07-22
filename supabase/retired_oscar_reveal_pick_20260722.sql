@@ -1,0 +1,45 @@
+-- ===============================================================
+-- RETIRED 2026-07-22 -- public.oscar_reveal_pick(int, int, uuid)
+-- ===============================================================
+-- Dropped during the security pass. It was a SECURITY DEFINER function
+-- executable by the `anon` role via /rest/v1/rpc/oscar_reveal_pick, and it
+-- was dead code: superseded by oscar_reveal_category(), with zero callers in
+-- src/, in supabase/, or in any other database function.
+--
+-- Kept here only so the logic is recoverable. Do NOT restore it without
+-- re-checking the grants (revoke EXECUTE from PUBLIC and anon).
+--
+-- Migration: security_pass_views_and_function_grants
+-- ===============================================================
+
+-- CREATE OR REPLACE FUNCTION public.oscar_reveal_pick(yid integer, cid integer, uid uuid)
+--  RETURNS text
+--  LANGUAGE plpgsql
+--  SECURITY DEFINER
+--  SET search_path TO 'public'
+-- AS $function$
+-- DECLARE total int; done int;
+-- BEGIN
+--   IF auth.role() <> 'authenticated' THEN RAISE EXCEPTION 'Not allowed'; END IF;
+--   IF NOT EXISTS (SELECT 1 FROM oscar_years WHERE id = yid AND status = 'locked') THEN
+--     RETURN 'not_locked';
+--   END IF;
+--   INSERT INTO oscar_reveals (year_id, category_id, user_id) VALUES (yid, cid, uid)
+--     ON CONFLICT (year_id, category_id, user_id) DO NOTHING;
+--   SELECT count(*) INTO total FROM oscar_guesses WHERE year_id = yid;
+--   SELECT count(*) INTO done FROM oscar_reveals r
+--     WHERE r.year_id = yid
+--       AND EXISTS (SELECT 1 FROM oscar_guesses g
+--                   WHERE g.year_id = r.year_id AND g.category_id = r.category_id AND g.user_id = r.user_id);
+--   IF total > 0 AND done >= total THEN
+--     UPDATE oscar_years y SET
+--       matt_runtime_guess     = (SELECT b.runtime_guess   FROM oscar_ballots b JOIN profiles p ON p.id = b.user_id WHERE b.year_id = yid AND p.username = 'matt'),
+--       dustin_runtime_guess   = (SELECT b.runtime_guess   FROM oscar_ballots b JOIN profiles p ON p.id = b.user_id WHERE b.year_id = yid AND p.username = 'dustin'),
+--       matt_monologue_guess   = (SELECT b.monologue_guess FROM oscar_ballots b JOIN profiles p ON p.id = b.user_id WHERE b.year_id = yid AND p.username = 'matt'),
+--       dustin_monologue_guess = (SELECT b.monologue_guess FROM oscar_ballots b JOIN profiles p ON p.id = b.user_id WHERE b.year_id = yid AND p.username = 'dustin'),
+--       status = 'revealed'
+--     WHERE y.id = yid;
+--     RETURN 'complete';
+--   END IF;
+--   RETURN 'revealed';
+-- END $function$;
