@@ -208,12 +208,11 @@ function TrajectoryRow({ cat, editions, dustinRows, mattRows, colW }) {
   const H = 58, PAD_T = 15, PAD_B = 13
   const plotH = H - PAD_T - PAD_B
   const W     = colW * editions.length
-  const yOf   = v => PAD_T + plotH * (1 - v / cat.max)
   const xOf   = i => colW * i + colW / 2
 
   const series = [
-    { rows: dustinRows, color: DC, dx: -12 },
-    { rows: mattRows,   color: HC, dx:  12 },
+    { rows: dustinRows, color: DC, dx: -13 },
+    { rows: mattRows,   color: HC, dx:  13 },
   ].map(s => {
     const pts = editions.map((yr, i) => {
       if (!catInYear(cat, yr)) return { i, v: null, na: true }
@@ -228,6 +227,20 @@ function TrajectoryRow({ cat, editions, dustinRows, mattRows, colW }) {
     if (run.length > 1) segs.push(run)
     return { ...s, pts, segs }
   })
+
+  // These are all top-100 films — raw scores live in a narrow 7–10 band, so a
+  // 0-to-max axis would flatten every line. Fit the axis to the observed range
+  // instead, with a floor on the span so a single point of drift can't be
+  // dramatised into a cliff. Exact values are printed, so only shape is relative.
+  const vals    = series.flatMap(s => s.pts.filter(p => p.v != null).map(p => p.v))
+  const minSpan = Math.max(3, cat.max * 0.35)
+  let lo = Math.min(...vals), hi = Math.max(...vals)
+  const gap = minSpan - (hi - lo)
+  if (gap > 0) { lo -= gap / 2; hi += gap / 2 }
+  if (lo < 0)       { hi -= lo;             lo = 0 }
+  if (hi > cat.max) { lo -= hi - cat.max;   hi = cat.max }
+  if (lo < 0) lo = 0
+  const yOf = v => PAD_T + plotH * (1 - (v - lo) / (hi - lo || 1))
 
   return (
     <svg width={W} height={H} className="block shrink-0" aria-hidden="true">
@@ -248,7 +261,7 @@ function TrajectoryRow({ cat, editions, dustinRows, mattRows, colW }) {
         return (
           <text key={`t${si}-${p.i}`} x={xOf(p.i) + s.dx} y={yOf(p.v)}
                 textAnchor="middle" dominantBaseline="central"
-                fontSize="12.5" fontWeight="600" fill={s.color}
+                fontSize="12" fontWeight="600" fill={s.color}
                 stroke={CARD_BG} strokeWidth="4" paintOrder="stroke"
                 style={{ fontFamily: MONO }}>
             {p.v}
