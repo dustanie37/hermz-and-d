@@ -59,6 +59,8 @@ const SECTIONS = [
         text: 'Enter winners during the broadcast and the other phone updates within seconds — each win folds into the all-time stats as it lands.' },
       { tag: 'Oscars', color: 'gold', name: 'Manage nominees & categories',
         text: 'Re-fetch a year’s nominees anytime, add / rename / remove by hand, and manage the Oscar category list from a simple form.' },
+      { tag: 'Podcast', color: 'cinema', isNew: true, name: 'Score Drift',
+        text: 'Each episode’s Score Breakdown now plots every category across all four editions at once — the scores themselves sit at their own height and connect in your colors, so a category you soured on or came around to reads instantly. A kicker names the single biggest swing.' },
       { tag: 'Podcast', color: 'cinema', name: 'Cinematrix',
         text: 'The whole podcast section: all 47 episodes with a production dashboard, a per-episode prep workbench (talking points, logistics, chapters), and embedded YouTube with clickable chapters.' },
       { tag: 'Films', color: 'film', name: 'Future Consideration',

@@ -194,6 +194,89 @@ function ScorePill({ value, max = 10 }) {
   return <span className={`font-mono font-semibold text-base ${color}`}>{value}</span>
 }
 
+// ── Category score trajectory ────────────────────────────────────────────────
+// Scores are plotted as the numerals themselves: vertical position = score
+// (normalised to the category max), connected by a thin line in the player's
+// colour. Dust sits left of each edition tick, Hermz right, so they never collide.
+const CARD_BG   = '#15141E'   // night-800 — knockout halo behind numerals
+const GRID      = '#2A2734'   // night-600 — edition guides
+const HOLLOW    = '#3a3a55'   // scored edition, no value for this category
+const MONO      = 'ui-monospace, SFMono-Regular, Menlo, monospace'
+const catInYear = (cat, yr) => cat.years === 'all' || cat.years.includes(yr)
+
+function TrajectoryRow({ cat, editions, dustinRows, mattRows, colW }) {
+  const H = 58, PAD_T = 15, PAD_B = 13
+  const plotH = H - PAD_T - PAD_B
+  const W     = colW * editions.length
+  const yOf   = v => PAD_T + plotH * (1 - v / cat.max)
+  const xOf   = i => colW * i + colW / 2
+
+  const series = [
+    { rows: dustinRows, color: DC, dx: -12 },
+    { rows: mattRows,   color: HC, dx:  12 },
+  ].map(s => {
+    const pts = editions.map((yr, i) => {
+      if (!catInYear(cat, yr)) return { i, v: null, na: true }
+      const v = s.rows[yr]?.[cat.key]
+      return { i, v: v ?? null, na: false }
+    })
+    const segs = []; let run = []
+    pts.forEach(p => {
+      if (p.v != null) run.push(p)
+      else { if (run.length > 1) segs.push(run); run = [] }
+    })
+    if (run.length > 1) segs.push(run)
+    return { ...s, pts, segs }
+  })
+
+  return (
+    <svg width={W} height={H} className="block shrink-0" aria-hidden="true">
+      {editions.map((yr, i) => (
+        <line key={yr} x1={xOf(i)} x2={xOf(i)} y1={5} y2={H - 5}
+              stroke={GRID} strokeWidth="1" opacity="0.55" />
+      ))}
+      {series.map((s, si) => s.segs.map((seg, gi) => (
+        <polyline key={`l${si}-${gi}`} fill="none" stroke={s.color} strokeWidth="1.5" opacity="0.5"
+                  points={seg.map(p => `${xOf(p.i) + s.dx},${yOf(p.v)}`).join(' ')} />
+      )))}
+      {series.map((s, si) => s.pts.map(p => {
+        if (p.na) return null
+        if (p.v == null) return (
+          <circle key={`c${si}-${p.i}`} cx={xOf(p.i) + s.dx} cy={PAD_T + plotH / 2} r="2.5"
+                  fill="none" stroke={HOLLOW} strokeWidth="1" />
+        )
+        return (
+          <text key={`t${si}-${p.i}`} x={xOf(p.i) + s.dx} y={yOf(p.v)}
+                textAnchor="middle" dominantBaseline="central"
+                fontSize="12.5" fontWeight="600" fill={s.color}
+                stroke={CARD_BG} strokeWidth="4" paintOrder="stroke"
+                style={{ fontFamily: MONO }}>
+            {p.v}
+          </text>
+        )
+      }))}
+    </svg>
+  )
+}
+
+// Largest first→last swing across every category and both players.
+function biggestMove(cats, editions, dustinRows, mattRows) {
+  let best = null
+  for (const cat of cats) {
+    for (const s of [{ name: 'Dust', rows: dustinRows, color: DC },
+                     { name: 'Hermz', rows: mattRows,  color: HC }]) {
+      const pts = editions
+        .filter(yr => catInYear(cat, yr) && s.rows[yr]?.[cat.key] != null)
+        .map(yr => ({ yr, v: s.rows[yr][cat.key] }))
+      if (pts.length < 2) continue
+      const a = pts[0], b = pts[pts.length - 1]
+      const d = b.v - a.v
+      if (!best || Math.abs(d) > Math.abs(best.d)) best = { cat, ...s, d, from: a }
+    }
+  }
+  return best && best.d !== 0 ? best : null
+}
+
 function SectionHeader({ label, sub }) {
   return (
     <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-4">
@@ -403,9 +486,14 @@ export default function PodcastEpisode() {
   )
 
   const isIntro = ep.type === 'intro'
-  const LATEST      = EVENTS[EVENTS.length - 1]
   const editionsOn  = film ? EVENTS.filter(yr => dustinRows[yr]?.rank || mattRows[yr]?.rank || combined[yr]?.combined_rank) : []
   const listApps    = film ? EXTERNAL_LISTS.filter(l => l.ranked ? film[l.key] != null : film[l.key] === true) : []
+  // Editions where this film was actually scored, and the categories in play
+  const scoredEds = EVENTS.filter(yr => SCORE_CATS.some(c =>
+    catInYear(c, yr) && (dustinRows[yr]?.[c.key] != null || mattRows[yr]?.[c.key] != null)))
+  const scoreCats = SCORE_CATS.filter(c => scoredEds.some(yr =>
+    catInYear(c, yr) && (dustinRows[yr]?.[c.key] != null || mattRows[yr]?.[c.key] != null)))
+  const topMove   = scoredEds.length > 1 ? biggestMove(scoreCats, scoredEds, dustinRows, mattRows) : null
   const oscarWins        = oscarNoms.filter(n => n.is_winner)
   const oscarNominations = oscarNoms.filter(n => !n.is_winner)
   const genre = film?.omdb_genres?.split(',')[0]?.trim()
@@ -706,39 +794,79 @@ export default function PodcastEpisode() {
         )}
 
         {/* ── Score Breakdown ── */}
-        {(dustinRows[LATEST] || mattRows[LATEST]) && (
+        {scoreCats.length > 0 && (
           <div className="card p-6">
-            <SectionHeader label="SCORE BREAKDOWN" sub={`${LATEST} Edition`} />
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[420px] text-sm">
-                <thead>
-                  <tr className="border-b border-white/[0.06]">
-                    <th className="text-left font-mono text-xs tracking-kicker text-gray-400 pb-3 uppercase">Category</th>
-                    <th className="text-center font-mono text-xs tracking-kicker pb-3 uppercase" style={{ color: DC }}>Dust</th>
-                    <th className="text-center font-mono text-xs tracking-kicker pb-3 uppercase" style={{ color: HC }}>Hermz</th>
-                    <th className="text-right font-mono text-xs tracking-kicker text-gray-400 pb-3 uppercase">Max</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {SCORE_CATS.filter(cat => {
-                    const inYear = cat.years === 'all' || cat.years.includes(LATEST)
-                    const d = dustinRows[LATEST]?.[cat.key]; const m = mattRows[LATEST]?.[cat.key]
-                    return inYear && (d != null || m != null)
-                  }).map(cat => {
-                    const d = dustinRows[LATEST]?.[cat.key]
-                    const m = mattRows[LATEST]?.[cat.key]
-                    return (
-                      <tr key={cat.key} className="border-b border-white/[0.04] last:border-0">
-                        <td className="py-2.5 text-gray-300 text-sm">{cat.label}</td>
-                        <td className="py-2.5 text-center"><ScorePill value={d} max={cat.max} /></td>
-                        <td className="py-2.5 text-center"><ScorePill value={m} max={cat.max} /></td>
-                        <td className="py-2.5 text-right font-mono text-sm text-gray-500">{cat.max}</td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
+            <SectionHeader
+              label="SCORE BREAKDOWN"
+              sub={scoredEds.length > 1
+                ? (topMove
+                    ? `Biggest move — ${topMove.name} on ${topMove.cat.label}, ${topMove.d > 0 ? '▴' : '▾'}${Math.abs(topMove.d)} since ${topMove.from.yr}`
+                    : 'Every score held steady across editions')
+                : `${scoredEds[0]} Edition`}
+            />
+
+            {scoredEds.length > 1 ? (
+              <div className="overflow-x-auto -mx-6 px-6">
+                <div className="min-w-[430px]">
+                  {/* Header: colour key + edition years */}
+                  <div className="flex items-end border-b border-white/[0.06] pb-2">
+                    <div className="w-[126px] sm:w-[150px] shrink-0 flex items-center gap-3">
+                      <span className="font-mono text-[10px] tracking-kicker uppercase" style={{ color: DC }}>Dust</span>
+                      <span className="font-mono text-[10px] tracking-kicker uppercase" style={{ color: HC }}>Hermz</span>
+                    </div>
+                    <div className="flex shrink-0">
+                      {scoredEds.map(yr => (
+                        <span key={yr} className="w-[76px] text-center font-mono text-xs tracking-kicker text-gray-400">
+                          {yr}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  {scoreCats.map(cat => (
+                    <div key={cat.key} className="flex items-center border-b border-white/[0.04] last:border-0">
+                      <div className="w-[126px] sm:w-[150px] shrink-0 pr-3">
+                        <p className="text-gray-300 text-sm leading-tight">{cat.label}</p>
+                        <p className="font-mono text-[10px] text-gray-600">out of {cat.max}</p>
+                      </div>
+                      <TrajectoryRow
+                        cat={cat}
+                        editions={scoredEds}
+                        dustinRows={dustinRows}
+                        mattRows={mattRows}
+                        colW={76}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[420px] text-sm">
+                  <thead>
+                    <tr className="border-b border-white/[0.06]">
+                      <th className="text-left font-mono text-xs tracking-kicker text-gray-400 pb-3 uppercase">Category</th>
+                      <th className="text-center font-mono text-xs tracking-kicker pb-3 uppercase" style={{ color: DC }}>Dust</th>
+                      <th className="text-center font-mono text-xs tracking-kicker pb-3 uppercase" style={{ color: HC }}>Hermz</th>
+                      <th className="text-right font-mono text-xs tracking-kicker text-gray-400 pb-3 uppercase">Max</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {scoreCats.map(cat => {
+                      const yr = scoredEds[0]
+                      return (
+                        <tr key={cat.key} className="border-b border-white/[0.04] last:border-0">
+                          <td className="py-2.5 text-gray-300 text-sm">{cat.label}</td>
+                          <td className="py-2.5 text-center"><ScorePill value={dustinRows[yr]?.[cat.key]} max={cat.max} /></td>
+                          <td className="py-2.5 text-center"><ScorePill value={mattRows[yr]?.[cat.key]} max={cat.max} /></td>
+                          <td className="py-2.5 text-right font-mono text-sm text-gray-500">{cat.max}</td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
 
