@@ -225,7 +225,7 @@ export default function PodcastHome() {
           <p className="font-mono text-xs tracking-kicker text-cinema-500 mb-3 uppercase">
             Hermz &amp; D · Podcast
           </p>
-          <h1 className="font-display text-[70px] sm:text-[88px] text-white leading-none tracking-wide">
+          <h1 className="font-display text-[42px] sm:text-[68px] lg:text-[88px] text-white leading-[0.95] tracking-wide">
             {PODCAST_NAME.toUpperCase()}
           </h1>
           <p className="font-sans text-gray-400 text-xl mt-1.5">

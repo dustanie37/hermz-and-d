@@ -1,8 +1,11 @@
-// ── Cinematrix podcast — SINGLE SOURCE ────────────────────────────────────────
-// Name lives here only. When the final podcast name lands, change PODCAST_NAME
-// and every page follows.
+// ── The Academy of Two — podcast SINGLE SOURCE ───────────────────────────────
+// Name lives here only. Renamed 2026-08-23 (was "Cinematrix" — too crowded a
+// name; see `Run of Show - 12 Angry Men Test.md`). Change PODCAST_NAME here and
+// every page follows.
 
-export const PODCAST_NAME    = 'Cinematrix'
+export const PODCAST_NAME    = 'The Academy of Two'
+// Article-less form for tight chrome (desktop nav pill). Same brand, less width.
+export const PODCAST_SHORT   = 'Academy of Two'
 export const PODCAST_TAGLINE = 'A deep dive into The Canon, one film at a time.'
 
 // Episode lifecycle. Order matters — it drives the stepper.
