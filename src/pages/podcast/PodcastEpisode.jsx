@@ -951,13 +951,13 @@ export default function PodcastEpisode() {
               <span className="w-1 self-stretch rounded-full bg-gold-500 shrink-0" aria-hidden="true" />
               <div className="min-w-0">
                 <p className="kicker leading-none mb-1">Run of show · Ep {ep.episode_num}</p>
-                <p className="font-display text-xl text-white leading-none truncate">{(film.title || '').toUpperCase()}</p>
+                <p className="flex items-baseline gap-3 min-w-0">
+                  <span className="font-display text-xl text-white leading-none truncate">{(film.title || '').toUpperCase()}</span>
+                  <span className="font-mono text-xs tracking-kicker uppercase text-gray-400 whitespace-nowrap">
+                    <span className="text-white">{rosCovered}</span>/{rosTotal} covered
+                  </span>
+                </p>
               </div>
-            </div>
-
-            <div className="hidden lg:flex items-baseline gap-2 font-mono">
-              <span className="text-2xl text-white leading-none">{rosCovered}</span>
-              <span className="text-xs tracking-kicker uppercase text-gray-400">of {rosTotal} covered</span>
             </div>
 
             <div className="ml-auto flex items-center gap-2 sm:gap-3">
