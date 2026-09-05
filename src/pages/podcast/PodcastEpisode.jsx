@@ -6,7 +6,7 @@ import { hydrateAcclaim } from '../../lib/acclaimLists'
 import { PODCAST_NAME, STATUS_META, fmtTime, youtubeId, epTitle } from '../../lib/podcast'
 import Workbench from './Workbench'
 import RunOfShow from './RunOfShow'
-import { normalizeRunOfShow, emptyRunOfShow, allNotes } from '../../lib/runOfShow'
+import { emptyRunOfShow } from '../../lib/runOfShow'
 
 // ── constants ────────────────────────────────────────────────────────────────
 const EVENTS   = [2001, 2007, 2016, 2026]
@@ -564,11 +564,8 @@ export default function PodcastEpisode() {
     [film, dustinRows, mattRows, combined, oscarNoms]
   )
 
-  // Coverage for the slate strip + the destructive reset (lives up here so
-  // the strip can own the button; RunOfShow performs every other write).
-  const rosNotes   = ep ? allNotes(normalizeRunOfShow(ep.run_of_show, ep.talking_points)) : []
-  const rosTotal   = rosNotes.length
-  const rosCovered = rosNotes.filter(n => n.done).length
+  // The destructive reset lives up here so the slate strip can own the
+  // button; RunOfShow performs every other write.
   async function startOver() {
     if (!ep) return
     if (!window.confirm('Clear every note, question, deep dive, feature pick, hook and snapshot text for this episode? The database facts stay; only what you typed is cleared.')) return
@@ -942,8 +939,7 @@ export default function PodcastEpisode() {
 
         {/* ── Slate: sticky control strip for the run of show ─────────
             Identity on the left (kicker + film), mode tabs + the destructive
-            reset on the right. In Recording only: a 'notes ticked' readout and
-            a gold rail along the bottom edge that fills as you tick. */}
+            reset on the right. */}
         <div className="sticky z-20 -mx-5 sm:-mx-8 bg-night-900/95 backdrop-blur-md border-y border-gold-500/25 shadow-[0_8px_24px_-12px_rgba(0,0,0,0.8)]"
              style={{ top: headerH }}>
           <div className="px-5 sm:px-8 py-3 flex flex-wrap items-center gap-x-4 gap-y-3">
@@ -951,14 +947,7 @@ export default function PodcastEpisode() {
               <span className="w-1 self-stretch rounded-full bg-gold-500 shrink-0" aria-hidden="true" />
               <div className="min-w-0">
                 <p className="kicker leading-none mb-1">Run of show · Ep {ep.episode_num}</p>
-                <p className="flex items-baseline gap-3 min-w-0">
-                  <span className="font-display text-xl text-white leading-none truncate">{(film.title || '').toUpperCase()}</span>
-                  {mode === 'record' && rosTotal > 0 && (
-                    <span className="font-mono text-xs tracking-kicker uppercase text-gray-400 whitespace-nowrap">
-                      <span className="text-white">{rosCovered}</span> of {rosTotal} notes ticked
-                    </span>
-                  )}
-                </p>
+                <p className="font-display text-xl text-white leading-none truncate">{(film.title || '').toUpperCase()}</p>
               </div>
             </div>
 
@@ -989,12 +978,6 @@ export default function PodcastEpisode() {
               )}
             </div>
           </div>
-          {mode === 'record' && (
-            <div className="h-0.5 bg-night-700" aria-hidden="true">
-              <div className="h-full bg-gold-500 transition-[width] duration-300"
-                   style={{ width: `${rosTotal ? Math.round(rosCovered / rosTotal * 100) : 0}%` }} />
-            </div>
-          )}
         </div>
 
         <RunOfShow
