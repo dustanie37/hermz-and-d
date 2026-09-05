@@ -91,7 +91,7 @@ function NoteList({ notes, onChange, mode, emptyText = 'Nothing here yet.' }) {
       <div className={record ? 'space-y-3' : 'space-y-1.5'}>
         {notes.map((n, i) => (
           <div key={n.id}
-               className={`group flex items-start gap-3 rounded-lg -mx-2 px-2 transition-colors ${record ? 'py-2' : 'py-1.5 hover:bg-night-900/50'}`}>
+               className={`group flex flex-wrap items-start gap-x-3 gap-y-1 rounded-lg -mx-2 px-2 transition-colors ${record ? 'py-2' : 'py-1.5 hover:bg-night-900/50'}`}>
             <button
               onClick={() => update(n.id, { done: !n.done })}
               aria-label={n.done ? 'Mark not covered' : 'Mark covered'}
@@ -125,8 +125,9 @@ function NoteList({ notes, onChange, mode, emptyText = 'Nothing here yet.' }) {
               </p>
             )}
 
+            {/* Row actions: wrap under the text on phones (always visible — no hover on touch), inline + hover-revealed from sm up */}
             {!record && editingId !== n.id && (
-              <div className="shrink-0 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+              <div className="shrink-0 flex items-center gap-0.5 basis-full justify-end sm:basis-auto opacity-60 sm:opacity-0 sm:group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
                 <button onClick={() => update(n.id, { kind: n.kind === 'question' ? 'note' : 'question' })}
                         className="w-6 h-6 rounded text-gray-600 hover:text-cinema-400 font-mono text-xs" aria-label="Toggle question">Q</button>
                 <button onClick={() => move(n.id, -1)} disabled={i === 0}

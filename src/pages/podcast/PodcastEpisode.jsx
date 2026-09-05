@@ -482,6 +482,15 @@ export default function PodcastEpisode() {
   const [features,   setFeatures]   = useState([])   // podcast_features library
   const [params,     setParams]     = useSearchParams()
   const mode = params.get('view') === 'record' ? 'record' : 'edit'
+  // The site header (nav + sub-nav) is 57px on phones and 94px on desktop —
+  // measure it so the sticky mode toggle tucks exactly beneath it.
+  const [headerH, setHeaderH] = useState(64)
+  useEffect(() => {
+    const measure = () => setHeaderH(document.querySelector('header')?.offsetHeight ?? 64)
+    measure()
+    window.addEventListener('resize', measure)
+    return () => window.removeEventListener('resize', measure)
+  }, [])
   const setMode = (m) => setParams(m === 'record' ? { view: 'record' } : {}, { replace: true })
 
   useEffect(() => {
@@ -912,7 +921,8 @@ export default function PodcastEpisode() {
         {mode === 'edit' && <MediaCard ep={ep} timestamps={timestamps} />}
 
         {/* Edit / Recording toggle — sticky so it's reachable mid-scroll */}
-        <div className="sticky top-16 z-20 -mx-5 sm:-mx-8 px-5 sm:px-8 py-2 bg-night-950/85 backdrop-blur-md border-b border-white/[0.06]">
+        <div className="sticky z-20 -mx-5 sm:-mx-8 px-5 sm:px-8 py-2 bg-night-950/85 backdrop-blur-md border-b border-white/[0.06]"
+             style={{ top: headerH }}>
           <div className="flex items-center gap-3">
             <span className="kicker-dim hidden sm:inline">Run of show</span>
             <span className="flex-1" />
