@@ -595,6 +595,11 @@ export default function PodcastEpisode() {
   const scoreCats = SCORE_CATS.filter(c => scoredEds.some(yr =>
     catInYear(c, yr) && (dustinRows[yr]?.[c.key] != null || mattRows[yr]?.[c.key] != null)))
   const topMove   = scoredEds.length > 1 ? biggestMove(scoreCats, scoredEds, dustinRows, mattRows) : null
+  // Per-category score paths for the Main Discussion deep-dive picker
+  const diveCats = scoreCats.map(c => {
+    const pts = rows => scoredEds.filter(yr => catInYear(c, yr) && rows[yr]?.[c.key] != null).map(yr => ({ yr, v: rows[yr][c.key] }))
+    return { key: c.key, label: c.label, max: c.max, d: pts(dustinRows), m: pts(mattRows) }
+  })
   const oscarWins        = oscarNoms.filter(n => n.is_winner)
   const oscarNominations = oscarNoms.filter(n => !n.is_winner)
   const genre = film?.omdb_genres?.split(',')[0]?.trim()
@@ -942,6 +947,7 @@ export default function PodcastEpisode() {
           ep={ep} setEp={setEp} film={film} mode={mode}
           insights={insights} features={features} setFeatures={setFeatures}
           combinedRank={combined[LATEST]?.combined_rank ?? null}
+          categories={diveCats}
           stats={{ readout: readoutEl, canon: canonEl, drift: driftEl, oscar: oscarEl, lists: listsEl }}
         />
 

@@ -60,7 +60,7 @@ const SECTIONS = [
       { tag: 'Oscars', color: 'gold', name: 'Manage nominees & categories',
         text: 'Re-fetch a year’s nominees anytime, add / rename / remove by hand, and manage the Oscar category list from a simple form.' },
       { tag: 'Podcast', color: 'cinema', isNew: true, name: 'Run of Show',
-        text: 'Every episode page is now the prep doc. Six fixed segments — cold open through outro — each with its own notes and questions tagged D, M or both, the film’s facts and free-text context in the Snapshot, and the ranking history, scorecard readout and score drift woven into the Main Discussion. Pick recurring features from an editable library, and flip to Recording view for a clean, big-type read on the day.' },
+        text: 'Every episode page is now the prep doc. Six fixed segments — cold open through outro — each with its own notes and questions tagged D, M or both, the film’s facts and free-text context in the Snapshot, and the ranking history, scorecard readout and score drift woven into the Main Discussion. Pick which score categories get a deep dive — each opens with both score paths and its own notes — choose recurring features from an editable library, and flip to Recording view for a clean, big-type read on the day.' },
       { tag: 'Podcast', color: 'cinema', name: 'The Academy of Two',
         text: 'The podcast has a name. “Cinematrix” is retired — every page, pill and header now reads The Academy of Two.' },
       { tag: 'Podcast', color: 'cinema', isNew: true, name: 'Score Drift',

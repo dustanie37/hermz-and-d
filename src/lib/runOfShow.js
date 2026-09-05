@@ -77,6 +77,7 @@ export function emptyRunOfShow() {
     target_runtime: 45,
     segments: Object.fromEntries(SEGMENTS.map(s => [s.key, { notes: [] }])),
     features: [],   // [{ feature_id, notes: [] }]
+    deep_dives: [], // [{ cat_key, notes: [] }]  — score categories picked for a closer look in Main Discussion
   }
 }
 
@@ -103,6 +104,9 @@ export function normalizeRunOfShow(stored, talkingPoints) {
   ros.features = Array.isArray(stored.features)
     ? stored.features.map(f => ({ feature_id: f.feature_id, notes: Array.isArray(f.notes) ? f.notes : [] }))
     : []
+  ros.deep_dives = Array.isArray(stored.deep_dives)
+    ? stored.deep_dives.map(d => ({ cat_key: d.cat_key, notes: Array.isArray(d.notes) ? d.notes : [] }))
+    : []
   return ros
 }
 
@@ -111,5 +115,6 @@ export function allNotes(ros) {
   if (!ros) return []
   const seg = SEGMENTS.flatMap(s => ros.segments?.[s.key]?.notes || [])
   const feat = (ros.features || []).flatMap(f => f.notes || [])
-  return [...seg, ...feat]
+  const dive = (ros.deep_dives || []).flatMap(d => d.notes || [])
+  return [...seg, ...feat, ...dive]
 }

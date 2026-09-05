@@ -312,9 +312,71 @@ function FeatureLibrary({ features, setFeatures, selectedIds, onToggle, mode }) 
   )
 }
 
+// ── Deep dives: score categories picked for a closer look ────────────────────
+function DeepDives({ categories, dives, onToggle, onNotes, mode }) {
+  const record   = mode === 'record'
+  const selected = new Set(dives.map(d => d.cat_key))
+  const byKey    = Object.fromEntries(categories.map(c => [c.key, c]))
+  const path     = pts => pts.map(p => p.v ?? '·').join(' → ')
+  if (!categories.length) return null
+  return (
+    <div>
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-3">
+        <h3 className="font-display not-italic text-xl text-white tracking-wide">DEEP DIVES</h3>
+        <span className="kicker-dim">{record ? 'Categories we\'re going long on' : 'Pick the categories worth going long on'}</span>
+      </div>
+
+      {!record && (
+        <div className="flex flex-wrap gap-2 mb-4">
+          {categories.map(c => {
+            const on = selected.has(c.key)
+            const dl = c.d[c.d.length - 1]?.v, ml = c.m[c.m.length - 1]?.v
+            return (
+              <button key={c.key} onClick={() => onToggle(c.key)}
+                      className={`px-3 py-1.5 rounded-full border font-mono text-xs tracking-kicker uppercase transition-all flex items-center gap-2
+                        ${on ? 'bg-gold-500 border-gold-500 text-night-950 font-semibold'
+                             : 'bg-night-900/40 border-white/[0.08] text-gray-400 hover:text-gray-200 hover:border-white/[0.16]'}`}>
+                {c.label}
+                <span className={`font-semibold ${on ? 'text-night-950/70' : 'text-gray-500'}`}>{dl ?? '·'}/{ml ?? '·'}</span>
+              </button>
+            )
+          })}
+        </div>
+      )}
+
+      {dives.length === 0 && (
+        <p className={`text-gray-500 ${record ? 'text-base' : 'text-sm'}`}>No deep dive picked for this episode.</p>
+      )}
+
+      <div className="space-y-5">
+        {dives.map(d => {
+          const c = byKey[d.cat_key]
+          if (!c) return null
+          const eds = [...new Set([...c.d, ...c.m].map(p => p.yr))].sort()
+          return (
+            <div key={d.cat_key} className="rounded-xl border border-cinema-500/20 bg-cinema-500/[0.04] p-4 sm:p-5">
+              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-2">
+                <h4 className={`font-display not-italic text-white ${record ? 'text-2xl' : 'text-xl'}`}>{c.label.toUpperCase()}</h4>
+                <span className="kicker-dim">out of {c.max} · {eds.join(' / ')}</span>
+              </div>
+              <div className={`flex flex-wrap gap-x-6 gap-y-1 mb-4 font-mono ${record ? 'text-base' : 'text-sm'}`}>
+                <span><span className="tracking-kicker uppercase text-xs mr-2" style={{ color: OWNERS.D.color }}>Dust</span><span className="text-gray-200">{path(c.d)}</span></span>
+                <span><span className="tracking-kicker uppercase text-xs mr-2" style={{ color: OWNERS.M.color }}>Hermz</span><span className="text-gray-200">{path(c.m)}</span></span>
+              </div>
+              <NoteList notes={d.notes} onChange={n => onNotes(d.cat_key, n)} mode={mode}
+                        emptyText={record ? 'Nothing planned — wing it.' : 'No notes for this deep dive yet.'} />
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 // ── Run of Show (exported) ───────────────────────────────────────────────────
 export default function RunOfShow({
   ep, setEp, film, mode = 'edit', stats = {}, insights = [], features = [], setFeatures, combinedRank,
+  categories = [],   // [{ key, label, max, d: [{yr,v}], m: [{yr,v}] }] — score categories with data for this film
 }) {
   const ros      = normalizeRunOfShow(ep.run_of_show, ep.talking_points)
   const snapshot = (ep.snapshot && typeof ep.snapshot === 'object') ? ep.snapshot : {}
@@ -336,6 +398,12 @@ export default function RunOfShow({
     saveRos({ ...ros, segments: { ...ros.segments, [key]: { notes } } })
   const setFeatNotes = (fid, notes) =>
     saveRos({ ...ros, features: ros.features.map(f => f.feature_id === fid ? { ...f, notes } : f) })
+  const setDiveNotes = (key, notes) =>
+    saveRos({ ...ros, deep_dives: ros.deep_dives.map(d => d.cat_key === key ? { ...d, notes } : d) })
+  const toggleDive = (key) => {
+    const has = ros.deep_dives.some(d => d.cat_key === key)
+    saveRos({ ...ros, deep_dives: has ? ros.deep_dives.filter(d => d.cat_key !== key) : [...ros.deep_dives, { cat_key: key, notes: [] }] })
+  }
   const toggleFeature = (fid) => {
     const has = ros.features.some(f => f.feature_id === fid)
     saveRos({ ...ros, features: has ? ros.features.filter(f => f.feature_id !== fid) : [...ros.features, { feature_id: fid, notes: [] }] })
@@ -469,6 +537,8 @@ export default function RunOfShow({
                 {stats.readout}
                 {stats.canon}
                 {stats.drift}
+                <DeepDives categories={categories} dives={ros.deep_dives}
+                           onToggle={toggleDive} onNotes={setDiveNotes} mode={mode} />
               </div>
             )}
 
