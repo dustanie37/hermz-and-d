@@ -6,6 +6,7 @@ import { hydrateAcclaim } from '../../lib/acclaimLists'
 import { PODCAST_NAME, STATUS_META, fmtTime, youtubeId, epTitle } from '../../lib/podcast'
 import Workbench from './Workbench'
 import RunOfShow from './RunOfShow'
+import { normalizeRunOfShow, emptyRunOfShow, allNotes } from '../../lib/runOfShow'
 
 // ── constants ────────────────────────────────────────────────────────────────
 const EVENTS   = [2001, 2007, 2016, 2026]
@@ -563,6 +564,20 @@ export default function PodcastEpisode() {
     [film, dustinRows, mattRows, combined, oscarNoms]
   )
 
+  // Coverage for the slate strip + the destructive reset (lives up here so
+  // the strip can own the button; RunOfShow performs every other write).
+  const rosNotes   = ep ? allNotes(normalizeRunOfShow(ep.run_of_show, ep.talking_points)) : []
+  const rosTotal   = rosNotes.length
+  const rosCovered = rosNotes.filter(n => n.done).length
+  async function startOver() {
+    if (!ep) return
+    if (!window.confirm('Clear every note, question, deep dive, feature pick, hook and snapshot text for this episode? The database facts stay; only what you typed is cleared.')) return
+    const { data, error: rErr } = await supabase.from('podcast_episodes')
+      .update({ run_of_show: emptyRunOfShow(), snapshot: {}, updated_at: new Date().toISOString() })
+      .eq('id', ep.id).select().single()
+    if (!rErr) setEp(prev => ({ ...data, films: prev.films }))
+  }
+
   const readout = useMemo(
     () => film ? buildReadout(dustinRows, mattRows, combined) : [],
     [film, dustinRows, mattRows, combined]
@@ -925,21 +940,56 @@ export default function PodcastEpisode() {
 
         {mode === 'edit' && <MediaCard ep={ep} timestamps={timestamps} />}
 
-        {/* Edit / Recording toggle — sticky so it's reachable mid-scroll */}
-        <div className="sticky z-20 -mx-5 sm:-mx-8 px-5 sm:px-8 py-2 bg-night-950/85 backdrop-blur-md border-b border-white/[0.06]"
+        {/* ── Slate: sticky control strip for the run of show ─────────
+            Identity on the left (kicker + film), coverage in the middle,
+            mode tabs + the destructive reset on the right. A gold rail
+            along the bottom edge fills as notes get ticked. */}
+        <div className="sticky z-20 -mx-5 sm:-mx-8 bg-night-900/95 backdrop-blur-md border-y border-gold-500/25 shadow-[0_8px_24px_-12px_rgba(0,0,0,0.8)]"
              style={{ top: headerH }}>
-          <div className="flex items-center gap-3">
-            <span className="kicker-dim hidden sm:inline">Run of show</span>
-            <span className="flex-1" />
-            <div className="flex rounded-full border border-white/[0.1] overflow-hidden">
-              {[['edit', 'Edit'], ['record', 'Recording']].map(([m, label]) => (
-                <button key={m} onClick={() => setMode(m)}
-                        className={`px-4 py-2 font-mono text-xs tracking-kicker uppercase transition-colors min-h-[44px]
-                          ${mode === m ? 'bg-gold-500 text-night-950 font-semibold' : 'text-gray-400 hover:text-gray-200'}`}>
-                  {label}
-                </button>
-              ))}
+          <div className="px-5 sm:px-8 py-3 flex flex-wrap items-center gap-x-6 gap-y-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <span className="w-1 self-stretch rounded-full bg-gold-500 shrink-0" aria-hidden="true" />
+              <div className="min-w-0">
+                <p className="kicker leading-none mb-1">Run of show · Ep {ep.episode_num}</p>
+                <p className="font-display text-xl text-white leading-none truncate">{(film.title || '').toUpperCase()}</p>
+              </div>
             </div>
+
+            <div className="hidden md:flex items-baseline gap-2 font-mono">
+              <span className="text-2xl text-white leading-none">{rosCovered}</span>
+              <span className="text-xs tracking-kicker uppercase text-gray-400">of {rosTotal} covered</span>
+            </div>
+
+            <div className="ml-auto flex items-center gap-2 sm:gap-3">
+              <div className="flex items-stretch" role="tablist" aria-label="View">
+                {[['edit', 'Edit'], ['record', 'Recording']].map(([m, label]) => {
+                  const on = mode === m
+                  return (
+                    <button key={m} role="tab" aria-selected={on} onClick={() => setMode(m)}
+                            className={`relative px-3 sm:px-4 min-h-[44px] font-mono text-xs tracking-kicker uppercase transition-colors
+                              ${on ? 'text-gold-400' : 'text-gray-400 hover:text-gray-200'}`}>
+                      {label}
+                      <span className={`absolute left-2 right-2 -bottom-px h-0.5 rounded-full transition-all ${on ? 'bg-gold-500' : 'bg-transparent'}`} />
+                    </button>
+                  )
+                })}
+              </div>
+              {mode === 'edit' && (
+                <>
+                  <span className="w-px h-6 bg-white/10" aria-hidden="true" />
+                  <button onClick={startOver}
+                          className="flex items-center gap-1.5 px-3 sm:px-4 min-h-[44px] rounded-full border border-red-500/40 text-red-300
+                                     font-mono text-xs tracking-kicker uppercase transition-colors hover:bg-red-500/10 hover:border-red-400">
+                    <span aria-hidden="true">↺</span>
+                    <span>Start over</span>
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+          <div className="h-0.5 bg-night-700">
+            <div className="h-full bg-gold-500 transition-[width] duration-300"
+                 style={{ width: `${rosTotal ? Math.round(rosCovered / rosTotal * 100) : 0}%` }} />
           </div>
         </div>
 

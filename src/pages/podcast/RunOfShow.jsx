@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import {
   SEGMENTS, OWNERS, OWNER_CYCLE, SNAPSHOT_FIELDS,
-  newNote, emptyRunOfShow, normalizeRunOfShow, allNotes,
+  newNote, normalizeRunOfShow, allNotes,
 } from '../../lib/runOfShow'
 
 /*
@@ -411,14 +411,8 @@ export default function RunOfShow({
   const addInsight = (segKey, text) =>
     setSegNotes(segKey, [...ros.segments[segKey].notes, newNote(text, { source: 'generated' })])
 
-  async function startOver() {
-    if (!window.confirm('Clear every note, question, feature pick, hook and snapshot text for this episode? The database facts stay; only what you typed is cleared.')) return
-    await persist({ run_of_show: emptyRunOfShow(), snapshot: {} })
-  }
-
   const notesAll   = allNotes(ros)
   const existing   = new Set(notesAll.map(n => n.text))
-  const covered    = notesAll.filter(n => n.done).length
   const selectedIds = new Set(ros.features.map(f => f.feature_id))
   const featureById = Object.fromEntries(features.map(f => [f.id, f]))
   const sizeCls = record ? 'text-lg' : 'text-base'
@@ -433,13 +427,7 @@ export default function RunOfShow({
       <div className={cardCls}>
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-5">
           <h2 className="font-display text-2xl text-white tracking-wide">EPISODE SNAPSHOT</h2>
-          <span className="kicker-dim">{notesAll.length ? `${covered}/${notesAll.length} covered` : 'Run of show'}</span>
-          {!record && (
-            <button onClick={startOver}
-                    className="ml-auto font-mono text-xs tracking-kicker uppercase text-gray-500 hover:text-red-400 transition-colors">
-              Start over
-            </button>
-          )}
+          <span className="kicker-dim">The one idea, the numbers, the date</span>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5">
