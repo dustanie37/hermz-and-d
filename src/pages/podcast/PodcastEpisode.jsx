@@ -944,11 +944,8 @@ export default function PodcastEpisode() {
              style={{ top: headerH }}>
           <div className="px-5 sm:px-8 py-3 flex flex-wrap items-center gap-x-4 gap-y-3">
             <div className="flex items-center gap-3 min-w-0">
-              <span className="w-1 self-stretch rounded-full bg-gold-500 shrink-0" aria-hidden="true" />
-              <div className="min-w-0">
-                <p className="kicker leading-none mb-1">Run of show · Ep {ep.episode_num}</p>
-                <p className="font-display text-xl text-white leading-none truncate">{(film.title || '').toUpperCase()}</p>
-              </div>
+              <span className="w-1 h-5 rounded-full bg-gold-500 shrink-0" aria-hidden="true" />
+              <p className="kicker leading-none">Run of show · Ep {ep.episode_num}</p>
             </div>
 
             <div className="ml-auto flex items-center gap-2 sm:gap-3">
