@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { supabase } from '../../lib/supabase'
-import { STATUSES, STATUS_META, fmtTime, parseTime, newTalkingPoint } from '../../lib/podcast'
+import { STATUSES, STATUS_META, fmtTime, parseTime } from '../../lib/podcast'
 
 /*
- * Episode prep workbench — logistics, talking points, timestamps.
+ * Episode prep workbench — logistics + timestamps. Talking points moved into
+ * RunOfShow.jsx (segment notes) on 2026-09-05.
  * The whole podcast section is login-protected, so no extra gating here.
  * Parent owns `ep` (podcast_episodes row) and `timestamps` (podcast_timestamps rows);
  * this component performs the writes and pushes fresh values back up.
@@ -168,125 +169,6 @@ function LogisticsCard({ ep, setEp }) {
   )
 }
 
-// ── Talking points ───────────────────────────────────────────────────────────
-function TalkingPointsCard({ ep, setEp }) {
-  const points = Array.isArray(ep.talking_points) ? ep.talking_points : []
-  const [draft,     setDraft]     = useState('')
-  const [editingId, setEditingId] = useState(null)
-  const [editText,  setEditText]  = useState('')
-  const [busy,      setBusy]      = useState(false)
-
-  async function persist(next) {
-    setBusy(true)
-    const { data, error } = await supabase
-      .from('podcast_episodes')
-      .update({ talking_points: next, updated_at: new Date().toISOString() })
-      .eq('id', ep.id).select().single()
-    setBusy(false)
-    if (!error) setEp(prev => ({ ...data, films: prev.films }))
-  }
-
-  const add     = () => { const t = draft.trim(); if (!t) return; setDraft(''); persist([...points, newTalkingPoint(t)]) }
-  const toggle  = (id) => persist(points.map(p => p.id === id ? { ...p, done: !p.done } : p))
-  const remove  = (id) => persist(points.filter(p => p.id !== id))
-  const move    = (id, dir) => {
-    const i = points.findIndex(p => p.id === id)
-    const j = i + dir
-    if (i < 0 || j < 0 || j >= points.length) return
-    const next = [...points]
-    ;[next[i], next[j]] = [next[j], next[i]]
-    persist(next)
-  }
-  const startEdit  = (p) => { setEditingId(p.id); setEditText(p.text) }
-  const commitEdit = () => {
-    const t = editText.trim()
-    if (t) persist(points.map(p => p.id === editingId ? { ...p, text: t } : p))
-    setEditingId(null)
-  }
-
-  return (
-    <div className="card p-6">
-      <SectionHeader label="TALKING POINTS" sub={points.length ? `${points.filter(p => p.done).length}/${points.length} covered` : 'Build the conversation'} />
-
-      {points.length === 0 && (
-        <p className="text-gray-500 text-base mb-4">
-          {ep.type === 'film'
-            ? 'Nothing yet — add points below, or pull ideas in from the generated insights above.'
-            : 'Nothing yet — add the first talking point below.'}
-        </p>
-      )}
-
-      <div className="space-y-2 mb-5">
-        {points.map((p, i) => (
-          <div key={p.id} className="group flex items-start gap-2.5 rounded-lg px-2 py-1.5 -mx-2 hover:bg-night-900/50 transition-colors">
-            {/* check */}
-            <button
-              onClick={() => toggle(p.id)}
-              disabled={busy}
-              aria-label={p.done ? 'Mark not covered' : 'Mark covered'}
-              className={`shrink-0 mt-0.5 w-5 h-5 rounded border flex items-center justify-center text-[11px] transition-all
-                ${p.done
-                  ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400'
-                  : 'bg-night-900 border-night-600 text-transparent hover:border-gray-500'}`}
-            >
-              ✓
-            </button>
-
-            {/* text / edit */}
-            {editingId === p.id ? (
-              <div className="flex-1">
-                <textarea
-                  autoFocus rows={2} className="input w-full text-base resize-y"
-                  value={editText}
-                  onChange={e => setEditText(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); commitEdit() } if (e.key === 'Escape') setEditingId(null) }}
-                />
-                <div className="flex gap-2 mt-1.5">
-                  <button className="btn-gold text-xs" onClick={commitEdit}>Save</button>
-                  <button className="btn-ghost text-xs" onClick={() => setEditingId(null)}>Cancel</button>
-                </div>
-              </div>
-            ) : (
-              <p className={`flex-1 text-base leading-relaxed ${p.done ? 'text-gray-500 line-through' : 'text-gray-200'}`}>
-                {p.text}
-                {p.source === 'generated' && (
-                  <span className="ml-2 align-middle font-mono text-[11px] tracking-kicker uppercase text-cinema-400 border border-cinema-500/30 rounded-full px-1.5 py-px">auto</span>
-                )}
-              </p>
-            )}
-
-            {/* row actions */}
-            {editingId !== p.id && (
-              <div className="shrink-0 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
-                <button onClick={() => move(p.id, -1)} disabled={busy || i === 0}
-                        className="w-6 h-6 rounded text-gray-600 hover:text-gray-300 disabled:opacity-30" aria-label="Move up">↑</button>
-                <button onClick={() => move(p.id, 1)} disabled={busy || i === points.length - 1}
-                        className="w-6 h-6 rounded text-gray-600 hover:text-gray-300 disabled:opacity-30" aria-label="Move down">↓</button>
-                <button onClick={() => startEdit(p)} disabled={busy}
-                        className="w-6 h-6 rounded text-gray-600 hover:text-cinema-400" aria-label="Edit">✎</button>
-                <button onClick={() => remove(p.id)} disabled={busy}
-                        className="w-6 h-6 rounded text-gray-600 hover:text-red-400" aria-label="Delete">×</button>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-
-      {/* add */}
-      <div className="flex gap-2">
-        <textarea
-          rows={1} className="input flex-1 text-base resize-none"
-          placeholder="Add a talking point…"
-          value={draft}
-          onChange={e => setDraft(e.target.value)}
-          onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); add() } }}
-        />
-        <button className="btn-gold text-sm disabled:opacity-50" disabled={!draft.trim() || busy} onClick={add}>Add</button>
-      </div>
-    </div>
-  )
-}
-
 // ── Timestamps ───────────────────────────────────────────────────────────────
 function TimestampsCard({ ep, timestamps, setTimestamps }) {
   const [time,  setTime]  = useState('')
@@ -368,7 +250,6 @@ export default function Workbench({ ep, setEp, timestamps, setTimestamps }) {
         <span className="font-mono text-xs tracking-kicker text-gray-400 uppercase">Prep Workbench</span>
         <span className="block flex-1 h-px bg-white/[0.06]" />
       </div>
-      <TalkingPointsCard ep={ep} setEp={setEp} />
       <LogisticsCard ep={ep} setEp={setEp} />
       <TimestampsCard ep={ep} timestamps={timestamps} setTimestamps={setTimestamps} />
     </div>

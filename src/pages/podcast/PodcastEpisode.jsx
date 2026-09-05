@@ -1,13 +1,15 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useSearchParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { DC, HC, CC } from '../../lib/helpers'
 import { hydrateAcclaim } from '../../lib/acclaimLists'
-import { PODCAST_NAME, STATUS_META, fmtTime, youtubeId, epTitle, newTalkingPoint } from '../../lib/podcast'
+import { PODCAST_NAME, STATUS_META, fmtTime, youtubeId, epTitle } from '../../lib/podcast'
 import Workbench from './Workbench'
+import RunOfShow from './RunOfShow'
 
 // ── constants ────────────────────────────────────────────────────────────────
 const EVENTS   = [2001, 2007, 2016, 2026]
+const LATEST   = EVENTS[EVENTS.length - 1]
 
 const SCORE_CATS = [
   { key: 'score_lead_performance',  label: 'Lead Performance',       max: 10, years: 'all'              },
@@ -36,7 +38,6 @@ const EXTERNAL_LISTS = [
 // ── insight generator (mirrors MovieDetail) ──────────────────────────────────
 function generateInsights(film, dustinRows, mattRows, combined, oscarNoms) {
   const insights    = []
-  const LATEST      = EVENTS[EVENTS.length - 1]
   const PRIOR       = EVENTS.slice(0, -1)
   const dustYears   = EVENTS.filter(yr => dustinRows[yr]?.rank)
   const mattYears   = EVENTS.filter(yr => mattRows[yr]?.rank)
@@ -290,6 +291,84 @@ function biggestMove(cats, editions, dustinRows, mattRows) {
   return best && best.d !== 0 ? best : null
 }
 
+// ── Scorecard readout ────────────────────────────────────────────────────────
+// The sentences you'd otherwise type into a run-of-show doc, computed from the
+// rows: each list's rank path across editions, the standout streaks, and where
+// the two totals actually diverge in the latest shared edition.
+function buildReadout(dustinRows, mattRows, combined) {
+  const lines = []
+  const path = (get) => EVENTS.filter(yr => get(yr) != null).map(yr => ({ yr, r: get(yr) }))
+  const arrows = (pts) => pts.map(p => `#${p.r}`).join(' → ')
+
+  const series = [
+    { name: 'Combined', color: CC, pts: path(yr => combined[yr]?.combined_rank ?? null) },
+    { name: 'Dust',     color: DC, pts: path(yr => dustinRows[yr]?.rank ?? null) },
+    { name: 'Hermz',    color: HC, pts: path(yr => mattRows[yr]?.rank ?? null) },
+  ]
+  for (const s of series) {
+    if (!s.pts.length) continue
+    const flags = []
+    const last = s.pts[s.pts.length - 1]
+    if (s.pts.length > 1) {
+      const best = Math.min(...s.pts.map(p => p.r))
+      if (last.r === best && s.pts.slice(0, -1).some(p => p.r > best)) flags.push('all-time high right now')
+      let big = null
+      for (let i = 1; i < s.pts.length; i++) {
+        const d = s.pts[i - 1].r - s.pts[i].r
+        if (!big || Math.abs(d) > Math.abs(big.d)) big = { d, yr: s.pts[i].yr }
+      }
+      if (big && Math.abs(big.d) >= 5) flags.push(`${big.d > 0 ? 'up' : 'down'} ${Math.abs(big.d)} in ${big.yr}`)
+      if (s.pts.every(p => p.r <= 10)) flags.push('top 10 every edition')
+    }
+    lines.push({ name: s.name, color: s.color, text: `${arrows(s.pts)}${flags.length ? ` — ${flags.join(', ')}` : ''}` })
+  }
+
+  // Perfect Personal Impact streaks
+  for (const s of [{ name: 'Dust', color: DC, rows: dustinRows }, { name: 'Hermz', color: HC, rows: mattRows }]) {
+    const yrs = EVENTS.filter(yr => s.rows[yr]?.score_personal_impact != null)
+    if (yrs.length > 1 && yrs.every(yr => s.rows[yr].score_personal_impact === 20))
+      lines.push({ name: s.name, color: s.color, text: `Personal Impact 20/20 in all ${yrs.length} editions.` })
+  }
+
+  // Where the gap lives — latest edition both scored
+  const shared = EVENTS.filter(yr => dustinRows[yr]?.total_score != null && mattRows[yr]?.total_score != null)
+  const yr = shared[shared.length - 1]
+  if (yr) {
+    const d = dustinRows[yr], m = mattRows[yr]
+    const gap = d.total_score - m.total_score
+    const cats = SCORE_CATS.filter(c => catInYear(c, yr) && d[c.key] != null && m[c.key] != null)
+    const diffs = cats.map(c => ({ c, dv: d[c.key], mv: m[c.key], diff: d[c.key] - m[c.key] }))
+    const agree = diffs.filter(x => x.diff === 0).length
+    const top = [...diffs].sort((a, b) => Math.abs(b.diff) - Math.abs(a.diff))[0]
+    let text
+    if (gap === 0) text = `Identical totals in ${yr} (${d.total_score}) — agree exactly on ${agree} of ${cats.length} categories.`
+    else {
+      const lead = gap > 0 ? 'Dust' : 'Hermz'
+      text = `${lead} is ${Math.abs(gap)} higher in ${yr} (${d.total_score} vs ${m.total_score}).`
+      if (top && top.diff !== 0) {
+        const share = Math.abs(gap) > 0 ? Math.round(Math.abs(top.diff) / Math.abs(gap) * 100) : null
+        text += ` ${top.c.label} (${top.dv} vs ${top.mv}) is the biggest split${share != null && share <= 100 ? ` — ${share}% of the gap` : ''}.`
+      }
+      text += ` Exact agreement on ${agree} of ${cats.length} categories.`
+    }
+    lines.push({ name: 'Gap', color: '#9ca3af', text })
+  }
+  return lines
+}
+
+// Inner panel — stats nested inside a run-of-show segment card
+function Panel({ label, sub, children }) {
+  return (
+    <div className="rounded-xl border border-white/[0.06] bg-night-900/40 p-4 sm:p-5">
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-3">
+        <h3 className="font-display not-italic text-xl text-white tracking-wide">{label}</h3>
+        {sub && <span className="kicker-dim">{sub}</span>}
+      </div>
+      {children}
+    </div>
+  )
+}
+
 function SectionHeader({ label, sub }) {
   return (
     <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-4">
@@ -400,6 +479,10 @@ export default function PodcastEpisode() {
   const [mattRows,   setMattRows]   = useState({})
   const [combined,   setCombined]   = useState({})
   const [oscarNoms,  setOscarNoms]  = useState([])
+  const [features,   setFeatures]   = useState([])   // podcast_features library
+  const [params,     setParams]     = useSearchParams()
+  const mode = params.get('view') === 'record' ? 'record' : 'edit'
+  const setMode = (m) => setParams(m === 'record' ? { view: 'record' } : {}, { replace: true })
 
   useEffect(() => {
     async function load() {
@@ -410,15 +493,18 @@ export default function PodcastEpisode() {
       const [
         { data: epRow, error: epErr },
         { data: eps },
+        { data: feats },
       ] = await Promise.all([
         supabase.from('podcast_episodes').select('*').eq('episode_num', episodeNum).single(),
         supabase.from('podcast_episodes')
           .select('episode_num, type, status, title_override, films(title)')
           .order('episode_num', { ascending: true }),
+        supabase.from('podcast_features').select('*').order('sort_order').order('id'),
       ])
       if (epErr || !epRow) { setError('Episode not found'); setLoading(false); return }
       setEp(epRow)
       setAllEps(eps || [])
+      setFeatures(feats || [])
 
       // 2. Timestamps
       const { data: ts } = await supabase
@@ -468,17 +554,10 @@ export default function PodcastEpisode() {
     [film, dustinRows, mattRows, combined, oscarNoms]
   )
 
-  // Promote a generated insight into the editable talking points
-  const pointTexts = new Set((Array.isArray(ep?.talking_points) ? ep.talking_points : []).map(p => p.text))
-  async function promote(text) {
-    if (!ep || pointTexts.has(text)) return
-    const next = [...(Array.isArray(ep.talking_points) ? ep.talking_points : []), newTalkingPoint(text, 'generated')]
-    const { data, error: uErr } = await supabase
-      .from('podcast_episodes')
-      .update({ talking_points: next, updated_at: new Date().toISOString() })
-      .eq('id', ep.id).select().single()
-    if (!uErr) setEp(data)
-  }
+  const readout = useMemo(
+    () => film ? buildReadout(dustinRows, mattRows, combined) : [],
+    [film, dustinRows, mattRows, combined]
+  )
 
   const idx    = allEps.findIndex(e => e.episode_num === episodeNum)
   const prevEp = idx > 0 ? allEps[idx - 1] : null
@@ -593,6 +672,174 @@ export default function PodcastEpisode() {
     </div>
   )
 
+  // ── Stats panels — woven into the run of show ─────────────────────────────
+  const readoutEl = readout.length > 0 && (
+    <Panel label="SCORECARD READOUT" sub="Rank paths & where the totals split">
+      <div className="space-y-2">
+        {readout.map((l, i) => (
+          <div key={i} className="flex items-start gap-3">
+            <span className="shrink-0 w-[68px] font-mono text-xs tracking-kicker uppercase pt-1" style={{ color: l.color }}>{l.name}</span>
+            <p className={`flex-1 leading-relaxed text-gray-200 ${mode === 'record' ? 'text-lg' : 'text-base'}`}>{l.text}</p>
+          </div>
+        ))}
+      </div>
+    </Panel>
+  )
+
+  const canonEl = (
+    <Panel label="IN THE CANON" sub="Ranking history across all editions">
+      {editionsOn.length === 0 ? (
+        <p className="text-gray-500 text-sm">No ranking data found.</p>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[480px] text-sm">
+            <thead>
+              <tr className="border-b border-white/[0.06]">
+                <th className="text-left font-mono text-xs tracking-kicker text-gray-400 pb-3 uppercase">Edition</th>
+                <th className="text-center font-mono text-xs tracking-kicker pb-3 uppercase" style={{ color: DC }}>Dust</th>
+                <th className="text-center font-mono text-xs tracking-kicker pb-3 uppercase" style={{ color: HC }}>Hermz</th>
+                <th className="text-center font-mono text-xs tracking-kicker pb-3 uppercase" style={{ color: CC }}>Combined</th>
+                <th className="text-right font-mono text-xs tracking-kicker text-gray-400 pb-3 uppercase">D Score</th>
+                <th className="text-right font-mono text-xs tracking-kicker text-gray-400 pb-3 uppercase">H Score</th>
+              </tr>
+            </thead>
+            <tbody>
+              {EVENTS.map(yr => {
+                const d = dustinRows[yr]; const m = mattRows[yr]; const c = combined[yr]
+                if (!d && !m && !c) return null
+                return (
+                  <tr key={yr} className="border-b border-white/[0.04] last:border-0">
+                    <td className="py-3 font-mono text-sm text-gray-300">{yr} Edition</td>
+                    <td className="py-3 text-center">
+                      {d?.rank ? <span className="font-mono font-semibold text-base" style={{ color: DC }}>#{d.rank}</span>
+                               : <span className="text-gray-500 text-sm">NR</span>}
+                    </td>
+                    <td className="py-3 text-center">
+                      {m?.rank ? <span className="font-mono font-semibold text-base" style={{ color: HC }}>#{m.rank}</span>
+                               : <span className="text-gray-500 text-sm">NR</span>}
+                    </td>
+                    <td className="py-3 text-center">
+                      {c?.combined_rank ? <span className="font-mono font-semibold text-base" style={{ color: CC }}>#{c.combined_rank}</span>
+                                        : <span className="text-gray-500 text-sm">—</span>}
+                    </td>
+                    <td className="py-3 text-right"><ScorePill value={d?.total_score} max={90} /></td>
+                    <td className="py-3 text-right"><ScorePill value={m?.total_score} max={90} /></td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </Panel>
+  )
+
+  const oscarEl = oscarNoms.length > 0 ? (
+    <Panel
+      label="OSCAR STORY"
+      sub={`${film.oscar_wins > 0 ? `${film.oscar_wins} win${film.oscar_wins > 1 ? 's' : ''}` : ''} ${film.oscar_nominations > 0 ? `${film.oscar_nominations} nomination${film.oscar_nominations > 1 ? 's' : ''}` : ''}`.trim() || 'Academy Award history'}
+    >
+      <div className="flex flex-wrap gap-2">
+        {oscarWins.map((nom, i) => {
+          const label = nom.nominee_name ? `${nom.category_name} — ${nom.nominee_name}` : nom.category_name
+          return <span key={i} className="badge-gold flex items-center gap-1 text-sm">🏆 {label}</span>
+        })}
+        {oscarNominations.map((nom, i) => {
+          const label = nom.nominee_name ? `${nom.category_name} — ${nom.nominee_name}` : nom.category_name
+          return (
+            <span key={i} className="text-sm text-gray-400 px-2.5 py-0.5 rounded-full border border-night-600 bg-night-800">{label}</span>
+          )
+        })}
+      </div>
+    </Panel>
+  ) : (film.oscar_nominations > 0 || film.oscar_wins > 0) ? (
+    <Panel label="OSCAR STORY">
+      <p className="text-gray-500 text-sm">
+        {film.oscar_wins > 0 ? `${film.oscar_wins} win${film.oscar_wins > 1 ? 's' : ''}` : ''}
+        {film.oscar_nominations > 0 ? `, ${film.oscar_nominations} nomination${film.oscar_nominations > 1 ? 's' : ''}` : ''}
+        {' '}— detailed category breakdown available via the film page.
+      </p>
+    </Panel>
+  ) : null
+
+  const listsEl = listApps.length > 0 && (
+    <Panel label="ON THE LISTS" sub="External critical lists">
+      <div className="flex flex-wrap gap-2">
+        {listApps.map(l => (
+          <span key={l.key} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-night-800 border border-white/[0.06] text-sm text-gray-300">
+            <span className="w-1.5 h-1.5 rounded-full bg-cinema-500 shrink-0"/>
+            {l.label}
+            {l.ranked && film[l.key] != null ? <span className="font-mono text-xs text-gray-500">#{film[l.key]}</span> : null}
+          </span>
+        ))}
+      </div>
+    </Panel>
+  )
+
+  const driftEl = scoreCats.length > 0 && (
+    <Panel
+      label="SCORE BREAKDOWN"
+      sub={scoredEds.length > 1
+        ? (topMove
+            ? `Biggest move — ${topMove.name} on ${topMove.cat.label}, ${topMove.d > 0 ? '▴' : '▾'}${Math.abs(topMove.d)} since ${topMove.from.yr}`
+            : 'Every score held steady across editions')
+        : `${scoredEds[0]} Edition`}
+    >
+      {scoredEds.length > 1 ? (
+        <div className="overflow-x-auto -mx-4 px-4 sm:-mx-5 sm:px-5">
+          <div className="min-w-[430px]">
+            <div className="flex items-end border-b border-white/[0.06] pb-2">
+              <div className="w-[126px] sm:w-[150px] shrink-0 flex items-center gap-3">
+                <span className="font-mono text-[10px] tracking-kicker uppercase" style={{ color: DC }}>Dust</span>
+                <span className="font-mono text-[10px] tracking-kicker uppercase" style={{ color: HC }}>Hermz</span>
+              </div>
+              <div className="flex shrink-0">
+                {scoredEds.map(yr => (
+                  <span key={yr} className="w-[76px] text-center font-mono text-xs tracking-kicker text-gray-400">{yr}</span>
+                ))}
+              </div>
+            </div>
+            {scoreCats.map(cat => (
+              <div key={cat.key} className="flex items-center border-b border-white/[0.04] last:border-0">
+                <div className="w-[126px] sm:w-[150px] shrink-0 pr-3">
+                  <p className="text-gray-300 text-sm leading-tight">{cat.label}</p>
+                  <p className="font-mono text-[10px] text-gray-600">out of {cat.max}</p>
+                </div>
+                <TrajectoryRow cat={cat} editions={scoredEds} dustinRows={dustinRows} mattRows={mattRows} colW={76} />
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[420px] text-sm">
+            <thead>
+              <tr className="border-b border-white/[0.06]">
+                <th className="text-left font-mono text-xs tracking-kicker text-gray-400 pb-3 uppercase">Category</th>
+                <th className="text-center font-mono text-xs tracking-kicker pb-3 uppercase" style={{ color: DC }}>Dust</th>
+                <th className="text-center font-mono text-xs tracking-kicker pb-3 uppercase" style={{ color: HC }}>Hermz</th>
+                <th className="text-right font-mono text-xs tracking-kicker text-gray-400 pb-3 uppercase">Max</th>
+              </tr>
+            </thead>
+            <tbody>
+              {scoreCats.map(cat => {
+                const yr = scoredEds[0]
+                return (
+                  <tr key={cat.key} className="border-b border-white/[0.04] last:border-0">
+                    <td className="py-2.5 text-gray-300 text-sm">{cat.label}</td>
+                    <td className="py-2.5 text-center"><ScorePill value={dustinRows[yr]?.[cat.key]} max={cat.max} /></td>
+                    <td className="py-2.5 text-center"><ScorePill value={mattRows[yr]?.[cat.key]} max={cat.max} /></td>
+                    <td className="py-2.5 text-right font-mono text-sm text-gray-500">{cat.max}</td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </Panel>
+  )
+
   return (
     <div className="min-h-screen bg-night-950">
 
@@ -662,229 +909,35 @@ export default function PodcastEpisode() {
       {/* ── Body ─────────────────────────────────────────────────── */}
       <div className="max-w-3xl mx-auto px-5 sm:px-8 py-10 space-y-8">
 
-        <MediaCard ep={ep} timestamps={timestamps} />
+        {mode === 'edit' && <MediaCard ep={ep} timestamps={timestamps} />}
 
-        {/* ── In The Canon ── */}
-        <div className="card p-6">
-          <SectionHeader label="IN THE CANON" sub="Ranking history across all editions" />
-          {editionsOn.length === 0 ? (
-            <p className="text-gray-600 text-sm">No ranking data found.</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[480px] text-sm">
-                <thead>
-                  <tr className="border-b border-white/[0.06]">
-                    <th className="text-left font-mono text-xs tracking-kicker text-gray-400 pb-3 uppercase">Edition</th>
-                    <th className="text-center font-mono text-xs tracking-kicker pb-3 uppercase" style={{ color: DC }}>Dust</th>
-                    <th className="text-center font-mono text-xs tracking-kicker pb-3 uppercase" style={{ color: HC }}>Hermz</th>
-                    <th className="text-center font-mono text-xs tracking-kicker pb-3 uppercase" style={{ color: CC }}>Combined</th>
-                    <th className="text-right font-mono text-xs tracking-kicker text-gray-400 pb-3 uppercase">D Score</th>
-                    <th className="text-right font-mono text-xs tracking-kicker text-gray-400 pb-3 uppercase">H Score</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {EVENTS.map(yr => {
-                    const d = dustinRows[yr]; const m = mattRows[yr]; const c = combined[yr]
-                    if (!d && !m && !c) return null
-                    return (
-                      <tr key={yr} className="border-b border-white/[0.04] last:border-0">
-                        <td className="py-3 font-mono text-sm text-gray-300">{yr} Edition</td>
-                        <td className="py-3 text-center">
-                          {d?.rank ? <span className="font-mono font-semibold text-base" style={{ color: DC }}>#{d.rank}</span>
-                                   : <span className="text-gray-500 text-sm">NR</span>}
-                        </td>
-                        <td className="py-3 text-center">
-                          {m?.rank ? <span className="font-mono font-semibold text-base" style={{ color: HC }}>#{m.rank}</span>
-                                   : <span className="text-gray-500 text-sm">NR</span>}
-                        </td>
-                        <td className="py-3 text-center">
-                          {c?.combined_rank ? <span className="font-mono font-semibold text-base" style={{ color: CC }}>#{c.combined_rank}</span>
-                                            : <span className="text-gray-500 text-sm">—</span>}
-                        </td>
-                        <td className="py-3 text-right">
-                          <ScorePill value={d?.total_score} max={90} />
-                        </td>
-                        <td className="py-3 text-right">
-                          <ScorePill value={m?.total_score} max={90} />
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-
-        {/* ── Generated Insights ── */}
-        {insights.length > 0 && (
-          <div className="card p-6">
-            <SectionHeader label="GENERATED INSIGHTS" sub="From ranking data — pull the good ones into talking points" />
-            <div className="space-y-3">
-              {insights.map((text, i) => {
-                const added = pointTexts.has(text)
-                return (
-                  <div key={i} className="flex gap-3 items-start">
-                    <div className="shrink-0 mt-1 w-6 h-6 rounded-full bg-cinema-500/10 border border-cinema-500/30 flex items-center justify-center">
-                      <span className="font-mono text-xs text-cinema-500">{i + 1}</span>
-                    </div>
-                    <p className="flex-1 text-gray-300 text-base leading-relaxed">{text}</p>
-                    <button
-                      onClick={() => promote(text)}
-                      disabled={added}
-                      className={`shrink-0 mt-0.5 px-2 py-0.5 rounded-full border font-mono text-xs tracking-kicker uppercase transition-all
-                        ${added
-                          ? 'border-emerald-500/30 text-emerald-400/70 cursor-default'
-                          : 'border-white/[0.08] text-gray-500 hover:text-cinema-400 hover:border-cinema-500/40'}`}
-                    >
-                      {added ? '✓ added' : '+ point'}
-                    </button>
-                  </div>
-                )
-              })}
-            </div>
-            <Link
-              to={`/movies/${film.id}`}
-              className="mt-5 inline-flex items-center gap-1.5 text-xs text-gray-600 hover:text-cinema-400 transition-colors font-mono tracking-kicker uppercase"
-            >
-              Full film page →
-            </Link>
-          </div>
-        )}
-
-        {/* ── Oscar Story ── */}
-        {oscarNoms.length > 0 && (
-          <div className="card p-6">
-            <SectionHeader
-              label="OSCAR STORY"
-              sub={`${film.oscar_wins > 0 ? `${film.oscar_wins} win${film.oscar_wins > 1 ? 's' : ''}` : ''} ${film.oscar_nominations > 0 ? `${film.oscar_nominations} nomination${film.oscar_nominations > 1 ? 's' : ''}` : ''}`.trim() || 'Academy Award history'}
-            />
-            <div className="flex flex-wrap gap-2">
-              {oscarWins.map((nom, i) => {
-                const label = nom.nominee_name ? `${nom.category_name} — ${nom.nominee_name}` : nom.category_name
-                return (
-                  <span key={i} className="badge-gold flex items-center gap-1 text-sm">🏆 {label}</span>
-                )
-              })}
-              {oscarNominations.map((nom, i) => {
-                const label = nom.nominee_name ? `${nom.category_name} — ${nom.nominee_name}` : nom.category_name
-                return (
-                  <span key={i} className="text-sm text-gray-400 px-2.5 py-0.5 rounded-full border border-night-600 bg-night-800">
-                    {label}
-                  </span>
-                )
-              })}
-            </div>
-          </div>
-        )}
-        {oscarNoms.length === 0 && (film.oscar_nominations > 0 || film.oscar_wins > 0) && (
-          <div className="card p-6">
-            <SectionHeader label="OSCAR STORY" />
-            <p className="text-gray-500 text-sm">
-              {film.oscar_wins > 0 ? `${film.oscar_wins} win${film.oscar_wins > 1 ? 's' : ''}` : ''}
-              {film.oscar_nominations > 0 ? `, ${film.oscar_nominations} nomination${film.oscar_nominations > 1 ? 's' : ''}` : ''}
-              {' '}— detailed category breakdown available via the film page.
-            </p>
-          </div>
-        )}
-
-        {/* ── On The Lists ── */}
-        {listApps.length > 0 && (
-          <div className="card p-6">
-            <SectionHeader label="ON THE LISTS" sub="External critical lists" />
-            <div className="flex flex-wrap gap-2">
-              {listApps.map(l => (
-                <span key={l.key} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-night-800 border border-white/[0.06] text-sm text-gray-300">
-                  <span className="w-1.5 h-1.5 rounded-full bg-cinema-500 shrink-0"/>
-                  {l.label}
-                  {l.ranked && film[l.key] != null ? (
-                    <span className="font-mono text-xs text-gray-500">#{film[l.key]}</span>
-                  ) : null}
-                </span>
+        {/* Edit / Recording toggle — sticky so it's reachable mid-scroll */}
+        <div className="sticky top-16 z-20 -mx-5 sm:-mx-8 px-5 sm:px-8 py-2 bg-night-950/85 backdrop-blur-md border-b border-white/[0.06]">
+          <div className="flex items-center gap-3">
+            <span className="kicker-dim hidden sm:inline">Run of show</span>
+            <span className="flex-1" />
+            <div className="flex rounded-full border border-white/[0.1] overflow-hidden">
+              {[['edit', 'Edit'], ['record', 'Recording']].map(([m, label]) => (
+                <button key={m} onClick={() => setMode(m)}
+                        className={`px-4 py-2 font-mono text-xs tracking-kicker uppercase transition-colors min-h-[44px]
+                          ${mode === m ? 'bg-gold-500 text-night-950 font-semibold' : 'text-gray-400 hover:text-gray-200'}`}>
+                  {label}
+                </button>
               ))}
             </div>
           </div>
+        </div>
+
+        <RunOfShow
+          ep={ep} setEp={setEp} film={film} mode={mode}
+          insights={insights} features={features} setFeatures={setFeatures}
+          combinedRank={combined[LATEST]?.combined_rank ?? null}
+          stats={{ readout: readoutEl, canon: canonEl, drift: driftEl, oscar: oscarEl, lists: listsEl }}
+        />
+
+        {mode === 'edit' && (
+          <Workbench ep={ep} setEp={setEp} timestamps={timestamps} setTimestamps={setTimestamps} />
         )}
-
-        {/* ── Score Breakdown ── */}
-        {scoreCats.length > 0 && (
-          <div className="card p-6">
-            <SectionHeader
-              label="SCORE BREAKDOWN"
-              sub={scoredEds.length > 1
-                ? (topMove
-                    ? `Biggest move — ${topMove.name} on ${topMove.cat.label}, ${topMove.d > 0 ? '▴' : '▾'}${Math.abs(topMove.d)} since ${topMove.from.yr}`
-                    : 'Every score held steady across editions')
-                : `${scoredEds[0]} Edition`}
-            />
-
-            {scoredEds.length > 1 ? (
-              <div className="overflow-x-auto -mx-6 px-6">
-                <div className="min-w-[430px]">
-                  {/* Header: colour key + edition years */}
-                  <div className="flex items-end border-b border-white/[0.06] pb-2">
-                    <div className="w-[126px] sm:w-[150px] shrink-0 flex items-center gap-3">
-                      <span className="font-mono text-[10px] tracking-kicker uppercase" style={{ color: DC }}>Dust</span>
-                      <span className="font-mono text-[10px] tracking-kicker uppercase" style={{ color: HC }}>Hermz</span>
-                    </div>
-                    <div className="flex shrink-0">
-                      {scoredEds.map(yr => (
-                        <span key={yr} className="w-[76px] text-center font-mono text-xs tracking-kicker text-gray-400">
-                          {yr}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  {scoreCats.map(cat => (
-                    <div key={cat.key} className="flex items-center border-b border-white/[0.04] last:border-0">
-                      <div className="w-[126px] sm:w-[150px] shrink-0 pr-3">
-                        <p className="text-gray-300 text-sm leading-tight">{cat.label}</p>
-                        <p className="font-mono text-[10px] text-gray-600">out of {cat.max}</p>
-                      </div>
-                      <TrajectoryRow
-                        cat={cat}
-                        editions={scoredEds}
-                        dustinRows={dustinRows}
-                        mattRows={mattRows}
-                        colW={76}
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[420px] text-sm">
-                  <thead>
-                    <tr className="border-b border-white/[0.06]">
-                      <th className="text-left font-mono text-xs tracking-kicker text-gray-400 pb-3 uppercase">Category</th>
-                      <th className="text-center font-mono text-xs tracking-kicker pb-3 uppercase" style={{ color: DC }}>Dust</th>
-                      <th className="text-center font-mono text-xs tracking-kicker pb-3 uppercase" style={{ color: HC }}>Hermz</th>
-                      <th className="text-right font-mono text-xs tracking-kicker text-gray-400 pb-3 uppercase">Max</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {scoreCats.map(cat => {
-                      const yr = scoredEds[0]
-                      return (
-                        <tr key={cat.key} className="border-b border-white/[0.04] last:border-0">
-                          <td className="py-2.5 text-gray-300 text-sm">{cat.label}</td>
-                          <td className="py-2.5 text-center"><ScorePill value={dustinRows[yr]?.[cat.key]} max={cat.max} /></td>
-                          <td className="py-2.5 text-center"><ScorePill value={mattRows[yr]?.[cat.key]} max={cat.max} /></td>
-                          <td className="py-2.5 text-right font-mono text-sm text-gray-500">{cat.max}</td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ── Prep Workbench ── */}
-        <Workbench ep={ep} setEp={setEp} timestamps={timestamps} setTimestamps={setTimestamps} />
 
         {navLinks}
       </div>
