@@ -129,15 +129,15 @@ function NoteList({ notes, onChange, mode, emptyText = 'Nothing here yet.' }) {
             {!record && editingId !== n.id && (
               <div className="shrink-0 flex items-center gap-0.5 basis-full justify-end sm:basis-auto opacity-60 sm:opacity-0 sm:group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
                 <button onClick={() => update(n.id, { kind: n.kind === 'question' ? 'note' : 'question' })}
-                        className="w-6 h-6 rounded text-gray-600 hover:text-cinema-400 font-mono text-xs" aria-label="Toggle question">Q</button>
+                        className="w-9 h-9 sm:w-6 sm:h-6 rounded text-gray-600 hover:text-cinema-400 font-mono text-xs" aria-label="Toggle question">Q</button>
                 <button onClick={() => move(n.id, -1)} disabled={i === 0}
-                        className="w-6 h-6 rounded text-gray-600 hover:text-gray-300 disabled:opacity-30" aria-label="Move up">↑</button>
+                        className="w-9 h-9 sm:w-6 sm:h-6 rounded text-gray-600 hover:text-gray-300 disabled:opacity-30" aria-label="Move up">↑</button>
                 <button onClick={() => move(n.id, 1)} disabled={i === notes.length - 1}
-                        className="w-6 h-6 rounded text-gray-600 hover:text-gray-300 disabled:opacity-30" aria-label="Move down">↓</button>
+                        className="w-9 h-9 sm:w-6 sm:h-6 rounded text-gray-600 hover:text-gray-300 disabled:opacity-30" aria-label="Move down">↓</button>
                 <button onClick={() => { setEditingId(n.id); setEditText(n.text) }}
-                        className="w-6 h-6 rounded text-gray-600 hover:text-cinema-400" aria-label="Edit">✎</button>
+                        className="w-9 h-9 sm:w-6 sm:h-6 rounded text-gray-600 hover:text-cinema-400" aria-label="Edit">✎</button>
                 <button onClick={() => remove(n.id)}
-                        className="w-6 h-6 rounded text-gray-600 hover:text-red-400" aria-label="Delete">×</button>
+                        className="w-9 h-9 sm:w-6 sm:h-6 rounded text-gray-600 hover:text-red-400" aria-label="Delete">×</button>
               </div>
             )}
           </div>
