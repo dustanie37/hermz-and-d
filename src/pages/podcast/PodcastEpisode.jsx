@@ -941,9 +941,9 @@ export default function PodcastEpisode() {
         {mode === 'edit' && <MediaCard ep={ep} timestamps={timestamps} />}
 
         {/* ── Slate: sticky control strip for the run of show ─────────
-            Identity on the left (kicker + film), coverage in the middle,
-            mode tabs + the destructive reset on the right. A gold rail
-            along the bottom edge fills as notes get ticked. */}
+            Identity on the left (kicker + film), mode tabs + the destructive
+            reset on the right. In Recording only: a 'notes ticked' readout and
+            a gold rail along the bottom edge that fills as you tick. */}
         <div className="sticky z-20 -mx-5 sm:-mx-8 bg-night-900/95 backdrop-blur-md border-y border-gold-500/25 shadow-[0_8px_24px_-12px_rgba(0,0,0,0.8)]"
              style={{ top: headerH }}>
           <div className="px-5 sm:px-8 py-3 flex flex-wrap items-center gap-x-4 gap-y-3">
@@ -953,9 +953,11 @@ export default function PodcastEpisode() {
                 <p className="kicker leading-none mb-1">Run of show · Ep {ep.episode_num}</p>
                 <p className="flex items-baseline gap-3 min-w-0">
                   <span className="font-display text-xl text-white leading-none truncate">{(film.title || '').toUpperCase()}</span>
-                  <span className="font-mono text-xs tracking-kicker uppercase text-gray-400 whitespace-nowrap">
-                    <span className="text-white">{rosCovered}</span>/{rosTotal} covered
-                  </span>
+                  {mode === 'record' && rosTotal > 0 && (
+                    <span className="font-mono text-xs tracking-kicker uppercase text-gray-400 whitespace-nowrap">
+                      <span className="text-white">{rosCovered}</span> of {rosTotal} notes ticked
+                    </span>
+                  )}
                 </p>
               </div>
             </div>
@@ -987,10 +989,12 @@ export default function PodcastEpisode() {
               )}
             </div>
           </div>
-          <div className="h-0.5 bg-night-700">
-            <div className="h-full bg-gold-500 transition-[width] duration-300"
-                 style={{ width: `${rosTotal ? Math.round(rosCovered / rosTotal * 100) : 0}%` }} />
-          </div>
+          {mode === 'record' && (
+            <div className="h-0.5 bg-night-700" aria-hidden="true">
+              <div className="h-full bg-gold-500 transition-[width] duration-300"
+                   style={{ width: `${rosTotal ? Math.round(rosCovered / rosTotal * 100) : 0}%` }} />
+            </div>
+          )}
         </div>
 
         <RunOfShow
