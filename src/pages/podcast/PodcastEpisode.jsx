@@ -946,7 +946,7 @@ export default function PodcastEpisode() {
             along the bottom edge fills as notes get ticked. */}
         <div className="sticky z-20 -mx-5 sm:-mx-8 bg-night-900/95 backdrop-blur-md border-y border-gold-500/25 shadow-[0_8px_24px_-12px_rgba(0,0,0,0.8)]"
              style={{ top: headerH }}>
-          <div className="px-5 sm:px-8 py-3 flex flex-wrap items-center gap-x-6 gap-y-3">
+          <div className="px-5 sm:px-8 py-3 flex flex-wrap items-center gap-x-4 gap-y-3">
             <div className="flex items-center gap-3 min-w-0">
               <span className="w-1 self-stretch rounded-full bg-gold-500 shrink-0" aria-hidden="true" />
               <div className="min-w-0">
@@ -955,7 +955,7 @@ export default function PodcastEpisode() {
               </div>
             </div>
 
-            <div className="hidden md:flex items-baseline gap-2 font-mono">
+            <div className="hidden lg:flex items-baseline gap-2 font-mono">
               <span className="text-2xl text-white leading-none">{rosCovered}</span>
               <span className="text-xs tracking-kicker uppercase text-gray-400">of {rosTotal} covered</span>
             </div>
