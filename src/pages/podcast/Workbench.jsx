@@ -85,7 +85,7 @@ function LogisticsCard({ ep, setEp }) {
 
   return (
     <div className="card p-6">
-      <SectionHeader label="LOGISTICS" sub="Status, dates & links" />
+      <SectionHeader label="LOGISTICS" />
 
       {/* Status stepper */}
       <div className="flex flex-wrap items-center gap-2 mb-6">
@@ -202,7 +202,7 @@ function TimestampsCard({ ep, timestamps, setTimestamps }) {
 
   return (
     <div className="card p-6">
-      <SectionHeader label="TIMESTAMPS" sub="Chapters — fill in after recording" />
+      <SectionHeader label="TIMESTAMPS" sub="Fill in after recording" />
 
       {timestamps.length === 0 && (
         <p className="text-gray-500 text-base mb-4">No chapters yet.</p>
@@ -245,11 +245,6 @@ function TimestampsCard({ ep, timestamps, setTimestamps }) {
 export default function Workbench({ ep, setEp, timestamps, setTimestamps }) {
   return (
     <div className="space-y-8">
-      <div className="flex items-center gap-3">
-        <span className="block flex-1 h-px bg-white/[0.06]" />
-        <span className="font-mono text-xs tracking-kicker text-gray-400 uppercase">Prep Workbench</span>
-        <span className="block flex-1 h-px bg-white/[0.06]" />
-      </div>
       <LogisticsCard ep={ep} setEp={setEp} />
       <TimestampsCard ep={ep} timestamps={timestamps} setTimestamps={setTimestamps} />
     </div>

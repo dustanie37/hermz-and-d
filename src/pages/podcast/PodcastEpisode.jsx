@@ -700,7 +700,7 @@ export default function PodcastEpisode() {
 
   // ── Stats panels — woven into the run of show ─────────────────────────────
   const readoutEl = readout.length > 0 && (
-    <Panel label="SCORECARD READOUT" sub="Rank paths & where the totals split">
+    <Panel label="SCORECARD READOUT">
       <div className="space-y-2">
         {readout.map((l, i) => (
           <div key={i} className="flex items-start gap-3">
@@ -713,7 +713,7 @@ export default function PodcastEpisode() {
   )
 
   const canonEl = (
-    <Panel label="IN THE CANON" sub="Ranking history across all editions">
+    <Panel label="RANKING HISTORY">
       {editionsOn.length === 0 ? (
         <p className="text-gray-500 text-sm">No ranking data found.</p>
       ) : (
@@ -789,7 +789,7 @@ export default function PodcastEpisode() {
   ) : null
 
   const listsEl = listApps.length > 0 && (
-    <Panel label="ON THE LISTS" sub="External critical lists">
+    <Panel label="ON THE LISTS">
       <div className="flex flex-wrap gap-2">
         {listApps.map(l => (
           <span key={l.key} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-night-800 border border-white/[0.06] text-sm text-gray-300">
@@ -885,7 +885,7 @@ export default function PodcastEpisode() {
           {/* Back + prev/next */}
           <div className="flex items-center justify-between mb-5">
             <Link to="/podcast" className="font-mono text-xs tracking-kicker text-gray-400 hover:text-cinema-500 transition-colors uppercase">
-              ← {PODCAST_NAME}
+              ← Episodes
             </Link>
             <div className="flex items-center gap-3">
               {prevEp && (
@@ -915,7 +915,7 @@ export default function PodcastEpisode() {
             <div>
               <div className="flex items-center gap-4 mb-1.5">
                 <p className="font-mono text-xs tracking-kicker text-cinema-500 uppercase">
-                  Episode {String(ep.episode_num).padStart(2,'0')} · {PODCAST_NAME}
+                  Episode {String(ep.episode_num).padStart(2,'0')}
                 </p>
                 <StatusChip status={ep.status} />
               </div>
@@ -945,7 +945,7 @@ export default function PodcastEpisode() {
           <div className="px-5 sm:px-8 py-3 flex flex-wrap items-center gap-x-4 gap-y-3">
             <div className="flex items-center gap-3 min-w-0">
               <span className="w-1 h-5 rounded-full bg-gold-500 shrink-0" aria-hidden="true" />
-              <p className="kicker leading-none">Run of show · Ep {ep.episode_num}</p>
+              <p className="kicker leading-none">Run of show</p>
             </div>
 
             <div className="ml-auto flex items-center gap-2 sm:gap-3">

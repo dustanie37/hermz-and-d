@@ -28,9 +28,8 @@ function SegmentHeader({ seg, right, mode }) {
           <h2 className={`font-display text-white tracking-wide ${mode === 'record' ? 'text-3xl' : 'text-2xl'}`}>
             {seg.name.toUpperCase()}
           </h2>
-          <span className="kicker-dim">{seg.aim}</span>
         </div>
-        {mode === 'edit' && <p className="text-gray-400 text-sm mt-1 leading-relaxed">{seg.hint}</p>}
+        {mode === 'edit' && seg.hint && <p className="text-gray-400 text-sm mt-1 leading-relaxed">{seg.hint}</p>}
       </div>
       {right}
     </div>
@@ -210,7 +209,7 @@ function InsightPicker({ insights, existing, onAdd, mode }) {
   if (!insights.length) return null
   return (
     <div className="mb-5 rounded-xl border border-cinema-500/20 bg-cinema-500/[0.04] p-4">
-      <p className="kicker-cinema mb-3">Hook material · from the ranking data</p>
+      <p className="kicker-cinema mb-3">Hook material</p>
       <div className="space-y-2.5">
         {insights.map((text, i) => {
           const added = existing.has(text)
@@ -323,7 +322,7 @@ function DeepDives({ categories, dives, onToggle, onNotes, mode }) {
     <div>
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-3">
         <h3 className="font-display not-italic text-xl text-white tracking-wide">DEEP DIVES</h3>
-        <span className="kicker-dim">{record ? 'Categories we\'re going long on' : 'Pick the categories worth going long on'}</span>
+        {!record && <span className="kicker-dim">Pick categories to go long on</span>}
       </div>
 
       {!record && (
@@ -427,14 +426,9 @@ export default function RunOfShow({
       <div className={cardCls}>
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-5">
           <h2 className="font-display text-2xl text-white tracking-wide">EPISODE SNAPSHOT</h2>
-          <span className="kicker-dim">The one idea, the numbers, the date</span>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5">
-          <div>
-            <p className="stat-label mb-1">Episode</p>
-            <p className="font-display text-3xl text-white leading-none">{String(ep.episode_num).padStart(2, '0')}</p>
-          </div>
+        <div className="grid grid-cols-3 gap-4 mb-5">
           <div>
             <p className="stat-label mb-1">Shared rank</p>
             <p className="font-display text-3xl leading-none" style={{ color: '#2DD4BF' }}>{combinedRank ? `#${combinedRank}` : '—'}</p>
@@ -457,7 +451,7 @@ export default function RunOfShow({
           </div>
         </div>
 
-        <p className="stat-label mb-1.5">Thesis / hook</p>
+        <p className="stat-label mb-1.5">Hook</p>
         {record ? (
           <p className={`${sizeCls} leading-relaxed ${ros.hook ? 'text-gray-100' : 'text-gray-500'}`}>{ros.hook || 'No hook written.'}</p>
         ) : (
@@ -481,19 +475,12 @@ export default function RunOfShow({
             {/* 3 · database facts + free text */}
             {seg.key === 'snapshot' && film && (
               <div className="mb-6 space-y-5">
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-3">
-                  {[
-                    ['Year',     film.release_year],
-                    ['Director', film.director],
-                    ['Writer',   film.writer],
-                    ['Genre',    film.omdb_genres],
-                  ].map(([k, v]) => (
-                    <div key={k}>
-                      <p className="stat-label mb-0.5">{k}</p>
-                      <p className={`text-gray-200 ${sizeCls}`}>{v || <span className="text-gray-500">—</span>}</p>
-                    </div>
-                  ))}
-                  <div className="col-span-2 sm:col-span-4">
+                <div className="grid grid-cols-1 sm:grid-cols-[1fr_2fr] gap-x-6 gap-y-3">
+                  <div>
+                    <p className="stat-label mb-0.5">Writer</p>
+                    <p className={`text-gray-200 ${sizeCls}`}>{film.writer || <span className="text-gray-500">—</span>}</p>
+                  </div>
+                  <div>
                     <p className="stat-label mb-0.5">Cast</p>
                     <p className={`text-gray-200 ${sizeCls}`}>
                       {[1,2,3,4,5,6,7,8].map(i => film[`actor_${i}`]).filter(Boolean).join(', ') || <span className="text-gray-500">—</span>}
